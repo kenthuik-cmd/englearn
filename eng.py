@@ -15,7 +15,7 @@ st.set_page_config(
     page_title="AI 英语进阶闯关", page_icon="📖", layout="centered"
 )
 
-# 注入手机端极简样式（新增隐藏原生音频播放器）
+# 注入手机端极简样式（隐藏原生音频播放器）
 st.markdown(
     """
     <style>
@@ -58,9 +58,31 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# 初始化 Session State
+# === 初始化 Session State ===
 if "user" not in st.session_state:
     st.session_state.user = None
+
+# ====== 新增核心：原生免刷新掉线机制 (URL 记住设备) ======
+# 当检测到内存被刷新清空，但网址栏带有 uid 凭证时，自动静默登录
+if not st.session_state.user and "uid" in st.query_params:
+    saved_uid = st.query_params["uid"]
+    
+    # 构建一个符合逻辑的模拟用户对象
+    class AutoLoginUser:
+        def __init__(self, uid):
+            self.id = uid
+            
+    st.session_state.user = AutoLoginUser(saved_uid)
+    
+    # 顺便从云端同步该用户的关卡等级
+    try:
+        profile = supabase.table("user_profiles").select("*").eq("user_id", saved_uid).execute()
+        if profile.data:
+            st.session_state.level = profile.data[0].get("grade", 1)
+    except Exception:
+        pass
+# ==========================================================
+
 if "level" not in st.session_state:
     st.session_state.level = 1
 
@@ -124,6 +146,10 @@ if not st.session_state.user:
                         {"email": email, "password": password}
                     )
                     st.session_state.user = res.user
+                    
+                    # --- 新增：登录成功后，把凭证写入 URL 网址，这样刷新就不会掉线了 ---
+                    st.query_params["uid"] = res.user.id
+                    
                     profile = (
                         supabase.table("user_profiles")
                         .select("*")
@@ -178,6 +204,9 @@ else:
         if st.button("🚪 退出登录", use_container_width=True):
             st.session_state.user = None
             st.session_state.page = "home"
+            # --- 新增：退出登录时，从 URL 擦除凭证印记 ---
+            if "uid" in st.query_params:
+                del st.query_params["uid"]
             st.rerun()
 
     # 子页面
@@ -282,7 +311,6 @@ else:
                 )
                 components.html(speech_component_html, height=75)
 
-                # --- 核心操作按钮区域 ---
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("❌ 模糊 (重练)", use_container_width=True):
@@ -296,13 +324,11 @@ else:
                         sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                         st.rerun()
                 
-                # --- 视觉分隔防误触区 ---
                 st.markdown(
                     "<hr style='margin: 15px 0 10px 0; border: none; border-top: 1px dashed #dcdfe6;'>", 
                     unsafe_allow_html=True
                 )
                 
-                # “斩词”按钮
                 if st.button("🗑️ 太简单，不再出现", use_container_width=True):
                     done_word = current_queue.pop(0)
                     if done_word not in mastered_list:
@@ -361,7 +387,7 @@ else:
                 qc = st.session_state.quiz_current
                 opts = st.session_state.quiz_options
 
-                # 如果已经答题
+                # 已经答题的状态
                 if st.session_state.get("quiz_answered", False):
                     selected = st.session_state.selected_option
                     audio_bytes = get_audio_bytes(qc["word"])
@@ -374,7 +400,6 @@ else:
                         status_msg = "❌ 抱歉，答错了"
                         status_color = "#F56C6C"
 
-                    # 综合大卡片：原地展示对错、音标、释义、例句
                     st.markdown(
                         f"""
                         <div class="quiz-card">
@@ -414,7 +439,7 @@ else:
                         st.session_state.selected_option = None
                         st.rerun()
 
-                # 如果还未答题
+                # 未答题状态
                 else:
                     if st.button(f"🔊 朗读测验词", use_container_width=True, type="primary"):
                         st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
