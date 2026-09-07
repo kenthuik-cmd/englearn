@@ -650,10 +650,8 @@ if st.session_state.queue:
       st.session_state.queue.pop(0)
       st.rerun()
 else:
-  st.success("🎉 太棒了！这 100 个五年级单词你已经全部顺利复习完了！")
-  if st.button("🔄 重新开始新一轮背诵", use_container_width=True):
-    st.session_state.queue = list(VOCAB_LIST)
-    random.shuffle(st.session_state.queue)
-    st.rerun()
+    st.success("🎉 太棒了！这 100 个五年级单词你已经全部顺利复习完了！")
+    if st.button("🔄 重新开始新一轮背诵", use_container_width=True):
+        st.session_state.queue = list(VOCAB_LIST)
         random.shuffle(st.session_state.queue)
         st.rerun()
