@@ -431,7 +431,13 @@ else:
                     for idx, opt in enumerate(opts):
                         current_col = col_a if idx % 2 == 0 else col_b
                         with current_col:
-                            btn_label = f"{labels[idx]}. {opt}"
+                            # 拆分词性并挪到末尾加括号，比如把 "n. 商店" 变成 "商店 (n.)"
+                            parts = opt.split(" ", 1)
+                            if len(parts) == 2:
+                                btn_label = f"{labels[idx]}. {parts[1]} ({parts[0]})"
+                            else:
+                                btn_label = f"{labels[idx]}. {opt}"
+                                
                             if st.button(btn_label, use_container_width=True, key=f"opt_{idx}"):
                                 st.session_state.quiz_answered = True
                                 st.session_state.selected_option = opt
