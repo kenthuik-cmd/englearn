@@ -15,7 +15,7 @@ st.set_page_config(
     page_title="AI 英语背单词", page_icon="📖", layout="centered"
 )
 
-# 注入自定义 CSS 样式：优化手机端按钮大小、圆角、卡片阴影，营造 App 沉浸感
+# 注入自定义 CSS 样式与自动回顶部的 JavaScript 脚本
 st.markdown(
     """
     <style>
@@ -53,6 +53,11 @@ st.markdown(
             text-align: center;
         }
     </style>
+    
+    <script>
+        // 每次页面重新加载或刷新时，自动滚动到屏幕最顶部
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    </script>
     """,
     unsafe_allow_html=True,
 )
@@ -476,7 +481,6 @@ else:
           st.write("点击下方按钮并大声读出上方单词：")
 
           target_word_lower = current["word"].lower()
-          # 改用纯字符串拼接，彻底解决大括号和百分号冲突问题
           speech_component_html = (
               """
                     <div style="font-family: sans-serif; text-align: center; padding: 5px;">
