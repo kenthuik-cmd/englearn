@@ -5,10 +5,9 @@ import streamlit as st
 import streamlit.components.v1 as components
 from supabase import create_client
 
-# 从外部词库文件中导入真实的独立造句词库
 from vocab_data import GLOBAL_VOCAB_DB
 
-# 从 Streamlit 的 secrets 配置中读取你的 Supabase 链接和密匙
+# 读取 Supabase 配置
 url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_ANON_KEY"]
 supabase = create_client(url, key)
