@@ -69,60 +69,31 @@ def generate_master_vocab():
           ("pen", "/pen/", "n. 钢笔", "Can I borrow your pen?", "我能借一下你的钢笔吗？"),
           ("dog", "/dɒɡ/", "n. 狗", "The dog is very friendly.", "这只狗非常友好。"),
           ("cat", "/kæt/", "n. 猫", "The cat is sleeping.", "猫正在睡觉。"),
-      ],
-      2: [
-          ("morning", "/ˈmɔːnɪŋ/", "n. 早晨，上午", "Good morning, teacher.", "老师，早上好。"),
-          ("night", "/naɪt/", "n. 夜晚", "Stars shine at night.", "星星在夜里闪烁。"),
-          ("happy", "/ˈhæpi/", "adj. 快乐的", "I am happy today.", "我今天很高兴。"),
-          ("friend", "/frend/", "n. 朋友", "She is my best friend.", "她是我最好的朋友。"),
-          ("school", "/skuːl/", "n. 学校", "We go to school by bus.", "我们坐巴士去学校。"),
-          ("teacher", "/ˈtiːtʃə(r)/", "n. 老师", "Our teacher is kind.", "我们的老师很慈祥。"),
-          ("student", "/ˈstjuːdnt/", "n. 学生", "He is a hard-working student.", "他是一个刻苦的学生。"),
-          ("family", "/ˈfæməli/", "n. 家庭", "I love my family.", "我爱我的家人。"),
-          ("father", "/ˈfɑːðə(r)/", "n. 父亲", "My father is a doctor.", "我父亲是一名医生。"),
-          ("mother", "/ˈmʌðə(r)/", "n. 母亲", "Mother is cooking dinner.", "母亲正在做晚饭。"),
-      ],
-      3: [
-          ("time", "/taɪm/", "n. 时间", "Time is money.", "时间就是金钱。"),
-          ("way", "/weɪ/", "n. 方法，道路", "This is the right way.", "这是正确的方法。"),
-          ("day", "/deɪ/", "n. 天，日子", "Have a nice day.", "祝你过愉快的一天。"),
-          ("work", "/wɜːk/", "n./v. 工作", "I love my work.", "我热爱我的工作。"),
-          ("life", "/laɪf/", "n. 生活，生命", "Life is wonderful.", "生活是美好的。"),
-          ("world", "/wɜːld/", "n. 世界", "Hello, world.", "世界，你好。"),
-          ("hand", "/hænd/", "n. 手", "Give me a hand.", "帮我一把。"),
-          ("part", "/pɑːt/", "n. 部分", "This is an important part.", "这是一个重要的部分。"),
-          ("child", "/tʃaɪld/", "n. 孩子", "Every child is unique.", "每个孩子都是独特的。"),
-          ("eye", "/aɪ/", "n. 眼睛", "She has big brown eyes.", "她有一双棕色的大眼睛。"),
       ]
   }
   
-  # 扩展词汇池衍生词，确保纯英文单词干净不带下划线后缀
   extra_words = [
       ("people", "/ˈpiːpl/", "n. 人们"), ("place", "/pleɪs/", "n. 地方"), ("case", "/keɪs/", "n. 情况"),
       ("week", "/wiːk/", "n. 星期"), ("company", "/ˈkʌmpəni/", "n. 公司"), ("system", "/ˈsɪstəm/", "n. 系统"),
       ("program", "/ˈprəʊɡræm/", "n. 节目，项目"), ("question", "/ˈkwestʃən/", "n. 问题"), ("night", "/naɪt/", "n. 夜晚"),
-      ("point", "/pɔɪnt/", "n. 点，观点"), ("government", "/ˈɡʌvənmənt/", "n. 政府"), ("company", "/ˈkʌmpəni/", "n. 公司"),
-      ("number", "/ˈnʌmbə(r)/", "n. 数字"), ("group", "/ɡruːp/", "n. 群，组"), ("problem", "/ˈprɒbləm/", "n. 问题"),
-      ("fact", "/fækt/", "n. 事实"), ("month", "/mʌnθ/", "n. 月"), ("lot", "/lɒt/", "n. 许多"),
-      ("right", "/raɪt/", "n./adj. 右边，正确的"), ("study", "/ˈstʌdi/", "n./v. 学习"), ("book", "/bʊk/", "n. 书籍"),
-      ("eye", "/aɪ/", "n. 眼睛"), ("job", "/dʒɒb/", "n. 工作"), ("word", "/wɜːd/", "n. 单词"),
+      ("point", "/pɔɪnt/", "n. 点，观点"), ("government", "/ˈɡʌvənmənt/", "n. 政府"), ("number", "/ˈnʌmbə(r)/", "n. 数字"), 
+      ("group", "/ɡruːp/", "n. 群，组"), ("problem", "/ˈprɒbləm/", "n. 问题"), ("fact", "/fækt/", "n. 事实"), 
+      ("month", "/mʌnθ/", "n. 月"), ("lot", "/lɒt/", "n. 许多"), ("right", "/raɪt/", "n./adj. 右边，正确的"), 
+      ("study", "/ˈstʌdi/", "n./v. 学习"), ("job", "/dʒɒb/", "n. 工作"), ("word", "/wɜːd/", "n. 单词"),
       ("business", "/ˈbɪznəs/", "n. 商业，生意"), ("issue", "/ˈɪʃuː/", "n. 议题"), ("side", "/saɪd/", "n. 边，侧"),
-      ("kind", "/kaɪnd/", "n./adj. 种类，善良的"), ("head", "/hed/", "n. 头"), ("house", "/haʊs/", "n. 房子"),
-      ("service", "/ˈsɜːvɪs/", "n. 服务"), ("friend", "/frend/", "n. 朋友"), ("father", "/ˈfɑːðə(r)/", "n. 父亲"),
-      ("power", "/ˈpaʊə(r)/", "n. 力量"), ("hour", "/ˈaʊə(r)/", "n. 小时"), ("game", "/ɡeɪm/", "n. 游戏"),
-      ("line", "/laɪn/", "n. 线路，排"), ("end", "/end/", "n. 结束"), ("member", "/ˈmembə(r)/", "n. 成员"),
-      ("law", "/lɔː/", "n. 法律"), ("car", "/kɑː(r)/", "n. 汽车"), ("city", "/ˈsɪti/", "n. 城市"),
-      ("name", "/neɪm/", "n. 名字"), ("team", "/tiːm/", "n. 团队"), ("minute", "/ˈmɪnɪt/", "n. 分钟"),
-      ("idea", "/aɪˈdɪə/", "n. 想法"), ("kid", "/kɪd/", "n. 小孩"), ("body", "/ˈbɒdi/", "n. 身体"),
-      ("information", "/ˌɪnfəˈmeɪʃn/", "n. 信息"), ("back", "/bæk/", "n./adv. 背部，后面"), ("parent", "/ˈpeərənt/", "n. 父亲/母亲"),
-      ("face", "/feɪs/", "n. 脸"), ("others", "/ˈʌðəz/", "n. 其他人"), ("level", "/ˈlevl/", "n. 水平，级别"),
+      ("kind", "/kaɪnd/", "n./adj. 种类，善良的"), ("head", "/hed/", "n. 头"), ("service", "/ˈsɜːvɪs/", "n. 服务"),
+      ("friend", "/frend/", "n. 朋友"), ("father", "/ˈfɑːðə(r)/", "n. 父亲"), ("power", "/ˈpaʊə(r)/", "n. 力量"), 
+      ("hour", "/ˈaʊə(r)/", "n. 小时"), ("game", "/ɡeɪm/", "n. 游戏"), ("line", "/laɪn/", "n. 线路，排"), 
+      ("end", "/end/", "n. 结束"), ("member", "/ˈmembə(r)/", "n. 成员"), ("law", "/lɔː/", "n. 法律"), 
+      ("city", "/ˈsɪti/", "n. 城市"), ("name", "/neɪm/", "n. 名字"), ("team", "/tiːm/", "n. 团队"), 
+      ("minute", "/ˈmɪnɪt/", "n. 分钟"), ("idea", "/aɪˈdɪə/", "n. 想法"), ("kid", "/kɪd/", "n. 小孩"), 
+      ("body", "/ˈbɒdi/", "n. 身体"), ("face", "/feɪs/", "n. 脸"), ("level", "/ˈlevl/", "n. 水平，级别"),
       ("office", "/ˈɒfɪs/", "n. 办公室"), ("door", "/dɔː(r)/", "n. 门"), ("health", "/helθ/", "n. 健康"),
       ("person", "/ˈpɜːsn/", "n. 个人"), ("art", "/ɑːt/", "n. 艺术"), ("history", "/ˈhɪstəri/", "n. 历史"),
       ("party", "/ˈpɑːti/", "n. 派对"), ("result", "/rɪˈzʌlt/", "n. 结果"), ("change", "/tʃeɪndʒ/", "n./v. 改变"),
-      ("morning", "/ˈmɔːnɪŋ/", "n. 早晨"), ("reason", "/ˈriːzn/", "n. 原因"), ("research", "/rɪˈsɜːtʃ/", "n. 研究"),
-      ("girl", "/ɡɜːl/", "n. 女孩"), ("guy", "/ɡaɪ/", "n. 家伙"), ("moment", "/ˈməʊmənt/", "n. 时刻"),
-      ("air", "/eə(r)/", "n. 空气"), ("teacher", "/ˈtiːtʃə(r)/", "n. 老师"), ("force", "/fɔːs/", "n. 力量"),
-      ("education", "/ˌedʒuˈkeɪʃn/", "n. 教育")
+      ("morning", "/ˈmɔːnɪŋ/", "n. 早晨"), ("reason", "/ˈriːzn/", "n. 原因"), ("girl", "/ɡɜːl/", "n. 女孩"), 
+      ("guy", "/ɡaɪ/", "n. 家伙"), ("moment", "/ˈməʊmənt/", "n. 时刻"), ("air", "/eə(r)/", "n. 空气"),
+      ("teacher", "/ˈtiːtʃə(r)/", "n. 老师"), ("force", "/fɔːs/", "n. 力量"), ("education", "/ˌedʒuˈkeɪʃn/", "n. 教育")
   ]
 
   full_db = {}
@@ -138,12 +109,12 @@ def generate_master_vocab():
         en = item[3]
         cn = item[4]
       else:
-        extra_item = extra_words[(i + lvl) % len(extra_words)]
-        w = extra_item[0] + (str(i) if i > 70 else "") # 极少情况下微调去重
+        extra_item = extra_words[(i * 7 + lvl * 3) % len(extra_words)]
+        w = extra_item[0]
         ph = extra_item[1]
         mean = extra_item[2]
-        en = f"This is a useful {extra_item[0]}."
-        cn = f"这是一个实用的{extra_item[2].split(' ')[-1]}。"
+        en = f"This is a useful {w}."
+        cn = f"这是一个实用的{mean.split(' ')[-1]}。"
       
       level_list.append({
           "word": w,
