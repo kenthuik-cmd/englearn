@@ -277,24 +277,30 @@ else:
                 )
                 components.html(speech_component_html, height=75)
 
+                # --- 底部按钮区域 ---
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("❌ 模糊 (重练)", use_container_width=True):
+                        # 把不会的单词放回队列末尾
                         current_queue.append(current_queue.pop(0))
                         st.rerun()
                 with col2:
-                    if st.button(
-                        "✔ 认识 (下一个)", use_container_width=True, type="primary"
-                    ):
+                    if st.button("✔ 认识 (下一个)", use_container_width=True, type="primary"):
+                        # 学完一个词，从队列中移除并记录到已掌握
                         done_word = current_queue.pop(0)
                         if done_word not in mastered_list:
                             mastered_list.append(done_word)
-                        sync_progress_to_cloud(
-                            st.session_state.user.id,
-                            st.session_state.level,
-                            st.session_state.mastered,
-                        )
+                        sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                         st.rerun()
+                
+                # 新增的“斩词”按钮，占满整行宽度，方便点击
+                if st.button("🗑️ 太简单，不再出现", use_container_width=True):
+                    done_word = current_queue.pop(0)
+                    if done_word not in mastered_list:
+                        mastered_list.append(done_word)
+                    sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
+                    st.rerun()
+
             else:
                 if current_lvl < 20:
                     st.success(f"🎉 Level {current_lvl} 完美通关！")
