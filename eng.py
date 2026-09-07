@@ -15,7 +15,7 @@ st.set_page_config(
     page_title="AI 英语背单词", page_icon="📖", layout="centered"
 )
 
-# 注入 CSS 样式：放大单词卡片，同时保持整体手机端单屏可容纳
+# 注入 CSS 样式：优化大卡片与可点击单词的样式
 st.markdown(
     """
     <style>
@@ -42,7 +42,7 @@ st.markdown(
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
         
-        /* 放大后的单词背诵卡片样式 */
+        /* 单词背诵卡片样式 */
         .quiz-card {
             background-color: #ffffff;
             border: 1px solid #e4e7ed;
@@ -435,6 +435,10 @@ else:
       if current_queue:
         current = current_queue[0]
 
+        # 把整个单词区域设计成点击直接朗读的交互（利用 Streamlit 按钮直接触发音频自动播放）
+        if st.button(f"🔊 点此朗读：{current['word']}", use_container_width=True, type="primary"):
+          st.audio(get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True)
+
         # 放大、高质感的单词卡片
         st.markdown(
             f"""
@@ -451,20 +455,12 @@ else:
             unsafe_allow_html=True,
         )
 
-        # 紧凑的音频朗读与跟读组件
-        c_audio, c_speak = st.columns(2)
-        with c_audio:
-          if st.button("🔊 朗读单词", use_container_width=True):
-            st.audio(
-                get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True
-            )
-        with c_speak:
-          if st.button("🔊 朗读例句", use_container_width=True):
-            st.audio(
-                get_audio_bytes(current["example_en"]),
-                format="audio/mp3",
-                autoplay=True,
-            )
+        if st.button("🔊 朗读例句", use_container_width=True):
+          st.audio(
+              get_audio_bytes(current["example_en"]),
+              format="audio/mp3",
+              autoplay=True,
+          )
 
         target_word_lower = current["word"].lower()
         speech_component_html = (
@@ -596,7 +592,9 @@ else:
         qc = st.session_state.quiz_current
         opts = st.session_state.quiz_options
 
-        # 放大后的测验单词卡片
+        if st.button(f"🔊 点此朗读测验词：{qc['word']}", use_container_width=True, type="primary"):
+          st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
+
         st.markdown(
             f"""
                 <div class="quiz-card">
@@ -665,6 +663,9 @@ else:
 
         rc = st.session_state.review_current
         with st.container():
+          if st.button(f"🔊 点此朗读：{rc['word']}", use_container_width=True, type="primary"):
+            st.audio(get_audio_bytes(rc["word"]), format="audio/mp3", autoplay=True)
+
           st.markdown(
               f"""
                 <div class="quiz-card">
@@ -679,9 +680,6 @@ else:
                 """,
               unsafe_allow_html=True,
           )
-
-          if st.button("🔊 朗读", use_container_width=True):
-            st.audio(get_audio_bytes(rc["word"]), format="audio/mp3", autoplay=True)
 
         if st.button("➡️ 换一个复习", use_container_width=True, type="primary"):
           st.session_state.review_current = random.choice(mastered_list)
