@@ -2,8 +2,10 @@
 # 真实难度递进词库：每个词独立造句，拒绝模板句
 
 GLOBAL_VOCAB_DB = {
+    # -------------------------------------------------------------
+    # Level 1: 基础生存日常（饮食、居家、基础动作）- 100词
+    # -------------------------------------------------------------
     1: [
-        # 基础问候与礼貌
         {"word": "hello", "phonetic": "/həˈləʊ/", "meaning": "int. 你好", "example_en": "Hello, it's really nice to finally meet you.", "example_cn": "你好，终于见到你了很高兴。"},
         {"word": "goodbye", "phonetic": "/ˌɡʊdˈbaɪ/", "meaning": "int. 再见", "example_en": "I have to leave now, goodbye!", "example_cn": "我现在得走了，再见！"},
         {"word": "please", "phonetic": "/pliːz/", "meaning": "adv. 请", "example_en": "Could you pass me the salt, please?", "example_cn": "请把盐递给我好吗？"},
@@ -14,8 +16,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "ok", "phonetic": "/ˌəʊˈkeɪ/", "meaning": "adj./adv. 好的", "example_en": "Are you feeling ok after the long trip?", "example_cn": "长途旅行后你感觉还好吗？"},
         {"word": "excuse", "phonetic": "/ɪkˈskjuːz/", "meaning": "v. 原谅；劳驾", "example_en": "Excuse me, where is the nearest restroom?", "example_cn": "打扰一下，请问最近的洗手间在哪里？"},
         {"word": "help", "phonetic": "/help/", "meaning": "v./n. 帮助", "example_en": "Can you help me carry these heavy bags?", "example_cn": "你能帮我提这些重包吗？"},
-
-        # 餐饮与食物
         {"word": "water", "phonetic": "/ˈwɔːtə(r)/", "meaning": "n. 水", "example_en": "Could I get a glass of warm water?", "example_cn": "能给我来一杯温水吗？"},
         {"word": "bread", "phonetic": "/bred/", "meaning": "n. 面包", "example_en": "We need to buy some fresh bread for tomorrow.", "example_cn": "我们需要买点新鲜面包留到明天吃。"},
         {"word": "milk", "phonetic": "/mɪlk/", "meaning": "n. 牛奶", "example_en": "Do you take milk and sugar in your coffee?", "example_cn": "你的咖啡里要加牛奶和糖吗？"},
@@ -26,8 +26,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "fish", "phonetic": "/fɪʃ/", "meaning": "n. 鱼", "example_en": "We had grilled fish with lemon for dinner.", "example_cn": "我们晚饭吃了柠檬烤鱼。"},
         {"word": "egg", "phonetic": "/eɡ/", "meaning": "n. 鸡蛋", "example_en": "I usually fry an egg for my breakfast.", "example_cn": "我通常早餐煎一个鸡蛋。"},
         {"word": "apple", "phonetic": "/ˈæpl/", "meaning": "n. 苹果", "example_en": "She bought some sweet red apples at the market.", "example_cn": "她在市场上买了一些甜红苹果。"},
-        
-        # 用餐动作与餐具
         {"word": "eat", "phonetic": "/iːt/", "meaning": "v. 吃", "example_en": "What do you want to eat for lunch?", "example_cn": "你午饭想吃什么？"},
         {"word": "drink", "phonetic": "/drɪŋk/", "meaning": "v. 喝", "example_en": "Make sure to drink enough water when it's hot.", "example_cn": "天气热的时候一定要多喝水。"},
         {"word": "hungry", "phonetic": "/ˈhʌŋɡri/", "meaning": "adj. 饥饿的", "example_en": "I am so hungry that I could eat a horse.", "example_cn": "我饿得简直能吃下一头牛。"},
@@ -38,8 +36,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "spoon", "phonetic": "/spuːn/", "meaning": "n. 勺子", "example_en": "You need a spoon to eat this dessert.", "example_cn": "你需要一把勺子来吃这个甜点。"},
         {"word": "fork", "phonetic": "/fɔːk/", "meaning": "n. 叉子", "example_en": "Can I get a clean fork, please?", "example_cn": "能给我一把干净的叉子吗？"},
         {"word": "knife", "phonetic": "/naɪf/", "meaning": "n. 刀", "example_en": "Use the sharp knife to cut the steak.", "example_cn": "用那把锋利的刀切牛排。"},
-
-        # 日常地点
         {"word": "home", "phonetic": "/həʊm/", "meaning": "n. 家", "example_en": "I will go straight home after work today.", "example_cn": "我今天下班后会直接回家。"},
         {"word": "school", "phonetic": "/skuːl/", "meaning": "n. 学校", "example_en": "My little brother walks to school every morning.", "example_cn": "我弟弟每天早晨步行去学校。"},
         {"word": "work", "phonetic": "/wɜːk/", "meaning": "n./v. 工作", "example_en": "She has a lot of work to finish by tomorrow.", "example_cn": "她有很多工作要在明天前完成。"},
@@ -50,8 +46,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "restaurant", "phonetic": "/ˈrestrɒnt/", "meaning": "n. 餐厅", "example_en": "They serve excellent pizza at that Italian restaurant.", "example_cn": "那家意大利餐厅的披萨非常棒。"},
         {"word": "hotel", "phonetic": "/həʊˈtel/", "meaning": "n. 酒店", "example_en": "We booked a room in a nice hotel near the beach.", "example_cn": "我们在海滩边一家不错的酒店订了房间。"},
         {"word": "airport", "phonetic": "/ˈeəpɔːt/", "meaning": "n. 机场", "example_en": "You should arrive at the airport two hours early.", "example_cn": "你应该提前两小时到达机场。"},
-
-        # 交通出行
         {"word": "car", "phonetic": "/kɑː(r)/", "meaning": "n. 汽车", "example_en": "He parked his car right outside the building.", "example_cn": "他把车直接停在了大楼外面。"},
         {"word": "bus", "phonetic": "/bʌs/", "meaning": "n. 巴士", "example_en": "I missed the morning bus and had to take a taxi.", "example_cn": "我错过了早班车，只好打车了。"},
         {"word": "train", "phonetic": "/treɪn/", "meaning": "n. 火车", "example_en": "The train to London leaves in ten minutes.", "example_cn": "开往伦敦的火车十分钟后出发。"},
@@ -62,8 +56,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "station", "phonetic": "/ˈsteɪʃn/", "meaning": "n. 车站", "example_en": "I will meet you at the central railway station.", "example_cn": "我会在中央火车站和你碰面。"},
         {"word": "fly", "phonetic": "/flaɪ/", "meaning": "v. 飞行；乘飞机", "example_en": "We will fly to Paris for our summer vacation.", "example_cn": "暑假我们将飞往巴黎。"},
         {"word": "drive", "phonetic": "/draɪv/", "meaning": "v. 驾驶", "example_en": "Don't drive if you feel tired or sleepy.", "example_cn": "如果你觉得累或困，就别开车了。"},
-
-        # 时间与节律
         {"word": "day", "phonetic": "/deɪ/", "meaning": "n. 天；白天", "example_en": "It has been a really long and exhausting day.", "example_cn": "这真是漫长又疲惫的一天。"},
         {"word": "night", "phonetic": "/naɪt/", "meaning": "n. 夜晚", "example_en": "The baby woke up crying in the middle of the night.", "example_cn": "婴儿半夜醒来哭闹。"},
         {"word": "morning", "phonetic": "/ˈmɔːnɪŋ/", "meaning": "n. 早晨", "example_en": "I like to read the news in the morning.", "example_cn": "我喜欢在早晨看新闻。"},
@@ -74,8 +66,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "yesterday", "phonetic": "/ˈjestədeɪ/", "meaning": "n./adv. 昨天", "example_en": "We went to the cinema yesterday evening.", "example_cn": "我们昨晚去电影院了。"},
         {"word": "week", "phonetic": "/wiːk/", "meaning": "n. 星期；周", "example_en": "I have been incredibly busy this whole week.", "example_cn": "我整整一个星期都忙得不可开交。"},
         {"word": "month", "phonetic": "/mʌnθ/", "meaning": "n. 月份", "example_en": "Rent is due on the first day of every month.", "example_cn": "房租必须在每个月的第一天交。"},
-
-        # 购物与金钱
         {"word": "buy", "phonetic": "/baɪ/", "meaning": "v. 买", "example_en": "Where did you buy this lovely dress?", "example_cn": "你在哪里买的这件漂亮的衣服？"},
         {"word": "sell", "phonetic": "/sel/", "meaning": "v. 卖", "example_en": "They sell fresh organic vegetables here.", "example_cn": "他们在这里卖新鲜的有机蔬菜。"},
         {"word": "cost", "phonetic": "/kɒst/", "meaning": "v./n. 花费；成本", "example_en": "How much does this laptop cost?", "example_cn": "这台笔记本电脑要多少钱？"},
@@ -86,8 +76,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "pay", "phonetic": "/peɪ/", "meaning": "v. 支付", "example_en": "Can I pay for my groceries with a credit card?", "example_cn": "我可以用信用卡支付杂货钱吗？"},
         {"word": "cash", "phonetic": "/kæʃ/", "meaning": "n. 现金", "example_en": "The small shop only accepts cash payments.", "example_cn": "这家小店只接受现金支付。"},
         {"word": "card", "phonetic": "/kɑːd/", "meaning": "n. 卡片；银行卡", "example_en": "Swipe your card to open the hotel room door.", "example_cn": "刷卡打开酒店房门。"},
-
-        # 人际关系
         {"word": "family", "phonetic": "/ˈfæməli/", "meaning": "n. 家人；家庭", "example_en": "My family usually watches a movie together on Fridays.", "example_cn": "我的家人通常在周五一起看电影。"},
         {"word": "friend", "phonetic": "/frend/", "meaning": "n. 朋友", "example_en": "She has been my best friend since high school.", "example_cn": "她从高中起就是我最好的朋友。"},
         {"word": "father", "phonetic": "/ˈfɑːðə(r)/", "meaning": "n. 父亲", "example_en": "His father taught him how to ride a bicycle.", "example_cn": "他父亲教他怎么骑自行车。"},
@@ -98,8 +86,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "wife", "phonetic": "/waɪf/", "meaning": "n. 妻子", "example_en": "He bought a beautiful necklace for his wife.", "example_cn": "他给妻子买了一条漂亮的项链。"},
         {"word": "child", "phonetic": "/tʃaɪld/", "meaning": "n. 孩子", "example_en": "The child laughed happily while playing on the swing.", "example_cn": "孩子荡秋千时开心地笑了。"},
         {"word": "person", "phonetic": "/ˈpɜːsn/", "meaning": "n. 人", "example_en": "He is a very reliable person to work with.", "example_cn": "他是一个非常靠谱的合作伙伴。"},
-
-        # 基础动作
         {"word": "sleep", "phonetic": "/sliːp/", "meaning": "v. 睡觉", "example_en": "You need to sleep at least eight hours a night.", "example_cn": "你每晚需要睡至少八个小时。"},
         {"word": "wake", "phonetic": "/weɪk/", "meaning": "v. 醒来", "example_en": "I usually wake up at 7 AM on weekdays.", "example_cn": "工作日我通常早上7点醒来。"},
         {"word": "wash", "phonetic": "/wɒʃ/", "meaning": "v. 洗", "example_en": "Please wash your hands before eating dinner.", "example_cn": "吃晚饭前请洗手。"},
@@ -110,8 +96,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "pull", "phonetic": "/pʊl/", "meaning": "v. 拉", "example_en": "He had to pull the heavy box across the floor.", "example_cn": "他不得不把那个沉重的箱子拖过地板。"},
         {"word": "walk", "phonetic": "/wɔːk/", "meaning": "v. 步行", "example_en": "They decided to walk to the beach instead of driving.", "example_cn": "他们决定走路去海滩，而不是开车。"},
         {"word": "run", "phonetic": "/rʌn/", "meaning": "v. 跑", "example_en": "She had to run to catch the departing train.", "example_cn": "她不得不跑着去赶那趟快开的火车。"},
-
-        # 情绪与状态
         {"word": "happy", "phonetic": "/ˈhæpi/", "meaning": "adj. 高兴的", "example_en": "I am so happy to hear your good news.", "example_cn": "听到你的好消息我太高兴了。"},
         {"word": "sad", "phonetic": "/sæd/", "meaning": "adj. 伤心的", "example_en": "He felt sad when his pet dog passed away.", "example_cn": "宠物狗去世时他感到很伤心。"},
         {"word": "tired", "phonetic": "/ˈtaɪəd/", "meaning": "adj. 疲劳的", "example_en": "I'm too tired to cook tonight, let's order takeout.", "example_cn": "我今晚累得不想做饭了，我们叫外卖吧。"},
@@ -122,13 +106,12 @@ GLOBAL_VOCAB_DB = {
         {"word": "hot", "phonetic": "/hɒt/", "meaning": "adj. 热的", "example_en": "Be careful, the soup is extremely hot.", "example_cn": "小心点，汤非常烫。"},
         {"word": "cold", "phonetic": "/kəʊld/", "meaning": "adj. 冷的", "example_en": "Put on a jacket, it's quite cold outside.", "example_cn": "穿件外套吧，外面挺冷的。"},
         {"word": "sick", "phonetic": "/sɪk/", "meaning": "adj. 生病的", "example_en": "He stayed in bed because he felt sick.", "example_cn": "他因为生病而躺在床上休息。"}
-    ]
-}
-# -------------------------------------------------------------
+    ],
+
+    # -------------------------------------------------------------
     # Level 2: 身体、衣物、居家、天气、基础动作与情绪 - 100词
     # -------------------------------------------------------------
     2: [
-        # 身体部位
         {"word": "head", "phonetic": "/hed/", "meaning": "n. 头", "example_en": "My head hurts from staring at the screen too long.", "example_cn": "盯着屏幕太久，我的头好痛。"},
         {"word": "face", "phonetic": "/feɪs/", "meaning": "n. 脸", "example_en": "She washed her face with cold water this morning.", "example_cn": "她今早用冷水洗了脸。"},
         {"word": "eye", "phonetic": "/aɪ/", "meaning": "n. 眼睛", "example_en": "He closed his eyes and listened to the music.", "example_cn": "他闭上眼睛，静静地听音乐。"},
@@ -139,8 +122,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "hair", "phonetic": "/heə(r)/", "meaning": "n. 头发", "example_en": "She has long, curly brown hair.", "example_cn": "她有一头长长的棕色卷发。"},
         {"word": "hand", "phonetic": "/hænd/", "meaning": "n. 手", "example_en": "Please wash your hands before eating dinner.", "example_cn": "晚饭前请洗手。"},
         {"word": "foot", "phonetic": "/fʊt/", "meaning": "n. 脚", "example_en": "I accidentally stepped on his left foot.", "example_cn": "我不小心踩到了他的左脚。"},
-
-        # 衣物与穿搭
         {"word": "clothes", "phonetic": "/kləʊðz/", "meaning": "n. 衣服", "example_en": "Put your dirty clothes in the washing machine.", "example_cn": "把你的脏衣服放进洗衣机里。"},
         {"word": "shirt", "phonetic": "/ʃɜːt/", "meaning": "n. 衬衫", "example_en": "He wore a crisp white shirt to the interview.", "example_cn": "他穿着挺括的白衬衫去面试。"},
         {"word": "pants", "phonetic": "/pænts/", "meaning": "n. 裤子", "example_en": "I need to buy a new pair of black pants for work.", "example_cn": "我需要买一条新的黑裤子上班穿。"},
@@ -151,8 +132,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "wear", "phonetic": "/weə(r)/", "meaning": "v. 穿，戴", "example_en": "What are you going to wear for the dinner tonight?", "example_cn": "今晚的晚宴你打算穿什么？"},
         {"word": "bag", "phonetic": "/bæɡ/", "meaning": "n. 包", "example_en": "I left my keys in my gym bag.", "example_cn": "我把钥匙忘在健身包里了。"},
         {"word": "wallet", "phonetic": "/ˈwɒlɪt/", "meaning": "n. 钱包", "example_en": "He panicked when he realized he lost his wallet.", "example_cn": "当他意识到丢了钱包时，他慌了。"},
-
-        # 居家与生活环境
         {"word": "room", "phonetic": "/ruːm/", "meaning": "n. 房间", "example_en": "My bedroom is the quietest room in the house.", "example_cn": "我的卧室是家里最安静的房间。"},
         {"word": "door", "phonetic": "/dɔː(r)/", "meaning": "n. 门", "example_en": "Please lock the front door when you leave.", "example_cn": "离开时请锁好前门。"},
         {"word": "window", "phonetic": "/ˈwɪndəʊ/", "meaning": "n. 窗户", "example_en": "Open the window to let some fresh air in.", "example_cn": "打开窗户透透新鲜空气。"},
@@ -163,8 +142,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "chair", "phonetic": "/tʃeə(r)/", "meaning": "n. 椅子", "example_en": "Pull up a chair and join us.", "example_cn": "拉把椅子过来加入我们吧。"},
         {"word": "light", "phonetic": "/laɪt/", "meaning": "n. 灯光；灯", "example_en": "Turn off the light before you go to sleep.", "example_cn": "睡觉前把灯关掉。"},
         {"word": "key", "phonetic": "/kiː/", "meaning": "n. 钥匙", "example_en": "I can't find my house key anywhere.", "example_cn": "我哪儿也找不到我家的钥匙。"},
-
-        # 颜色与基础形容词
         {"word": "color", "phonetic": "/ˈkʌlə(r)/", "meaning": "n. 颜色", "example_en": "What is your favorite color?", "example_cn": "你最喜欢的颜色是什么？"},
         {"word": "red", "phonetic": "/red/", "meaning": "adj. 红色的", "example_en": "She painted her nails a bright red.", "example_cn": "她把指甲涂成了明亮的红色。"},
         {"word": "blue", "phonetic": "/bluː/", "meaning": "adj. 蓝色的", "example_en": "The sky is clear and blue today.", "example_cn": "今天天空晴朗蔚蓝。"},
@@ -175,8 +152,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "big", "phonetic": "/bɪɡ/", "meaning": "adj. 大的", "example_en": "They moved into a really big apartment.", "example_cn": "他们搬进了一间非常大的公寓。"},
         {"word": "small", "phonetic": "/smɔːl/", "meaning": "adj. 小的", "example_en": "The town is too small to have a shopping mall.", "example_cn": "这个镇太小了，连个购物中心都没有。"},
         {"word": "beautiful", "phonetic": "/ˈbjuːtɪfl/", "meaning": "adj. 美丽的", "example_en": "We enjoyed a beautiful sunset at the beach.", "example_cn": "我们在海滩上欣赏了美丽的日落。"},
-
-        # 天气与自然
         {"word": "weather", "phonetic": "/ˈweðə(r)/", "meaning": "n. 天气", "example_en": "The weather is supposed to be nice this weekend.", "example_cn": "预计这周末天气会很好。"},
         {"word": "sun", "phonetic": "/sʌn/", "meaning": "n. 太阳", "example_en": "The sun rises in the east and sets in the west.", "example_cn": "太阳东升西落。"},
         {"word": "rain", "phonetic": "/reɪn/", "meaning": "n. 雨", "example_en": "We canceled the picnic because of the heavy rain.", "example_cn": "因为下大雨，我们取消了野餐。"},
@@ -187,8 +162,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "flower", "phonetic": "/ˈflaʊə(r)/", "meaning": "n. 花朵", "example_en": "He gave her a bunch of beautiful flowers.", "example_cn": "他送给她一束美丽的花。"},
         {"word": "dog", "phonetic": "/dɒɡ/", "meaning": "n. 狗", "example_en": "Our dog barks whenever the mailman arrives.", "example_cn": "邮递员一到，我家的狗就会叫。"},
         {"word": "cat", "phonetic": "/kæt/", "meaning": "n. 猫", "example_en": "The cat is sleeping peacefully on the sofa.", "example_cn": "猫正安详地睡在沙发上。"},
-
-        # 时间与频率
         {"word": "year", "phonetic": "/jɪə(r)/", "meaning": "n. 年", "example_en": "I traveled to Japan last year.", "example_cn": "我去年去日本旅行了。"},
         {"word": "hour", "phonetic": "/ˈaʊə(r)/", "meaning": "n. 小时", "example_en": "The flight to London takes about twelve hours.", "example_cn": "飞往伦敦的航班大约需要十二个小时。"},
         {"word": "minute", "phonetic": "/ˈmɪnɪt/", "meaning": "n. 分钟", "example_en": "Please wait a minute, I'll be right with you.", "example_cn": "请稍等一分钟，我马上过来。"},
@@ -199,8 +172,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "always", "phonetic": "/ˈɔːlweɪz/", "meaning": "adv. 总是", "example_en": "She always locks the door before leaving.", "example_cn": "她离开前总是会锁好门。"},
         {"word": "sometimes", "phonetic": "/ˈsʌmtaɪmz/", "meaning": "adv. 有时", "example_en": "Sometimes I prefer staying home rather than going out.", "example_cn": "有时我更喜欢待在家里而不是出门。"},
         {"word": "never", "phonetic": "/ˈnevə(r)/", "meaning": "adv. 从不", "example_en": "I have never been to a music festival before.", "example_cn": "我以前从未去过音乐节。"},
-
-        # 方向与位置
         {"word": "left", "phonetic": "/left/", "meaning": "n./adv. 左边", "example_en": "Turn left at the next intersection.", "example_cn": "在下一个十字路口左转。"},
         {"word": "right", "phonetic": "/raɪt/", "meaning": "n./adv. 右边", "example_en": "Keep right on the highway unless you're passing.", "example_cn": "在高速公路上除非超车，否则请靠右行驶。"},
         {"word": "up", "phonetic": "/ʌp/", "meaning": "adv. 向上", "example_en": "Look up at the stars in the night sky.", "example_cn": "抬头看看夜空中的星星。"},
@@ -211,8 +182,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "far", "phonetic": "/fɑː(r)/", "meaning": "adv. 远", "example_en": "The airport is quite far from the city center.", "example_cn": "机场离市中心挺远的。"},
         {"word": "front", "phonetic": "/frʌnt/", "meaning": "n. 前面", "example_en": "There is a small garden in front of the house.", "example_cn": "房子前面有一个小花园。"},
         {"word": "back", "phonetic": "/bæk/", "meaning": "n./adv. 后面", "example_en": "He stood at the back of the line.", "example_cn": "他站在队伍的最后面。"},
-
-        # 交流与学习动作
         {"word": "speak", "phonetic": "/spiːk/", "meaning": "v. 说，讲话", "example_en": "Can you speak a little louder, please?", "example_cn": "请问你能说大声一点吗？"},
         {"word": "listen", "phonetic": "/ˈlɪsn/", "meaning": "v. 听", "example_en": "You should listen to your doctor's advice.", "example_cn": "你应该听从医生的建议。"},
         {"word": "read", "phonetic": "/riːd/", "meaning": "v. 阅读", "example_en": "I love to read a few pages before bed.", "example_cn": "我喜欢在睡前读几页书。"},
@@ -223,8 +192,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "word", "phonetic": "/wɜːd/", "meaning": "n. 单词；词", "example_en": "How do you spell this English word?", "example_cn": "这个英文单词怎么拼？"},
         {"word": "book", "phonetic": "/bʊk/", "meaning": "n. 书", "example_en": "I am reading a fascinating book about history.", "example_cn": "我正在读一本关于历史的迷人书籍。"},
         {"word": "pen", "phonetic": "/pen/", "meaning": "n. 钢笔", "example_en": "Do you have a pen I could borrow?", "example_cn": "你有一支我可以借用的笔吗？"},
-
-        # 高频核心动作
         {"word": "go", "phonetic": "/ɡəʊ/", "meaning": "v. 去", "example_en": "We plan to go to the beach this weekend.", "example_cn": "我们计划这周末去海滩。"},
         {"word": "come", "phonetic": "/kʌm/", "meaning": "v. 来", "example_en": "Are you going to come to the party tonight?", "example_cn": "你今晚会来参加派对吗？"},
         {"word": "make", "phonetic": "/meɪk/", "meaning": "v. 制作", "example_en": "I am going to make some pancakes for breakfast.", "example_cn": "我打算做些煎饼当早餐。"},
@@ -235,8 +202,6 @@ GLOBAL_VOCAB_DB = {
         {"word": "lose", "phonetic": "/luːz/", "meaning": "v. 丢失", "example_en": "Try not to lose your passport while traveling.", "example_cn": "旅行时尽量别把护照弄丢了。"},
         {"word": "need", "phonetic": "/niːd/", "meaning": "v. 需要", "example_en": "We need to buy more eggs and milk.", "example_cn": "我们需要买更多的鸡蛋和牛奶。"},
         {"word": "want", "phonetic": "/wɒnt/", "meaning": "v. 想要", "example_en": "I just want to relax on the sofa all day.", "example_cn": "我只想整天在沙发上放松。"},
-
-        # 感官与高级情绪表达
         {"word": "look", "phonetic": "/lʊk/", "meaning": "v. 看", "example_en": "Look at that beautiful bird on the tree!", "example_cn": "看树上那只美丽的鸟！"},
         {"word": "see", "phonetic": "/siː/", "meaning": "v. 看见", "example_en": "I can clearly see the mountains from my window.", "example_cn": "从我的窗户能清楚地看到群山。"},
         {"word": "hear", "phonetic": "/hɪə(r)/", "meaning": "v. 听见", "example_en": "Did you hear that strange noise outside?", "example_cn": "你听到外面那个奇怪的声音了吗？"},
@@ -248,9 +213,113 @@ GLOBAL_VOCAB_DB = {
         {"word": "afraid", "phonetic": "/əˈfreɪd/", "meaning": "adj. 害怕的", "example_en": "Many people are afraid of speaking in public.", "example_cn": "许多人都害怕在公众面前演讲。"},
         {"word": "excited", "phonetic": "/ɪkˈsaɪtɪd/", "meaning": "adj. 兴奋的", "example_en": "The kids are very excited about the trip to Disneyland.", "example_cn": "孩子们对去迪士尼乐园的旅行感到非常兴奋。"}
     ],
-    # 后面可以继续追加 Level 3, Level 4...
 
-# 为了保证程序不报错，其余 19 个关卡我们先用 Level 1 占位兜底
-# 当你获取了新的 Level 词库后，可以直接贴进来替换
-for lvl in range(2, 21):
+    # -------------------------------------------------------------
+    # Level 3: 职场学习、城市交通、食物味道与时间频率 - 100词
+    # -------------------------------------------------------------
+    3: [
+        {"word": "office", "phonetic": "/ˈɒfɪs/", "meaning": "n. 办公室", "example_en": "I left my umbrella in the office.", "example_cn": "我把伞落在办公室了。"},
+        {"word": "boss", "phonetic": "/bɒs/", "meaning": "n. 老板", "example_en": "My boss gave me a new project today.", "example_cn": "我老板今天交给我一个新项目。"},
+        {"word": "job", "phonetic": "/dʒɒb/", "meaning": "n. 工作", "example_en": "Finding a good job is not easy.", "example_cn": "找一份好工作并不容易。"},
+        {"word": "meeting", "phonetic": "/ˈmiːtɪŋ/", "meaning": "n. 会议", "example_en": "We have a team meeting at 10 AM.", "example_cn": "我们上午10点有个团队会议。"},
+        {"word": "break", "phonetic": "/breɪk/", "meaning": "n. 休息", "example_en": "Let's take a ten-minute break.", "example_cn": "我们休息十分钟吧。"},
+        {"word": "student", "phonetic": "/ˈstjuːdnt/", "meaning": "n. 学生", "example_en": "The student asked the teacher a question.", "example_cn": "那个学生问了老师一个问题。"},
+        {"word": "class", "phonetic": "/klɑːs/", "meaning": "n. 课程；班级", "example_en": "I was late for my English class.", "example_cn": "我的英语课迟到了。"},
+        {"word": "homework", "phonetic": "/ˈhəʊmwɜːk/", "meaning": "n. 家庭作业", "example_en": "Did you finish your math homework?", "example_cn": "你做完数学作业了吗？"},
+        {"word": "test", "phonetic": "/test/", "meaning": "n. 测试，考试", "example_en": "I need to study for the driving test.", "example_cn": "我需要为驾照考试做准备。"},
+        {"word": "pass", "phonetic": "/pɑːs/", "meaning": "v. 通过", "example_en": "She studied hard and passed the exam.", "example_cn": "她努力学习并通过了考试。"},
+        {"word": "fail", "phonetic": "/feɪl/", "meaning": "v. 失败，不及格", "example_en": "Don't worry if you fail, just try again.", "example_cn": "如果不及格别担心，再试一次就好。"},
+        {"word": "easy", "phonetic": "/ˈiːzi/", "meaning": "adj. 容易的", "example_en": "This puzzle is too easy for me.", "example_cn": "这个谜题对我来说太简单了。"},
+        {"word": "hard", "phonetic": "/hɑːd/", "meaning": "adj. 困难的；努力的", "example_en": "He works hard to support his family.", "example_cn": "他努力工作来养家。"},
+        {"word": "learn", "phonetic": "/lɜːn/", "meaning": "v. 学习", "example_en": "I want to learn how to play the guitar.", "example_cn": "我想学习弹吉他。"},
+        {"word": "study", "phonetic": "/ˈstʌdi/", "meaning": "v. 学习，研究", "example_en": "We study in the library every afternoon.", "example_cn": "我们每天下午在图书馆学习。"},
+        {"word": "use", "phonetic": "/juːz/", "meaning": "v. 使用", "example_en": "Can I use your phone for a second?", "example_cn": "我能用一下你的手机吗？"},
+        {"word": "try", "phonetic": "/traɪ/", "meaning": "v. 尝试", "example_en": "You should try this delicious cake.", "example_cn": "你应该尝尝这块美味的蛋糕。"},
+        {"word": "change", "phonetic": "/tʃeɪndʒ/", "meaning": "v. 改变，更换", "example_en": "I need to change my clothes before the party.", "example_cn": "派对前我需要换身衣服。"},
+        {"word": "wait", "phonetic": "/weɪt/", "meaning": "v. 等待", "example_en": "Please wait for me at the entrance.", "example_cn": "请在入口处等我。"},
+        {"word": "help", "phonetic": "/help/", "meaning": "v./n. 帮助", "example_en": "Thank you so much for your help.", "example_cn": "非常感谢你的帮助。"},
+        {"word": "street", "phonetic": "/striːt/", "meaning": "n. 街道", "example_en": "Look both ways before crossing the street.", "example_cn": "过马路前要注意两边。"},
+        {"word": "avenue", "phonetic": "/ˈævənjuː/", "meaning": "n. 大道", "example_en": "Their shop is located on Fifth Avenue.", "example_cn": "他们的店位于第五大道。"},
+        {"word": "traffic", "phonetic": "/ˈtræfɪk/", "meaning": "n. 交通", "example_en": "The traffic is always terrible in the morning.", "example_cn": "早上的交通总是很糟糕。"},
+        {"word": "bridge", "phonetic": "/brɪdʒ/", "meaning": "n. 桥梁", "example_en": "We drove across the golden bridge.", "example_cn": "我们开车驶过了那座金色的桥。"},
+        {"word": "corner", "phonetic": "/ˈkɔːnə(r)/", "meaning": "n. 角落，拐角", "example_en": "The coffee shop is right around the corner.", "example_cn": "那家咖啡店就在拐角处。"},
+        {"word": "map", "phonetic": "/mæp/", "meaning": "n. 地图", "example_en": "Let me check the map on my phone.", "example_cn": "让我查一下手机上的地图。"},
+        {"word": "block", "phonetic": "/blɒk/", "meaning": "n. 街区", "example_en": "Walk two blocks and turn left.", "example_cn": "走两个街区然后左转。"},
+        {"word": "subway", "phonetic": "/ˈsʌbweɪ/", "meaning": "n. 地铁", "example_en": "Taking the subway is faster than taking a taxi.", "example_cn": "坐地铁比打车快。"},
+        {"word": "bicycle", "phonetic": "/ˈbaɪsɪkl/", "meaning": "n. 自行车", "example_en": "She rides her bicycle to work every day.", "example_cn": "她每天骑自行车上班。"},
+        {"word": "drive", "phonetic": "/draɪv/", "meaning": "v. 驾驶", "example_en": "It takes an hour to drive to the airport.", "example_cn": "开车去机场需要一个小时。"},
+        {"word": "ride", "phonetic": "/raɪd/", "meaning": "v. 骑", "example_en": "He likes to ride a horse on the farm.", "example_cn": "他喜欢在农场里骑马。"},
+        {"word": "stop", "phonetic": "/stɒp/", "meaning": "v. 停止", "example_en": "The bus will stop at the next station.", "example_cn": "公交车将在下一站停车。"},
+        {"word": "fast", "phonetic": "/fɑːst/", "meaning": "adj./adv. 快的", "example_en": "Don't drive so fast, it's dangerous.", "example_cn": "别开这么快，很危险。"},
+        {"word": "slow", "phonetic": "/sləʊ/", "meaning": "adj. 慢的", "example_en": "The internet connection is very slow today.", "example_cn": "今天的网络连接非常慢。"},
+        {"word": "trip", "phonetic": "/trɪp/", "meaning": "n. 旅行", "example_en": "How was your business trip to London?", "example_cn": "你去伦敦的出差顺利吗？"},
+        {"word": "vacation", "phonetic": "/vəˈkeɪʃn/", "meaning": "n. 假期", "example_en": "I need a long vacation to relax.", "example_cn": "我需要一个长假来放松一下。"},
+        {"word": "guide", "phonetic": "/ɡaɪd/", "meaning": "n. 导游；指南", "example_en": "Our tour guide was very friendly and helpful.", "example_cn": "我们的导游非常友好并且乐于助人。"},
+        {"word": "tour", "phonetic": "/tʊə(r)/", "meaning": "n. 参观，游览", "example_en": "We took a guided tour of the museum.", "example_cn": "我们在导游的带领下参观了博物馆。"},
+        {"word": "flight", "phonetic": "/flaɪt/", "meaning": "n. 航班", "example_en": "My flight was delayed by two hours.", "example_cn": "我的航班延误了两个小时。"},
+        {"word": "passport", "phonetic": "/ˈpɑːspɔːt/", "meaning": "n. 护照", "example_en": "Please show your passport at the checking counter.", "example_cn": "请在值机柜台出示您的护照。"},
+        {"word": "bathroom", "phonetic": "/ˈbɑːθruːm/", "meaning": "n. 浴室，洗手间", "example_en": "The bathroom is at the end of the hall.", "example_cn": "洗手间在走廊尽头。"},
+        {"word": "kitchen", "phonetic": "/ˈkɪtʃɪn/", "meaning": "n. 厨房", "example_en": "Something smells really good in the kitchen.", "example_cn": "厨房里有什么东西闻起来好香。"},
+        {"word": "bedroom", "phonetic": "/ˈbedruːm/", "meaning": "n. 卧室", "example_en": "I painted my bedroom walls light blue.", "example_cn": "我把卧室的墙漆成了浅蓝色。"},
+        {"word": "towel", "phonetic": "/ˈtaʊəl/", "meaning": "n. 毛巾", "example_en": "Could you bring me a clean towel?", "example_cn": "你能给我拿条干净的毛巾吗？"},
+        {"word": "soap", "phonetic": "/səʊp/", "meaning": "n. 肥皂", "example_en": "Wash your hands with soap and water.", "example_cn": "用肥皂和水洗手。"},
+        {"word": "brush", "phonetic": "/brʌʃ/", "meaning": "n./v. 刷子；梳理", "example_en": "Remember to brush your teeth before bed.", "example_cn": "记得睡前刷牙。"},
+        {"word": "shower", "phonetic": "/ˈʃaʊə(r)/", "meaning": "n. 淋浴", "example_en": "I take a quick shower every morning.", "example_cn": "我每天早上都会快速洗个淋浴。"},
+        {"word": "bath", "phonetic": "/bɑːθ/", "meaning": "n. 浴缸，洗澡", "example_en": "She soaked in a hot bath to relax.", "example_cn": "她泡了个热水澡来放松。"},
+        {"word": "mirror", "phonetic": "/ˈmɪrə(r)/", "meaning": "n. 镜子", "example_en": "She looked at herself in the mirror.", "example_cn": "她照了照镜子。"},
+        {"word": "picture", "phonetic": "/ˈpɪktʃə(r)/", "meaning": "n. 照片，画", "example_en": "Let's take a group picture together.", "example_cn": "我们一起来拍张合影吧。"},
+        {"word": "clock", "phonetic": "/klɒk/", "meaning": "n. 时钟", "example_en": "The clock on the wall says it's noon.", "example_cn": "墙上的钟显示现在是中午。"},
+        {"word": "radio", "phonetic": "/ˈreɪdiəʊ/", "meaning": "n. 收音机", "example_en": "My grandfather still listens to the radio.", "example_cn": "我爷爷仍然听收音机。"},
+        {"word": "television", "phonetic": "/ˈtelɪvɪʒn/", "meaning": "n. 电视机", "example_en": "We watched a movie on the television.", "example_cn": "我们在电视上看了一部电影。"},
+        {"word": "sofa", "phonetic": "/ˈsəʊfə/", "meaning": "n. 沙发", "example_en": "He fell asleep on the living room sofa.", "example_cn": "他在客厅的沙发上睡着了。"},
+        {"word": "blanket", "phonetic": "/ˈblæŋkɪt/", "meaning": "n. 毯子", "example_en": "Can I have an extra blanket, please?", "example_cn": "请问能给我加一床毯子吗？"},
+        {"word": "pillow", "phonetic": "/ˈpɪləʊ/", "meaning": "n. 枕头", "example_en": "This pillow is too soft for my neck.", "example_cn": "这个枕头对我的脖子来说太软了。"},
+        {"word": "lock", "phonetic": "/lɒk/", "meaning": "v./n. 锁", "example_en": "Make sure you lock the door when leaving.", "example_cn": "离开时确保把门锁好。"},
+        {"word": "open", "phonetic": "/ˈəʊpən/", "meaning": "v. 打开", "example_en": "Please open the window, it's too hot.", "example_cn": "请把窗户打开，太热了。"},
+        {"word": "close", "phonetic": "/kləʊz/", "meaning": "v. 关闭", "example_en": "Close your eyes and make a wish.", "example_cn": "闭上眼睛许个愿吧。"},
+        {"word": "clean", "phonetic": "/kliːn/", "meaning": "v./adj. 打扫；干净的", "example_en": "I need to clean my room this weekend.", "example_cn": "这周末我需要打扫房间。"},
+        {"word": "beef", "phonetic": "/biːf/", "meaning": "n. 牛肉", "example_en": "I ordered a beef steak for dinner.", "example_cn": "我晚餐点了一份牛排。"},
+        {"word": "pork", "phonetic": "/pɔːk/", "meaning": "n. 猪肉", "example_en": "We had roast pork with potatoes.", "example_cn": "我们吃了烤猪肉配土豆。"},
+        {"word": "chicken", "phonetic": "/ˈtʃɪkɪn/", "meaning": "n. 鸡肉", "example_en": "Fried chicken is his favorite food.", "example_cn": "炸鸡是他最喜欢的食物。"},
+        {"word": "vegetable", "phonetic": "/ˈvedʒtəbl/", "meaning": "n. 蔬菜", "example_en": "You should eat more fresh vegetables.", "example_cn": "你应该多吃些新鲜蔬菜。"},
+        {"word": "juice", "phonetic": "/dʒuːs/", "meaning": "n. 果汁", "example_en": "A glass of orange juice, please.", "example_cn": "请给我一杯橙汁。"},
+        {"word": "soup", "phonetic": "/suːp/", "meaning": "n. 汤", "example_en": "This chicken soup tastes really good.", "example_cn": "这个鸡汤味道真不错。"},
+        {"word": "salad", "phonetic": "/ˈsæləd/", "meaning": "n. 沙拉", "example_en": "I'll just have a green salad.", "example_cn": "我只要一份蔬菜沙拉就好。"},
+        {"word": "cheese", "phonetic": "/tʃiːz/", "meaning": "n. 奶酪", "example_en": "Do you want some cheese on your pizza?", "example_cn": "你的披萨上要加奶酪吗？"},
+        {"word": "butter", "phonetic": "/ˈbʌtə(r)/", "meaning": "n. 黄油", "example_en": "Spread some butter on the toast.", "example_cn": "在吐司上涂点黄油。"},
+        {"word": "salt", "phonetic": "/sɔːlt/", "meaning": "n. 盐", "example_en": "The soup needs a little more salt.", "example_cn": "这汤需要再加点盐。"},
+        {"word": "sugar", "phonetic": "/ˈʃʊɡə(r)/", "meaning": "n. 糖", "example_en": "I don't put sugar in my coffee.", "example_cn": "我喝咖啡不加糖。"},
+        {"word": "sweet", "phonetic": "/swiːt/", "meaning": "adj. 甜的", "example_en": "This chocolate cake is too sweet for me.", "example_cn": "这块巧克力蛋糕对我来说太甜了。"},
+        {"word": "sour", "phonetic": "/ˈsaʊə(r)/", "meaning": "adj. 酸的", "example_en": "Lemons have a very sour taste.", "example_cn": "柠檬的味道非常酸。"},
+        {"word": "spicy", "phonetic": "/ˈspaɪsi/", "meaning": "adj. 辣的", "example_en": "I love eating spicy Sichuan food.", "example_cn": "我喜欢吃辣的四川菜。"},
+        {"word": "bitter", "phonetic": "/ˈbɪtə(r)/", "meaning": "adj. 苦的", "example_en": "Black coffee is a bit bitter.", "example_cn": "黑咖啡有点苦。"},
+        {"word": "delicious", "phonetic": "/dɪˈlɪʃəs/", "meaning": "adj. 美味的", "example_en": "Thank you, the meal was absolutely delicious.", "example_cn": "谢谢你，这顿饭绝对美味。"},
+        {"word": "fresh", "phonetic": "/freʃ/", "meaning": "adj. 新鲜的", "example_en": "These strawberries are very fresh and juicy.", "example_cn": "这些草莓非常新鲜多汁。"},
+        {"word": "hungry", "phonetic": "/ˈhʌŋɡri/", "meaning": "adj. 饥饿的", "example_en": "I am getting hungry, let's grab a bite.", "example_cn": "我开始饿了，我们去吃点东西吧。"},
+        {"word": "thirsty", "phonetic": "/ˈθɜːsti/", "meaning": "adj. 口渴的", "example_en": "Drinking soda makes me even more thirsty.", "example_cn": "喝苏打水让我觉得更渴了。"},
+        {"word": "cook", "phonetic": "/kʊk/", "meaning": "v. 烹饪", "example_en": "He loves to cook Italian food on weekends.", "example_cn": "他喜欢在周末做意大利菜。"},
+        {"word": "week", "phonetic": "/wiːk/", "meaning": "n. 星期", "example_en": "I will see you next week.", "example_cn": "我们下周见。"},
+        {"word": "month", "phonetic": "/mʌnθ/", "meaning": "n. 月份", "example_en": "August is the hottest month of the year.", "example_cn": "八月是一年中最热的月份。"},
+        {"word": "today", "phonetic": "/təˈdeɪ/", "meaning": "n./adv. 今天", "example_en": "What are you doing later today?", "example_cn": "你今天晚些时候做什么？"},
+        {"word": "tomorrow", "phonetic": "/təˈmɒrəʊ/", "meaning": "n./adv. 明天", "example_en": "Tomorrow is a public holiday.", "example_cn": "明天是公共假期。"},
+        {"word": "yesterday", "phonetic": "/ˈjestədeɪ/", "meaning": "n./adv. 昨天", "example_en": "It rained all day yesterday.", "example_cn": "昨天几乎下了一整天的雨。"},
+        {"word": "weekend", "phonetic": "/ˌwiːkˈend/", "meaning": "n. 周末", "example_en": "Have a great weekend!", "example_cn": "周末愉快！"},
+        {"word": "future", "phonetic": "/ˈfjuːtʃə(r)/", "meaning": "n. 未来", "example_en": "Nobody knows what will happen in the future.", "example_cn": "没人知道未来会发生什么。"},
+        {"word": "past", "phonetic": "/pɑːst/", "meaning": "n. 过去", "example_en": "Forget the past and move on.", "example_cn": "忘记过去，继续前进吧。"},
+        {"word": "always", "phonetic": "/ˈɔːlweɪz/", "meaning": "adv. 总是", "example_en": "She always wakes up at six.", "example_cn": "她总是六点醒来。"},
+        {"word": "never", "phonetic": "/ˈnevə(r)/", "meaning": "adv. 从不", "example_en": "I have never seen that movie.", "example_cn": "我从未看过那部电影。"},
+        {"word": "sometimes", "phonetic": "/ˈsʌmtaɪmz/", "meaning": "adv. 有时", "example_en": "Sometimes I just want to stay in bed.", "example_cn": "有时候我只想赖在床上。"},
+        {"word": "often", "phonetic": "/ˈɒfn/", "meaning": "adv. 经常", "example_en": "How often do you go to the gym?", "example_cn": "你多久去一次健身房？"},
+        {"word": "usually", "phonetic": "/ˈjuːʒuəli/", "meaning": "adv. 通常", "example_en": "I usually drink coffee with my breakfast.", "example_cn": "我通常早餐时喝咖啡。"},
+        {"word": "early", "phonetic": "/ˈɜːli/", "meaning": "adv. 早的", "example_en": "He arrived at the office very early.", "example_cn": "他很早就到了办公室。"},
+        {"word": "late", "phonetic": "/leɪt/", "meaning": "adv. 晚的，迟的", "example_en": "Sorry I'm late, there was heavy traffic.", "example_cn": "抱歉我迟到了，路上很堵。"},
+        {"word": "now", "phonetic": "/naʊ/", "meaning": "adv. 现在", "example_en": "We should leave right now.", "example_cn": "我们应该马上离开。"},
+        {"word": "then", "phonetic": "/ðen/", "meaning": "adv. 那么；然后", "example_en": "Finish your dinner, then you can watch TV.", "example_cn": "吃完饭，然后你就可以看电视了。"},
+        {"word": "before", "phonetic": "/bɪˈfɔː(r)/", "meaning": "prep. 在...之前", "example_en": "Wash your hands before you eat.", "example_cn": "吃饭前洗手。"},
+        {"word": "after", "phonetic": "/ˈɑːftə(r)/", "meaning": "prep. 在...之后", "example_en": "Let's go for a walk after lunch.", "example_cn": "午饭后我们去散步吧。"},
+        {"word": "time", "phonetic": "/taɪm/", "meaning": "n. 时间", "example_en": "What time does the movie start?", "example_cn": "电影几点开始？"}
+    ]
+}
+
+for lvl in range(4, 21):
     GLOBAL_VOCAB_DB[lvl] = list(GLOBAL_VOCAB_DB[1])
