@@ -3,7 +3,7 @@ import random
 from gtts import gTTS
 import streamlit as st
 
-# 100个小学五年级核心英语单词库（含例句中英文及双语朗读）
+# 100个小学五年级核心英语单词库（统一使用 example_en 和 example_cn 字段）
 VOCAB_LIST = [
     {
         "word": "active",
@@ -733,18 +733,19 @@ if st.session_state.queue:
   with st.container():
     st.markdown(f"## **{current['word']}**")
 
-    # 单词发音按钮
+    # 单词发音
     word_audio = get_audio_bytes(current["word"])
     st.audio(word_audio, format="audio/mp3")
 
     st.write(f"🔊 **音标**：`{current['phonetic']}`")
     st.write(f"💡 **释义**：**{current['meaning']}**")
 
-    # 例句展示与例句朗读按钮
+    # 例句与翻译
     st.info(
         f"📝 **例句**：{current['example_en']}\n\n🏷️ **翻译**："
         f" {current['example_cn']}"
     )
+
     if st.button("🔊 朗读例句"):
       example_audio = get_audio_bytes(current["example_en"])
       st.audio(example_audio, format="audio/mp3", autoplay=True)
