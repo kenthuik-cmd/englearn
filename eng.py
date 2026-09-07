@@ -4,7 +4,7 @@ from gtts import gTTS
 import streamlit as st
 import streamlit.components.v1 as components
 
-# 五年级单词库 (100个)
+# 五年级单词库 (100个精选)
 VOCAB_GRADE_5 = [
     {
         "word": "active",
@@ -631,7 +631,7 @@ VOCAB_GRADE_5 = [
     },
     {
         "word": "opposite",
-        "phonetic": "/ˈɒpəzɪt/",
+        "phonetic": "/ˈpɒpəzɪt/",
         "meaning": "prep./adj. 在……对面",
         "example_en": "He lives opposite my house.",
         "example_cn": "他住在我的房子对面。",
@@ -694,7 +694,7 @@ VOCAB_GRADE_5 = [
     },
     {
         "word": "popular",
-        "phonetic": "/ˈpɒpjələ(r)/",
+        "phonetic": "/`pɒpjələ(r)/",
         "meaning": "adj. 受欢迎的，流行的",
         "example_en": "Football is a popular sport.",
         "example_cn": "足球是一项受欢迎的运动。",
@@ -861,9 +861,10 @@ def get_audio_bytes(text):
   return fp.read()
 
 
-st.title("📖 AI 智能语音跟读与闯关系统")
+# 页面设置
+st.set_page_config(page_title="背单词与小测应用", page_icon="📖", layout="centered")
 
-# 初始化状态
+# 初始化 Session State
 if "grade" not in st.session_state:
   st.session_state.grade = 5
 if "queue_g5" not in st.session_state:
@@ -871,52 +872,147 @@ if "queue_g5" not in st.session_state:
   random.shuffle(st.session_state.queue_g5)
 if "mastered_g5" not in st.session_state:
   st.session_state.mastered_g5 = []
-
 if "queue_g6" not in st.session_state:
   st.session_state.queue_g6 = list(VOCAB_GRADE_6)
   random.shuffle(st.session_state.queue_g6)
 if "mastered_g6" not in st.session_state:
   st.session_state.mastered_g6 = []
-
 if "mode" not in st.session_state:
   st.session_state.mode = "study"
 
-# 侧边栏
-st.sidebar.title("📌 学习面板")
-st.sidebar.write(f"当前年级：**小学 {st.session_state.grade} 年级**")
+# 侧边栏菜单
+st.sidebar.title("📌 导航菜单")
+if st.sidebar.button("📚 背单词与AI跟读模式", use_container_width=True):
+  st.session_state.mode = "study"
+  st.rerun()
 
+if st.sidebar.button("🎯 四选一小测验面板", use_container_width=True):
+  st.session_state.mode = "quiz"
+  st.rerun()
+
+if st.sidebar.button("🔁 已学单词重温", use_container_width=True):
+  st.session_state.mode = "review"
+  st.rerun()
+
+# 确定当前年级对应的词库
 if st.session_state.grade == 5:
   total_c = len(VOCAB_GRADE_5)
   rem_c = len(st.session_state.queue_g5)
   current_queue = st.session_state.queue_g5
   mastered_list = st.session_state.mastered_g5
+  all_learned_pool = (
+      mastered_list + current_queue
+  )  # 所有可用或已接触的词作为小测范围
 else:
   total_c = len(VOCAB_GRADE_6)
   rem_c = len(st.session_state.queue_g6)
   current_queue = st.session_state.queue_g6
   mastered_list = st.session_state.mastered_g6
+  all_learned_pool = mastered_list + current_queue
 
-st.sidebar.progress((total_c - rem_c) / total_c)
-st.sidebar.write(
-    f"📊 本阶段总数：{total_c} 个 | 待学习：{rem_c} 个 | 已掌握："
-    f" {len(mastered_list)} 个"
-)
+# ==========================================
+# 1. 小测验面板 (匹配图示卡片化 UI，自动发音)
+# ==========================================
+if st.session_state.mode == "quiz":
+  st.markdown("### 🎯 错题与已学单词小测验")
 
-st.sidebar.markdown("---")
-st.sidebar.subheader("🔄 功能切换")
-if st.sidebar.button("📚 正常背诵与AI跟读", use_container_width=True):
-  st.session_state.mode = "study"
-  st.rerun()
+  # 检查是否有足够的词进行测试
+  if not all_learned_pool:
+    st.info("当前还没有学过任何单词，请先去背诵页面学习！")
+  else:
+    # 如果还没有当前题目，或者切换了题目
+    if "quiz_current" not in st.session_state:
+      q_item = random.choice(all_learned_pool)
+      st.session_state.quiz_current = q_item
+      # 自动生成 4 个选项（1个正确，3个错误）
+      wrong_meanings = [
+          v["meaning"]
+          for v in VOCAB_GRADE_5 + VOCAB_GRADE_6
+          if v["meaning"] != q_item["meaning"]
+      ]
+      distractors = random.sample(wrong_meanings, min(3, len(wrong_meanings)))
+      options = distractors + [q_item["meaning"]]
+      random.shuffle(options)
+      st.session_state.quiz_options = options
+      st.session_state.quiz_answered = False
+      st.session_state.selected_option = None
 
-if st.sidebar.button("🔁 已掌握单词重温", use_container_width=True):
-  st.session_state.mode = "review"
-  st.rerun()
+    qc = st.session_state.quiz_current
+    opts = st.session_state.quiz_options
 
-# 主界面逻辑
-if st.session_state.mode == "review":
+    # 自动读出单词声音
+    audio_bytes = get_audio_bytes(qc["word"])
+    st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+
+    # 模仿图示卡片样式的 UI 容器
+    st.markdown(
+        f"""
+        <div style="background-color: #f7f9fa; border: 1px solid #dcdfe6; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                <span style="background-color: #52c41a; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 14px; margin-right: 12px;">Lv.{st.session_state.grade} 核心</span>
+                <span style="color: #606266; font-size: 16px; font-weight: 500;">v. {qc['phonetic']}</span>
+            </div>
+            <div style="font-size: 36px; font-weight: bold; color: #303133; margin-bottom: 10px;">
+                {qc['word']}
+            </div>
+            <div style="font-size: 22px; color: #606266; margin-bottom: 20px; font-weight: 600;">
+                {qc['meaning']}
+            </div>
+            <hr style="border: none; border-top: 1px solid #e4e7ed; margin: 15px 0;">
+            <div style="font-size: 15px; color: #606266; font-style: italic;">
+                📝 <b>例句：</b>{qc['example_en']} / {qc['example_cn']}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.write("请选择正确的中文释义：")
+
+    # 使用 2x2 按钮网格模拟 A B C D 选项卡片
+    col_a, col_b = st.columns(2)
+    labels = ["A", "B", "C", "D"]
+
+    for idx, opt in enumerate(opts):
+      current_col = col_a if idx % 2 == 0 else col_b
+      with current_col:
+        btn_label = f"{labels[idx]}. {opt}"
+        if st.button(btn_label, use_container_width=True, key=f"opt_{idx}")):
+          st.session_state.quiz_answered = True
+          st.session_state.selected_option = opt
+
+    # 反馈结果
+    if st.session_state.get("quiz_answered", False):
+      selected = st.session_state.selected_option
+      if selected == qc["meaning"]:
+        st.success("✅ 回答正确！太棒了！")
+      else:
+        st.error(f"❌ 回答错误。正确答案是：{qc['meaning']}")
+
+      if st.button("➡️ 下一题", use_container_width=True):
+        # 刷新下一题
+        q_item = random.choice(all_learned_pool)
+        st.session_state.quiz_current = q_item
+        wrong_meanings = [
+            v["meaning"]
+            for v in VOCAB_GRADE_5 + VOCAB_GRADE_6
+            if v["meaning"] != q_item["meaning"]
+        ]
+        distractors = random.sample(wrong_meanings, min(3, len(wrong_meanings)))
+        options = distractors + [q_item["meaning"]]
+        random.shuffle(options)
+        st.session_state.quiz_options = options
+        st.session_state.quiz_answered = False
+        st.session_state.selected_option = None
+        st.rerun()
+
+# ==========================================
+# 2. 已学单词重温面板
+# ==========================================
+elif st.session_state.mode == "review":
   st.subheader("🔁 已掌握单词重温大本营")
   if not mastered_list:
-    st.info("你还没有完全掌握任何单词哦！先去“正常背诵模式”攻克单词吧。")
+    st.info("你还没有完全掌握任何单词哦！先去“背单词模式”攻克单词吧。")
   else:
     if "review_current" not in st.session_state:
       st.session_state.review_current = random.choice(mastered_list)
@@ -939,6 +1035,9 @@ if st.session_state.mode == "review":
       st.session_state.review_current = random.choice(mastered_list)
       st.rerun()
 
+# ==========================================
+# 3. 正常背诵与 AI 跟读模式
+# ==========================================
 else:
   if st.session_state.grade == 5:
     st.subheader("📖 小学五年级核心单词闯关")
@@ -967,7 +1066,7 @@ else:
         )
 
       # ---------------------------------------------------------
-      # 🎤 AI 语音跟读测评模块 (安全规避语法冲突版)
+      # 🎤 AI 语音跟读测评模块
       # ---------------------------------------------------------
       st.markdown("---")
       st.markdown("#### 🎙️ AI 语音跟读评测")
@@ -977,7 +1076,6 @@ else:
 
       target_word_lower = current["word"].lower()
 
-      # 将 HTML 写为独立多行字符串，避免 f-string 冲突
       speech_component_html = (
           """
             <div style="font-family: sans-serif; text-align: center; padding: 10px;">
@@ -1048,10 +1146,7 @@ else:
         st.rerun()
   else:
     if st.session_state.grade == 5:
-      st.success(
-          "🎉 太棒了！五年级 100 个单词你已经全部顺利掌握，即将自动晋升到"
-          " 六年级！"
-      )
+      st.success("🎉 太棒了！五年级单词已全部掌握，即将自动晋升到六年级！")
       if st.button("🚀 点击开始升入六年级生活单词", use_container_width=True):
         st.session_state.grade = 6
         st.rerun()
