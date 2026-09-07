@@ -15,7 +15,7 @@ st.set_page_config(
     page_title="AI 英语背单词", page_icon="📖", layout="centered"
 )
 
-# 注入自定义 CSS 样式（包含卡片切换的丝滑淡入放大动画）
+# 注入极简紧凑的 CSS 样式，确保单屏一页显示完毕
 st.markdown(
     """
     <style>
@@ -24,45 +24,33 @@ st.markdown(
         footer {visibility: hidden;}
         header {visibility: hidden;}
         
-        /* 调整整体页面内边距，使手机端左右自适应 */
+        /* 极致压缩上下留白，确保手机一屏装下 */
         .block-container {
-            padding-top: 1.0rem;
-            padding-bottom: 2rem;
-            padding-left: 1rem;
-            padding-right: 1rem;
-            max-width: 600px;
+            padding-top: 0.5rem;
+            padding-bottom: 1rem;
+            padding-left: 0.8rem;
+            padding-right: 0.8rem;
+            max-width: 500px;
         }
 
-        /* 手机端大按钮美化 */
+        /* 手机端大按钮紧凑化 */
         .stButton > button {
-            border-radius: 12px;
+            border-radius: 10px;
             font-weight: 600;
-            padding: 0.6rem 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: all 0.2s ease;
+            padding: 0.4rem 0.8rem;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
         
-        /* 原生 App 感的单词卡片 + 切换加载动画 */
+        /* 单屏精简卡片 */
         .quiz-card {
             background-color: #ffffff;
             border: 1px solid #e4e7ed;
-            padding: 20px;
-            border-radius: 16px;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-            margin-bottom: 20px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            margin-bottom: 10px;
             text-align: center;
-            animation: cardAppear 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        @keyframes cardAppear {
-            0% {
-                opacity: 0;
-                transform: scale(0.95) translateY(8px);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
         }
     </style>
     """,
@@ -351,16 +339,12 @@ else:
 
 
 # ==========================================
-# 🔐 未登录状态：手机端沉浸式登录/注册页
+# 🔐 未登录状态：手机端登录页
 # ==========================================
 if not st.session_state.user:
   st.markdown(
-      "<h1 style='text-align: center; color: #303133; font-size: 24px; margin-top:"
-      " 20px;'>📖 智能背单词 App</h1>",
-      unsafe_allow_html=True,
-  )
-  st.markdown(
-      "<p style='text-align: center; color: #606266; font-size: 14px;'>登录后云端自动同步学习进度</p>",
+      "<h3 style='text-align: center; color: #303133; margin-top:"
+      " 10px;'>📖 智能背单词 App</h3>",
       unsafe_allow_html=True,
   )
 
@@ -400,23 +384,23 @@ if not st.session_state.user:
           st.error(f"注册失败: {e}")
 
 # ==========================================
-# 👤 已登录状态：手机端 HOME 主页与功能页
+# 👤 已登录状态：手机单屏单页布局
 # ==========================================
 else:
   # ------------------------------------------
-  # 🏠 HOME 主页 (大按钮导航)
+  # 🏠 HOME 主页
   # ------------------------------------------
   if st.session_state.page == "home":
     st.markdown(
-        "<h2 style='text-align: center; color: #303133;'>🌟 学习中心</h2>",
+        "<h3 style='text-align: center; color: #303133; margin-bottom:"
+        " 5px;'>🌟 学习中心</h3>",
         unsafe_allow_html=True,
     )
     st.markdown(
-        f"<p style='text-align: center; color: #909399; font-size: 13px;'>当前年级：小学"
-        f" {st.session_state.grade} 年级</p>",
+        f"<p style='text-align: center; color: #909399; font-size: 12px;'"
+        f" margin-bottom: 15px;>当前年级：小学 {st.session_state.grade} 年级</p>",
         unsafe_allow_html=True,
     )
-    st.markdown("---")
 
     if st.button("📚 开启单词背诵与 AI 跟读", use_container_width=True):
       st.session_state.page = "study"
@@ -439,112 +423,103 @@ else:
       st.rerun()
 
   # ------------------------------------------
-  # ⬅️ 手机端子页面 (顶部带返回主页按钮)
+  # ⬅️ 手机端子页面 (单屏紧凑布局)
   # ------------------------------------------
   else:
     if st.button("⬅️ 返回主页", type="secondary"):
       st.session_state.page = "home"
       st.rerun()
 
-    st.markdown("---")
-
     # 1. 单词背诵与 AI 跟读模式
     if st.session_state.page == "study":
-      if st.session_state.grade == 5:
-        st.markdown("### 📖 五年级核心单词闯关")
-      else:
-        st.markdown("### 🚀 六年级进阶生活单词闯关")
-
       if current_queue:
         current = current_queue[0]
 
-        with st.container():
-          st.markdown(
-              f"""
-                    <div class="quiz-card">
-                        <div style="font-size: 32px; font-weight: bold; color: #303133; margin-bottom: 5px;">{current['word']}</div>
-                        <div style="font-size: 15px; color: #909399; margin-bottom: 12px;">音标：{current['phonetic']}</div>
-                        <div style="font-size: 18px; font-weight: 600; color: #409EFF; margin-bottom: 15px;">{current['meaning']}</div>
-                        <hr style="border: none; border-top: 1px solid #ebeef5; margin: 12px 0;">
-                        <div style="font-size: 14px; color: #606266; font-style: italic; text-align: left;">
-                            📝 <b>例句：</b>{current['example_en']}<br>🏷️ <b>翻译：</b>{current['example_cn']}
-                        </div>
+        # 极简紧凑的单屏卡片
+        st.markdown(
+            f"""
+                <div class="quiz-card" style="padding: 10px 14px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 26px; font-weight: bold; color: #303133;">{current['word']}</span>
+                        <span style="font-size: 13px; color: #909399;">{current['phonetic']}</span>
                     </div>
-                    """,
-              unsafe_allow_html=True,
-          )
-
-          st.audio(get_audio_bytes(current["word"]), format="audio/mp3")
-
-          if st.button("🔊 朗读例句", use_container_width=True):
-            st.audio(
-                get_audio_bytes(current["example_en"]),
-                format="audio/mp3",
-                autoplay=True,
-            )
-
-          st.markdown("---")
-          st.markdown("#### 🎙️ AI 语音跟读评测")
-          st.write("点击下方按钮并大声读出上方单词：")
-
-          target_word_lower = current["word"].lower()
-          speech_component_html = (
-              """
-                    <div style="font-family: sans-serif; text-align: center; padding: 5px;">
-                        <button id="recordBtn" style="background-color: #ff4b4b; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 12px; cursor: pointer; width: 100%;">🎙️ 点击开始说话跟读</button>
-                        <p id="statusText" style="margin-top: 8px; color: #555; font-size: 13px;"></p>
+                    <div style="font-size: 16px; font-weight: 600; color: #409EFF; text-align: left; margin: 4px 0;">{current['meaning']}</div>
+                    <div style="font-size: 12px; color: #606266; font-style: italic; text-align: left; border-top: 1px solid #f2f3f5; padding-top: 4px; margin-top: 4px;">
+                        📝 {current['example_en']} ({current['example_cn']})
                     </div>
-                    <script>
-                        const targetWord = '"""
-              + target_word_lower
-              + """';
-                        const btn = document.getElementById('recordBtn');
-                        const statusText = document.getElementById('statusText');
+                </div>
+                """,
+            unsafe_allow_html=True,
+        )
 
-                        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                        if (!SpeechRecognition) {
-                            statusText.innerHTML = "❌ 浏览器不支持语音识别，请用手机自带浏览器或Chrome。";
-                            btn.disabled = true;
-                        } else {
-                            const recognition = new SpeechRecognition();
-                            recognition.lang = 'en-US';
-                            recognition.interimResults = false;
-                            recognition.maxAlternatives = 1;
+        # 紧凑的音频与发音评测组件
+        c_audio, c_speak = st.columns([1, 3])
+        with c_audio:
+          if st.button("🔊 读词", use_container_width=True):
+            st.audio(get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True)
+        with c_speak:
+          if st.button("🔊 读例句", use_container_width=True):
+            st.audio(get_audio_bytes(current["example_en"]), format="audio/mp3", autoplay=True)
 
-                            btn.onclick = function() {
-                                statusText.innerHTML = "👂 正在听你发音，请说话...";
-                                btn.style.backgroundColor = "#ffa500";
-                                recognition.start();
-                            };
+        target_word_lower = current["word"].lower()
+        speech_component_html = (
+            """
+                <div style="font-family: sans-serif; text-align: center; margin-top: 4px;">
+                    <button id="recordBtn" style="background-color: #ff4b4b; color: white; border: none; padding: 8px 16px; font-size: 14px; border-radius: 10px; cursor: pointer; width: 100%;">🎙️ 点击进行 AI 语音跟读</button>
+                    <p id="statusText" style="margin-top: 4px; color: #555; font-size: 12px;"></p>
+                </div>
+                <script>
+                    const targetWord = '"""
+            + target_word_lower
+            + """';
+                    const btn = document.getElementById('recordBtn');
+                    const statusText = document.getElementById('statusText');
 
-                            recognition.onresult = function(event) {
-                                const speechResult = event.results[0][0].transcript.trim().toLowerCase();
-                                const cleanResult = speechResult.replace(/[.,\/#!$%%^&*;:{}=\\-_`~()]/g,"");
-                                
-                                if (cleanResult.includes(targetWord)) {
-                                    statusText.innerHTML = "✅ 识别成功！你读的是: <b>" + speechResult + "</b> 🎉 发音标准！";
-                                    btn.style.backgroundColor = "#67C23A";
-                                } else {
-                                    statusText.innerHTML = "❌ 识别结果为: <b>" + speechResult + "</b>，再试一次哦！";
-                                    btn.style.backgroundColor = "#F56C6C";
-                                }
-                            };
+                    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                    if (!SpeechRecognition) {
+                        statusText.innerHTML = "❌ 浏览器不支持语音识别";
+                        btn.disabled = true;
+                    } else {
+                        const recognition = new SpeechRecognition();
+                        recognition.lang = 'en-US';
+                        recognition.interimResults = false;
+                        recognition.maxAlternatives = 1;
 
-                            recognition.onerror = function(event) {
-                                statusText.innerHTML = "⚠️ 识别出错: " + event.error;
-                                btn.style.backgroundColor = "#ff4b4b";
-                            };
+                        btn.onclick = function() {
+                            statusText.innerHTML = "👂 正在听你发音...";
+                            btn.style.backgroundColor = "#ffa500";
+                            recognition.start();
+                        };
 
-                            recognition.onspeechend = function() {
-                                recognition.stop();
-                                btn.innerHTML = "🎙️ 再次跟读";
-                            };
-                        }
-                    </script>
-                    """
-          )
-          components.html(speech_component_html, height=110)
+                        recognition.onresult = function(event) {
+                            const speechResult = event.results[0][0].transcript.trim().toLowerCase();
+                            const cleanResult = speechResult.replace(/[.,\/#!$%%^&*;:{}=\\-_`~()]/g,"");
+                            
+                            if (cleanResult.includes(targetWord)) {
+                                statusText.innerHTML = "✅ 识别成功: " + speechResult + " 🎉";
+                                btn.style.backgroundColor = "#67C23A";
+                            } else {
+                                statusText.innerHTML = "❌ 识别为: " + speechResult + "，再试一次";
+                                btn.style.backgroundColor = "#F56C6C";
+                            }
+                        };
 
+                        recognition.onerror = function(event) {
+                            statusText.innerHTML = "⚠️ 出错: " + event.error;
+                            btn.style.backgroundColor = "#ff4b4b";
+                        };
+
+                        recognition.onspeechend = function() {
+                            recognition.stop();
+                            btn.innerHTML = "🎙️ 再次跟读";
+                        };
+                    }
+                </script>
+                """
+        )
+        components.html(speech_component_html, height=75)
+
+        # 底部操作按钮
         col1, col2 = st.columns(2)
         with col1:
           if st.button("❌ 模糊 (重练)", use_container_width=True):
@@ -565,9 +540,9 @@ else:
             st.rerun()
       else:
         if st.session_state.grade == 5:
-          st.success("🎉 太棒了！五年级单词已全部掌握，自动晋升六年级！")
+          st.success("🎉 五年级单词已全通关！")
           if st.button(
-              "🚀 开始六年级进阶词汇", use_container_width=True, type="primary"
+              "🚀 进入六年级词汇", use_container_width=True, type="primary"
           ):
             st.session_state.grade = 6
             sync_progress_to_cloud(
@@ -577,7 +552,7 @@ else:
             )
             st.rerun()
         else:
-          st.success("🏆 恭喜你！全通关大吉！")
+          st.success("🏆 全通关大吉！")
           if st.button("🔄 重新复习全部课程", use_container_width=True):
             st.session_state.queue_g5 = list(VOCAB_GRADE_5)
             random.shuffle(st.session_state.queue_g5)
@@ -593,10 +568,8 @@ else:
 
     # 2. 小测验面板
     elif st.session_state.page == "quiz":
-      st.markdown("### 🎯 已学单词小测验")
-
       if not all_learned_pool:
-        st.info("当前还没有学过任何单词，请先去背诵页面学习！")
+        st.info("当前还没有学过任何单词！")
       else:
         if "quiz_current" not in st.session_state:
           q_item = random.choice(all_learned_pool)
@@ -618,20 +591,17 @@ else:
         qc = st.session_state.quiz_current
         opts = st.session_state.quiz_options
 
-        audio_bytes = get_audio_bytes(qc["word"])
-        st.audio(audio_bytes, format="audio/mp3")
-
+        # 顶部极简卡片
         st.markdown(
             f"""
-                <div class="quiz-card">
-                    <div style="font-size: 34px; font-weight: bold; color: #303133;">{qc['word']}</div>
+                <div class="quiz-card" style="padding: 10px; margin-bottom: 6px;">
+                    <div style="font-size: 28px; font-weight: bold; color: #303133;">{qc['word']}</div>
                 </div>
                 """,
             unsafe_allow_html=True,
         )
 
-        st.write("请选择正确的中文释义：")
-
+        # 选项按钮（2x2 紧凑排列）
         col_a, col_b = st.columns(2)
         labels = ["A", "B", "C", "D"]
 
@@ -645,24 +615,19 @@ else:
 
         if st.session_state.get("quiz_answered", False):
           selected = st.session_state.selected_option
+          audio_bytes = get_audio_bytes(qc["word"])
           st.audio(audio_bytes, format="audio/mp3", autoplay=True)
 
           if selected == qc["meaning"]:
             st.success("✅ 回答正确！")
           else:
-            st.error(f"❌ 回答错误。正确答案是：{qc['meaning']}")
+            st.error(f"❌ 正确答案是：{qc['meaning']}")
 
           st.markdown(
               f"""
-                    <div class="quiz-card" style="text-align: left; margin-top: 15px;">
-                        <span style="background-color: #67C23A; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">Lv.{st.session_state.grade} 核心</span>
-                        <span style="color: #909399; font-size: 14px; margin-left: 8px;">{qc['phonetic']}</span>
-                        <div style="font-size: 28px; font-weight: bold; color: #303133; margin: 8px 0;">{qc['word']}</div>
-                        <div style="font-size: 18px; font-weight: 600; color: #409EFF; margin-bottom: 10px;">{qc['meaning']}</div>
-                        <hr style="border: none; border-top: 1px solid #ebeef5; margin: 10px 0;">
-                        <div style="font-size: 13px; color: #606266; font-style: italic;">
-                            📝 <b>例句：</b>{qc['example_en']}<br>🏷️ <b>翻译：</b>{qc['example_cn']}
-                        </div>
+                    <div class="quiz-card" style="text-align: left; padding: 8px 12px; margin-top: 6px;">
+                        <span style="font-size: 13px; font-weight: bold; color: #409EFF;">{qc['word']}</span> <span style="font-size: 11px; color: #909399;">{qc['phonetic']}</span>
+                        <div style="font-size: 13px; font-weight: 600; color: #67C23A;">{qc['meaning']}</div>
                     </div>
                     """,
               unsafe_allow_html=True,
@@ -688,9 +653,8 @@ else:
 
     # 3. 已学单词重温面板
     elif st.session_state.page == "review":
-      st.markdown("### 🔁 已掌握单词重温")
       if not mastered_list:
-        st.info("你还没有完全掌握任何单词哦！先去背诵页面学习吧。")
+        st.info("还没有掌握任何单词哦！")
       else:
         if "review_current" not in st.session_state:
           st.session_state.review_current = random.choice(mastered_list)
@@ -699,27 +663,22 @@ else:
         with st.container():
           st.markdown(
               f"""
-                    <div class="quiz-card">
-                        <div style="font-size: 32px; font-weight: bold; color: #303133; margin-bottom: 5px;">{rc['word']}</div>
-                        <div style="font-size: 15px; color: #909399; margin-bottom: 12px;">音标：{rc['phonetic']}</div>
-                        <div style="font-size: 18px; font-weight: 600; color: #67C23A; margin-bottom: 15px;">{rc['meaning']}</div>
-                        <hr style="border: none; border-top: 1px solid #ebeef5; margin: 12px 0;">
-                        <div style="font-size: 14px; color: #606266; font-style: italic; text-align: left;">
-                            📝 <b>例句：</b>{rc['example_en']}<br>🏷️ <b>翻译：</b>{rc['example_cn']}
-                        </div>
+                <div class="quiz-card" style="padding: 10px 14px; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 26px; font-weight: bold; color: #303133;">{rc['word']}</span>
+                        <span style="font-size: 13px; color: #909399;">{rc['phonetic']}</span>
                     </div>
-                    """,
+                    <div style="font-size: 16px; font-weight: 600; color: #67C23A; text-align: left; margin: 4px 0;">{rc['meaning']}</div>
+                    <div style="font-size: 12px; color: #606266; font-style: italic; text-align: left; border-top: 1px solid #f2f3f5; padding-top: 4px; margin-top: 4px;">
+                        📝 {rc['example_en']} ({rc['example_cn']})
+                    </div>
+                </div>
+                """,
               unsafe_allow_html=True,
           )
 
-          st.audio(get_audio_bytes(rc["word"]), format="audio/mp3")
-
-          if st.button("🔊 朗读例句", use_container_width=True):
-            st.audio(
-                get_audio_bytes(rc["example_en"]),
-                format="audio/mp3",
-                autoplay=True,
-            )
+          if st.button("🔊 朗读", use_container_width=True):
+            st.audio(get_audio_bytes(rc["word"]), format="audio/mp3", autoplay=True)
 
         if st.button("➡️ 换一个复习", use_container_width=True, type="primary"):
           st.session_state.review_current = random.choice(mastered_list)
