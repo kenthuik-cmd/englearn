@@ -3,8 +3,8 @@ import random
 from gtts import gTTS
 import streamlit as st
 
-# 100个小学五年级核心英语单词库（统一使用 example_en 和 example_cn 字段）
-VOCAB_LIST = [
+# 五年级单词库 (100个)
+VOCAB_GRADE_5 = [
     {
         "word": "active",
         "phonetic": "/ˈæktɪv/",
@@ -584,7 +584,7 @@ VOCAB_LIST = [
         "phonetic": "/mjuˈziːəm/",
         "meaning": "n. 博物馆",
         "example_en": "We visited the science museum.",
-        "example_cn": "我们参观了科学博物馆。",
+        "example_cn": "We visited the science museum.",
     },
     {
         "word": "natural",
@@ -707,6 +707,150 @@ VOCAB_LIST = [
     },
 ]
 
+# 六年级升级单词库（聚焦日常生活、社交、校园与生活高频词）
+VOCAB_GRADE_6 = [
+    {
+        "word": "achieve",
+        "phonetic": "/əˈtʃiːv/",
+        "meaning": "v. 实现，取得",
+        "example_en": "You can achieve your goal.",
+        "example_cn": "你能实现你的目标。",
+    },
+    {
+        "word": "balance",
+        "phonetic": "/ˈbæləns/",
+        "meaning": "n./v. 平衡，均衡",
+        "example_en": "Keep a balance between study and play.",
+        "example_cn": "保持学习和玩耍的平衡。",
+    },
+    {
+        "word": "communication",
+        "phonetic": "/kəˌmjuːnɪˈkeɪʃn/",
+        "meaning": "n. 交流，沟通",
+        "example_en": "Good communication is important.",
+        "example_cn": "良好的沟通很重要。",
+    },
+    {
+        "word": "confident",
+        "phonetic": "/ˈkɒnfɪdənt/",
+        "meaning": "adj. 自信的",
+        "example_en": "Be confident in yourself.",
+        "example_cn": "对你自己要有信心。",
+    },
+    {
+        "word": "curious",
+        "phonetic": "/ˈkjʊəriəs/",
+        "meaning": "adj. 好奇的",
+        "example_en": "Children are curious about the world.",
+        "example_cn": "孩子们对世界充满好奇。",
+    },
+    {
+        "word": "delicious",
+        "phonetic": "/dɪˈlɪʃəs/",
+        "meaning": "adj. 美味的，可口的",
+        "example_en": "Mom cooked a delicious dinner.",
+        "example_cn": "妈妈做了一顿美味的晚餐。",
+    },
+    {
+        "word": "digital",
+        "phonetic": "/ˈdɪdʒɪtl/",
+        "meaning": "adj. 数码的，数字的",
+        "example_en": "We live in a digital age.",
+        "example_cn": "我们生活在一个数字时代。",
+    },
+    {
+        "word": "efficient",
+        "phonetic": "/ɪˈfɪʃnt/",
+        "meaning": "adj. 效率高的",
+        "example_en": "An efficient way to study.",
+        "example_cn": "一种高效的学习方法。",
+    },
+    {
+        "word": "encourage",
+        "phonetic": "/ɪnˈkʌrɪdʒ/",
+        "meaning": "v. 鼓励，激励",
+        "example_en": "Parents encourage their children.",
+        "example_cn": "父母鼓励他们的孩子。",
+    },
+    {
+        "word": "flexible",
+        "phonetic": "/ˈfleksəbl/",
+        "meaning": "adj. 灵活的",
+        "example_en": "We have a flexible schedule.",
+        "example_cn": "我们的时间表很灵活。",
+    },
+    {
+        "word": "generation",
+        "phonetic": "/ˌdʒenəˈreɪʃn/",
+        "meaning": "n. 一代人",
+        "example_en": "Understand the younger generation.",
+        "example_cn": "理解年轻一代。",
+    },
+    {
+        "word": "grateful",
+        "phonetic": "/ˈɡreɪtfl/",
+        "meaning": "adj. 感恩的，感激的",
+        "example_en": "I am grateful for your help.",
+        "example_cn": "我很感激你的帮助。",
+    },
+    {
+        "word": "independent",
+        "phonetic": "/ˌɪndɪˈpendənt/",
+        "meaning": "adj. 独立的",
+        "example_en": "Learn to be an independent person.",
+        "example_cn": "学会做一个独立的人。",
+    },
+    {
+        "word": "inspire",
+        "phonetic": "/ɪnˈspaɪə(r)/",
+        "meaning": "v. 启发，鼓舞",
+        "example_en": "The teacher inspires students.",
+        "example_cn": "老师鼓舞了学生们。",
+    },
+    {
+        "word": "manage",
+        "phonetic": "/ˈmænɪdʒ/",
+        "meaning": "v. 管理，经营",
+        "example_en": "Manage your time wisely.",
+        "example_cn": "明智地管理你的时间。",
+    },
+    {
+        "word": "opportunity",
+        "phonetic": "/ˌɒpəˈtjuːnəti/",
+        "meaning": "n. 机会，机遇",
+        "example_en": "Grab every opportunity to learn.",
+        "example_cn": "抓住每一个学习的机会。",
+    },
+    {
+        "word": "positive",
+        "phonetic": "/ˈpɒzətɪv/",
+        "meaning": "adj. 积极的，乐观的",
+        "example_en": "Keep a positive attitude.",
+        "example_cn": "保持乐观的态度。",
+    },
+    {
+        "word": "prepare",
+        "phonetic": "/prɪˈpeə(r)/",
+        "meaning": "v. 准备，预备",
+        "example_en": "Prepare for the exam carefully.",
+        "example_cn": "认真准备考试。",
+    },
+    {
+        "word": "reliable",
+        "phonetic": "/rɪˈlaɪəbl/",
+        "meaning": "adj. 可靠的，可信赖的",
+        "example_en": "He is a reliable friend.",
+        "example_cn": "他是个可靠的朋友。",
+    },
+    {
+        "word": "successful",
+        "phonetic": "/səkˈsesfl/",
+        "meaning": "adj. 成功的",
+        "example_en": "Hard work leads to a successful life.",
+        "example_cn": "努力工作带来成功的生活。",
+    },
+]
+
 
 def get_audio_bytes(text):
   tts = gTTS(text=text, lang="en")
@@ -716,52 +860,142 @@ def get_audio_bytes(text):
   return fp.read()
 
 
-st.title("📖 小学五年级英语背单词训练营")
+st.title("📖 校园英语闯关与重温系统")
 
-if "queue" not in st.session_state:
-  st.session_state.queue = list(VOCAB_LIST)
-  random.shuffle(st.session_state.queue)
+# 初始化 Session 状态
+if "grade" not in st.session_state:
+  st.session_state.grade = 5  # 默认从五年级开始
+if "queue_g5" not in st.session_state:
+  st.session_state.queue_g5 = list(VOCAB_GRADE_5)
+  random.shuffle(st.session_state.queue_g5)
+if "mastered_g5" not in st.session_state:
+  st.session_state.mastered_g5 = []  # 保存已掌握的五年级单词用于重温
 
-total_count = len(VOCAB_LIST)
-remaining_count = len(st.session_state.queue)
-st.progress((total_count - remaining_count) / total_count)
-st.write(f"📊 总词汇量：{total_count} 个 | 剩余待复习：{remaining_count} 个")
+if "queue_g6" not in st.session_state:
+  st.session_state.queue_g6 = list(VOCAB_GRADE_6)
+  random.shuffle(st.session_state.queue_g6)
+if "mastered_g6" not in st.session_state:
+  st.session_state.mastered_g6 = []
 
-if st.session_state.queue:
-  current = st.session_state.queue[0]
+if "mode" not in st.session_state:
+  st.session_state.mode = "study"  # "study" 或 "review"
 
-  with st.container():
-    st.markdown(f"## **{current['word']}**")
+# 侧边栏：显示当前年级、进度与重温功能入口
+st.sidebar.title("📌 学习面板")
+st.sidebar.write(f"当前年级：**小学 {st.session_state.grade} 年级**")
 
-    # 单词发音
-    word_audio = get_audio_bytes(current["word"])
-    st.audio(word_audio, format="audio/mp3")
-
-    st.write(f"🔊 **音标**：`{current['phonetic']}`")
-    st.write(f"💡 **释义**：**{current['meaning']}**")
-
-    # 例句与翻译
-    st.info(
-        f"📝 **例句**：{current['example_en']}\n\n🏷️ **翻译**："
-        f" {current['example_cn']}"
-    )
-
-    if st.button("🔊 朗读例句"):
-      example_audio = get_audio_bytes(current["example_en"])
-      st.audio(example_audio, format="audio/mp3", autoplay=True)
-
-  col1, col2 = st.columns(2)
-  with col1:
-    if st.button("❌ 模糊 (放回队列重练)", use_container_width=True):
-      st.session_state.queue.append(st.session_state.queue.pop(0))
-      st.rerun()
-  with col2:
-    if st.button("✔ 认识 (下一个)", use_container_width=True):
-      st.session_state.queue.pop(0)
-      st.rerun()
+# 计算进度
+if st.session_state.grade == 5:
+  total_c = len(VOCAB_GRADE_5)
+  rem_c = len(st.session_state.queue_g5)
+  current_queue = st.session_state.queue_g5
+  mastered_list = st.session_state.mastered_g5
 else:
-  st.success("🎉 太棒了！这 100 个五年级单词你已经全部顺利复习完了！")
-  if st.button("🔄 重新开始新一轮背诵", use_container_width=True):
-    st.session_state.queue = list(VOCAB_LIST)
-    random.shuffle(st.session_state.queue)
-    st.rerun()
+  total_c = len(VOCAB_GRADE_6)
+  rem_c = len(st.session_state.queue_g6)
+  current_queue = st.session_state.queue_g6
+  mastered_list = st.session_state.mastered_g6
+
+progress_val = (total_c - rem_c) / total_c
+st.sidebar.progress(progress_val)
+st.sidebar.write(
+    f"📊 本阶段总数：{total_c} 个 | 待学习：{rem_c} 个 | 已掌握："
+    f" {len(mastered_list)} 个"
+)
+
+st.sidebar.markdown("---")
+st.sidebar.subheader("🔄 功能切换")
+if st.sidebar.button("📚 正常背诵模式", use_container_width=True):
+  st.session_state.mode = "study"
+  st.rerun()
+
+if st.sidebar.button("🔁 已掌握单词重温", use_container_width=True):
+  st.session_state.mode = "review"
+  st.rerun()
+
+# 主界面逻辑
+if st.session_state.mode == "review":
+  st.subheader(f"🔁 【六年级/五年级】已掌握单词重温大本营")
+  if not mastered_list:
+    st.info(
+        "你还没有完全掌握任何单词哦！先去“正常背诵模式”攻克单词吧。"
+    )
+  else:
+    # 随机展示一个已掌握的单词进行重温
+    if "review_current" not in st.session_state:
+      st.session_state.review_current = random.choice(mastered_list)
+
+    rc = st.session_state.review_current
+    with st.container():
+      st.markdown(f"## **{rc['word']}** (已掌握复习)")
+      w_audio = get_audio_bytes(rc["word"])
+      st.audio(w_audio, format="audio/mp3")
+
+      st.write(f"🔊 **音标**：`{rc['phonetic']}`")
+      st.write(f"💡 **释义**：**{rc['meaning']}**")
+      st.info(f"📝 **例句**：{rc['example_en']}\n\n🏷️ **翻译**：{rc['example_cn']}")
+
+      if st.button("🔊 朗读例句"):
+        e_audio = get_audio_bytes(rc["example_en"])
+        st.audio(e_audio, format="audio/mp3", autoplay=True)
+
+    if st.button("➡️ 换一个复习", use_container_width=True):
+      st.session_state.review_current = random.choice(mastered_list)
+      st.rerun()
+
+else:
+  # 正常背诵模式
+  if st.session_state.grade == 5:
+    st.subheader("📖 小学五年级核心单词闯关")
+  else:
+    st.subheader("🚀 小学六年级进阶生活/日常英语单词闯关")
+
+  if current_queue:
+    current = current_queue[0]
+
+    with st.container():
+      st.markdown(f"## **{current['word']}**")
+      word_audio = get_audio_bytes(current["word"])
+      st.audio(word_audio, format="audio/mp3")
+
+      st.write(f"🔊 **音标**：`{current['phonetic']}`")
+      st.write(f"💡 **释义**：**{current['meaning']}**")
+      st.info(
+          f"📝 **例句**：{current['example_en']}\n\n🏷️ **翻译**："
+          f" {current['example_cn']}"
+      )
+
+      if st.button("🔊 朗读例句"):
+        example_audio = get_audio_bytes(current["example_en"])
+        st.audio(example_audio, format="audio/mp3", autoplay=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+      if st.button("❌ 模糊 (放回队列重练)", use_container_width=True):
+        current_queue.append(current_queue.pop(0))
+        st.rerun()
+    with col2:
+      if st.button("✔ 认识 (下一个)", use_container_width=True):
+        done_word = current_queue.pop(0)
+        if done_word not in mastered_list:
+          mastered_list.append(done_word)
+        st.rerun()
+  else:
+    # 当前年级学完了
+    if st.session_state.grade == 5:
+      st.success(
+          "🎉 太棒了！五年级 100 个单词你已经全部顺利掌握，即将自动晋升到"
+          " 六年级！"
+      )
+      if st.button("🚀 点击开始升入六年级生活单词", use_container_width=True):
+        st.session_state.grade = 6
+        st.rerun()
+    else:
+      st.success("🏆 恭喜你！六年级进阶日常词汇也已经全部通关大吉！")
+      if st.button("🔄 重新复习全部课程", use_container_width=True):
+        st.session_state.queue_g5 = list(VOCAB_GRADE_5)
+        random.shuffle(st.session_state.queue_g5)
+        st.session_state.queue_g6 = list(VOCAB_GRADE_6)
+        random.shuffle(st.session_state.queue_g6)
+        st.session_state.grade = 5
+        st.rerun()
