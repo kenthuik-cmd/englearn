@@ -967,7 +967,7 @@ else:
         )
 
       # ---------------------------------------------------------
-      # 🎤 AI 语音跟读测评模块 (基于浏览器原生语音识别，全平台免费免配置)
+      # 🎤 AI 语音跟读测评模块 (安全规避语法冲突版)
       # ---------------------------------------------------------
       st.markdown("---")
       st.markdown("#### 🎙️ AI 语音跟读评测")
@@ -975,15 +975,17 @@ else:
           "点击下方按钮并对着麦克风大声读出上方单词，AI 会立即检测你的发音！"
       )
 
-      # 动态构建针对当前单词校验的前端 HTML/JS 组件
       target_word_lower = current["word"].lower()
-      speech_component_html = f"""
+
+      # 将 HTML 写为独立多行字符串，避免 f-string 冲突
+      speech_component_html = (
+          """
             <div style="font-family: sans-serif; text-align: center; padding: 10px;">
                 <button id="recordBtn" style="background-color: #ff4b4b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer;">🎙️ 点击开始说话跟读</button>
                 <p id="statusText" style="margin-top: 10px; color: #555; font-size: 14px;"></p>
             </div>
             <script>
-                const targetWord = "{target_word_lower}";
+                const targetWord = "%s";
                 const btn = document.getElementById('recordBtn');
                 const statusText = document.getElementById('statusText');
 
@@ -997,38 +999,40 @@ else:
                     recognition.interimResults = false;
                     recognition.maxAlternatives = 1;
 
-                    btn.onclick = function() {{
+                    btn.onclick = function() {
                         statusText.innerHTML = "👂 正在听你发音，请说话...";
                         btn.style.backgroundColor = "#ffa500";
                         recognition.start();
-                    }};
+                    };
 
-                    recognition.onresult = function(event) {{
+                    recognition.onresult = function(event) {
                         const speechResult = event.results[0][0].transcript.trim().toLowerCase();
-                        // 去除末尾可能带有的标点符号
-                        const cleanResult = speechResult.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+                        const cleanResult = speechResult.replace(/[.,\/#!$%%^&*;:{}=\-_`~()]/g,"");
                         
-                        if (cleanResult.includes(targetWord)) {{
+                        if (cleanResult.includes(targetWord)) {
                             statusText.innerHTML = "✅ 识别成功！你读的是: <b>" + speechResult + "</b> 🎉 发音标准！";
                             btn.style.backgroundColor = "#28a745";
-                        }} else {{
+                        } else {
                             statusText.innerHTML = "❌ 识别结果为: <b>" + speechResult + "</b>，再试一次哦！";
                             btn.style.backgroundColor = "#dc3545";
-                        }}
-                    }};
+                        }
+                    };
 
-                    recognition.onerror = function(event) {{
+                    recognition.onerror = function(event) {
                         statusText.innerHTML = "⚠️ 识别出错: " + event.error + "，请重试。";
                         btn.style.backgroundColor = "#ff4b4b";
-                    }};
+                    };
 
-                    recognition.onspeechend = function() {{
+                    recognition.onspeechend = function() {
                         recognition.stop();
                         btn.innerHTML = "🎙️ 再次跟读";
-                    }};
-                }}
+                    };
+                }
             </script>
             """
+          % target_word_lower
+      )
+
       components.html(speech_component_html, height=120)
 
     col1, col2 = st.columns(2)
