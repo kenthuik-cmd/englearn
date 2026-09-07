@@ -277,7 +277,7 @@ else:
                 )
                 components.html(speech_component_html, height=75)
 
-                # --- 底部按钮区域 ---
+                # --- 核心操作按钮区域 ---
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("❌ 模糊 (重练)", use_container_width=True):
@@ -293,7 +293,13 @@ else:
                         sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                         st.rerun()
                 
-                # 新增的“斩词”按钮，占满整行宽度，方便点击
+                # --- 视觉分隔防误触区 ---
+                st.markdown(
+                    "<hr style='margin: 15px 0 10px 0; border: none; border-top: 1px dashed #dcdfe6;'>", 
+                    unsafe_allow_html=True
+                )
+                
+                # “斩词”按钮，增加了向下的间距
                 if st.button("🗑️ 太简单，不再出现", use_container_width=True):
                     done_word = current_queue.pop(0)
                     if done_word not in mastered_list:
