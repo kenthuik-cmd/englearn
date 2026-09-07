@@ -57,7 +57,6 @@ st.markdown(
 # 20个 Level 严谨难度递进的 2000 词完整词库引擎
 # ==========================================
 def generate_graded_vocab_db():
-  # 按难度阶梯精细划分的 20 个级别的核心种子池（每个级别 100 个独立高频词）
   tiers_data = {
       1: [("apple", "/ˈæpl/", "n. 苹果", "I eat an apple daily.", "我每天吃一个苹果。"),
           ("water", "/ˈwɔːtə(r)/", "n. 水", "Please give me some water.", "请给我一些水。"),
@@ -101,7 +100,7 @@ def generate_graded_vocab_db():
           ("snow", "/snəʊ/", "n./v. 雪，下雪", "Children love playing in the snow.", "孩子们喜欢在雪地里玩。"),
           ("one", "/wʌn/", "num. 一", "I have one apple.", "我有一个苹果。"),
           ("two", "/tuː/", "num. 二", "Two birds are singing.", "两只鸟在唱歌。"),
-          ("three", /θriː/, "num. 三", "Three is a magic number.", "三是一个神奇的数字。"),
+          ("three", "/θriː/", "num. 三", "Three is a magic number.", "三是一个神奇的数字。"),
           ("four", "/fɔː(r)/", "num. 四", "There are four seasons.", "一年有四个季节。"),
           ("five", "/faɪv/", "num. 五", "A hand has five fingers.", "一只手有五个手指。"),
           ("six", "/sɪks/", "num. 六", "Six days of hard work.", "工作辛勤的六天。"),
@@ -195,7 +194,6 @@ def generate_graded_vocab_db():
            ("perspective", "/pəˈspektɪv/", "n. 视角", "Broaden your global perspective.", "拓宽你的全球视野。")]
   }
 
-  # 补充高级多维通用词池，保证20个级别平滑过渡、足量2000词且绝不重复
   advanced_pool = [
       ("ability", "/əˈbɪləti/", "n. 能力"), ("achieve", "/əˈtʃiːv/", "v. 实现"), ("advantage", "/ədˈvɑːntɪdʒ/", "n. 优势"),
       ("advertisement", "/ədˈvɜːtɪsmənt/", "n. 广告"), ("agency", "/ˈeɪdʒənsi/", "n. 机构"), ("alternative", "/ɔːlˈtɜːnətɪv/", "n. 替代方案"),
@@ -206,7 +204,7 @@ def generate_graded_vocab_db():
       ("average", "/ˈævərɪdʒ/", "adj./n. 平均"), ("balance", "/ˈbæləns/", "n./v. 平衡"), ("barrier", "/ˈbæriə(r)/", "n. 障碍"),
       ("behavior", "/bɪˈheɪvjə(r)/", "n. 行为"), ("benefit", "/ˈbenɪfɪt/", "n./v. 好处"), ("budget", "/ˈbʌdʒɪt/", "n. 预算"),
       ("campaign", "/kæmˈpeɪn/", "n. 活动，战役"), ("capacity", "/kəˈpæsəti/", "n. 容量，能力"), ("category", "/ˈkætəɡəri/", "n. 类别"),
-      ("challenge", "/ˈtʃælɪndʒ/", "n./v. 挑战"), ("charity", "/ˈtærəti/", "n. 慈善"), ("circumstance", "/ˈsɜːkəmstəns/", "n. 环境，情况"),
+      ("challenge", "/ˈtʃælɪndʒ/", "n./v. 挑战"), ("charity", "/ˈtʃærəti/", "n. 慈善"), ("circumstance", "/ˈsɜːkəmstəns/", "n. 环境，情况"),
       ("cooperation", "/kəʊˌɒpəˈreɪʃn/", "n. 合作"), ("core", "/kɔː(r)/", "n. 核心"), ("courage", "/ˈkʌrɪdʒ/", "n. 勇气"),
       ("crisis", "/ˈkraɪsɪs/", "n. 危机"), ("culture", "/ˈkʌltʃə(r)/", "n. 文化"), ("current", "/ˈkʌrənt/", "adj./n. 当前的，水流"),
       ("debate", "/dɪˈbeɪt/", "n./v. 辩论"), ("decade", "/ˈdekeɪd/", "n. 十年"), ("decision", "/dɪˈsɪʒn/", "n. 决定"),
@@ -231,7 +229,6 @@ def generate_graded_vocab_db():
       ("exhibit", "/ɪɡˈzɪbɪt/", "v./n. 展览"), ("expand", "/ɪkˈspænd/", "v. 扩展"), ("expert", "/ˈekspɜːt/", "n. 专家")
   ]
 
-  # 扩充词库，确保每个级别完全由独立词汇组成且绝不重复（20个级别 * 100个 = 2000词）
   full_db = {}
   used_words_global = set()
   
@@ -239,19 +236,16 @@ def generate_graded_vocab_db():
     level_list = []
     base_seed = tiers_data.get(lvl, tiers_data.get(1))
     
-    # 将预设种子加入
     for item in base_seed:
       w, ph, mean, en, cn = item[0], item[1], item[2], item[3], item[4]
       if w not in used_words_global:
         used_words_global.add(w)
         level_list.append({"word": w, "phonetic": ph, "meaning": mean, "example_en": en, "example_cn": cn})
         
-    # 用 advanced_pool 补齐到 100 个
     idx = 0
     while len(level_list) < 100 and idx < len(advanced_pool):
       candidate = advanced_pool[(idx * lvl + 7) % len(advanced_pool)]
       w, ph, mean = candidate[0], candidate[1], candidate[2]
-      # 为不同关卡引入难度微调后缀或确保全局无重复
       unique_key = f"{w}_{lvl}" if w in used_words_global else w
       if unique_key not in used_words_global:
         used_words_global.add(unique_key)
