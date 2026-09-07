@@ -11,58 +11,66 @@ key = st.secrets["SUPABASE_ANON_KEY"]
 supabase = create_client(url, key)
 
 # 页面设置
-st.set_page_config(page_title="背单词与小测应用", page_icon="📖", layout="centered")
+st.set_page_config(
+    page_title="App 单词背诵闯关", page_icon="📖", layout="centered"
+)
 
 # ==========================================
 # 用户登录与云端数据同步逻辑
 # ==========================================
 if "user" not in st.session_state:
-    st.session_state.user = None
+  st.session_state.user = None
 
 if not st.session_state.user:
-    st.sidebar.subheader("🔐 账号登录 / 注册")
-    email = st.sidebar.text_input("邮箱")
-    password = st.sidebar.text_input("密码", type="password")
+  st.sidebar.subheader("🔐 账号登录 / 注册")
+  email = st.sidebar.text_input("邮箱")
+  password = st.sidebar.text_input("密码", type="password")
 
-    col_login, col_signup = st.sidebar.columns(2)
-    with col_login:
-        if st.button("登录"):
-            try:
-                res = supabase.auth.sign_in_with_password(
-                    {"email": email, "password": password}
-                )
-                st.session_state.user = res.user
-                
-                # 登录成功后，尝试从云端加载用户的学习进度
-                profile = supabase.table("user_profiles").select("*").eq("user_id", res.user.id).execute()
-                if profile.data:
-                    st.session_state.grade = profile.data[0].get("grade", 5)
-                    # 可按需恢复 mastered 列表等
-                st.success("登录成功！")
-                st.rerun()
-            except Exception as e:
-                st.error(f"登录失败: {e}")
+  col_login, col_signup = st.sidebar.columns(2)
+  with col_login:
+    if st.button("登录"):
+      try:
+        res = supabase.auth.sign_in_with_password(
+            {"email": email, "password": password}
+        )
+        st.session_state.user = res.user
 
-    with col_signup:
-        if st.button("注册新账号"):
-            try:
-                res = supabase.auth.sign_up({"email": email, "password": password})
-                st.success("注册成功！请直接登录。")
-            except Exception as e:
-                st.error(f"注册失败: {e}")
-    st.stop()  # 未登录时拦截，不让看主界面
+        # 登录成功后，尝试从云端加载用户的学习进度
+        profile = (
+            supabase.table("user_profiles")
+            .select("*")
+            .eq("user_id", res.user.id)
+            .execute()
+        )
+        if profile.data:
+          st.session_state.grade = profile.data[0].get("grade", 5)
+        st.success("登录成功！")
+        st.rerun()
+      except Exception as e:
+        st.error(f"登录失败: {e}")
+
+  with col_signup:
+    if st.button("注册新账号"):
+      try:
+        res = supabase.auth.sign_up({"email": email, "password": password})
+        st.success("注册成功！请直接登录。")
+      except Exception as e:
+        st.error(f"注册失败: {e}")
+  st.stop()  # 未登录时拦截，不让看主界面
 else:
-    st.sidebar.write(f"👤 当前用户: {st.session_state.user.email}")
+  st.sidebar.write(f"👤 当前用户: {st.session_state.user.email}")
+
 
 def sync_progress_to_cloud(user_id, grade, mastered_list):
-    try:
-        supabase.table("user_profiles").upsert({
-            "user_id": user_id,
-            "grade": grade,
-            "mastered_words": mastered_list,  
-        }).execute()
-    except Exception as e:
-        print("同步云端失败:", e)
+  try:
+    supabase.table("user_profiles").upsert({
+        "user_id": user_id,
+        "grade": grade,
+        "mastered_words": mastered_list,
+    }).execute()
+  except Exception as e:
+    print("同步云端失败:", e)
+
 
 # 五年级单词库 (100个精选)
 VOCAB_GRADE_5 = [
@@ -914,235 +922,127 @@ VOCAB_GRADE_6 = [
 
 
 def get_audio_bytes(text):
-    tts = gTTS(text=text, lang="en")
-    fp = BytesIO()
-    tts.write_to_fp(fp)
-    fp.seek(0)
-    return fp.read()
+  tts = gTTS(text=text, lang="en")
+  fp = BytesIO()
+  tts.write_to_fp(fp)
+  fp.seek(0)
+  return fp.read()
 
 
 # 初始化 Session State
 if "grade" not in st.session_state:
-    st.session_state.grade = 5
+  st.session_state.grade = 5
 if "queue_g5" not in st.session_state:
-    st.session_state.queue_g5 = list(VOCAB_GRADE_5)
-    random.shuffle(st.session_state.queue_g5)
+  st.session_state.queue_g5 = list(VOCAB_GRADE_5)
+  random.shuffle(st.session_state.queue_g5)
 if "mastered_g5" not in st.session_state:
-    st.session_state.mastered_g5 = []
+  st.session_state.mastered_g5 = []
 if "queue_g6" not in st.session_state:
-    st.session_state.queue_g6 = list(VOCAB_GRADE_6)
-    random.shuffle(st.session_state.queue_g6)
+  st.session_state.queue_g6 = list(VOCAB_GRADE_6)
+  random.shuffle(st.session_state.queue_g6)
 if "mastered_g6" not in st.session_state:
-    st.session_state.mastered_g6 = []
-if "mode" not in st.session_state:
-    st.session_state.mode = "study"
+  st.session_state.mastered_g6 = []
 
-# 侧边栏菜单
-st.sidebar.title("📌 导航菜单")
-if st.sidebar.button("📚 背单词与AI跟读模式", use_container_width=True):
-    st.session_state.mode = "study"
-    st.rerun()
-
-if st.sidebar.button("🎯 已学单词小测验", use_container_width=True):
-    st.session_state.mode = "quiz"
-    st.rerun()
-
-if st.sidebar.button("🔁 已学单词重温", use_container_width=True):
-    st.session_state.mode = "review"
-    st.rerun()
+# 控制页面跳转的状态 ("home" 为首页，其他为子页面)
+if "page" not in st.session_state:
+  st.session_state.page = "home"
 
 # 确定当前年级对应的词库
 if st.session_state.grade == 5:
-    total_c = len(VOCAB_GRADE_5)
-    rem_c = len(st.session_state.queue_g5)
-    current_queue = st.session_state.queue_g5
-    mastered_list = st.session_state.mastered_g5
-    all_learned_pool = mastered_list + current_queue
+  total_c = len(VOCAB_GRADE_5)
+  rem_c = len(st.session_state.queue_g5)
+  current_queue = st.session_state.queue_g5
+  mastered_list = st.session_state.mastered_g5
+  all_learned_pool = mastered_list + current_queue
 else:
-    total_c = len(VOCAB_GRADE_6)
-    rem_c = len(st.session_state.queue_g6)
-    current_queue = st.session_state.queue_g6
-    mastered_list = st.session_state.mastered_g6
-    all_learned_pool = mastered_list + current_queue
+  total_c = len(VOCAB_GRADE_6)
+  rem_c = len(st.session_state.queue_g6)
+  current_queue = st.session_state.queue_g6
+  mastered_list = st.session_state.mastered_g6
+  all_learned_pool = mastered_list + current_queue
 
 # ==========================================
-# 1. 小测验面板 (先显示英文+选项，答题后展示P2卡片详情并自动发音)
+# 🏠 首页展示 (App 风格大按钮导航)
 # ==========================================
-if st.session_state.mode == "quiz":
-    st.markdown("### 🎯 已学单词小测验")
+if st.session_state.page == "home":
+  st.title("📖 智能背单词与闯关 App")
+  st.write(
+      f"欢迎回来！当前年级：**小学 {st.session_state.grade} 年级** 🌟"
+  )
+  st.markdown("---")
 
-    if not all_learned_pool:
-        st.info("当前还没有学过任何单词，请先去背诵页面学习！")
-    else:
-        if "quiz_current" not in st.session_state:
-            q_item = random.choice(all_learned_pool)
-            st.session_state.quiz_current = q_item
-            wrong_meanings = [
-                v["meaning"]
-                for v in VOCAB_GRADE_5 + VOCAB_GRADE_6
-                if v["meaning"] != q_item["meaning"]
-            ]
-            distractors = random.sample(wrong_meanings, min(3, len(wrong_meanings)))
-            options = distractors + [q_item["meaning"]]
-            random.shuffle(options)
-            st.session_state.quiz_options = options
-            st.session_state.quiz_answered = False
-            st.session_state.selected_option = None
+  st.write("### 请选择你想进行的功能：")
 
-        qc = st.session_state.quiz_current
-        opts = st.session_state.quiz_options
+  # 用大按钮铺满首页，营造原生 App 触控感
+  if st.button("📚 开启单词背诵与 AI 跟读", use_container_width=True):
+    st.session_state.page = "study"
+    st.rerun()
 
-        # 1. 顶部先展示英文单词与发音音频
-        audio_bytes = get_audio_bytes(qc["word"])
-        st.audio(audio_bytes, format="audio/mp3")
+  if st.button("🎯 进入已学单词小测验", use_container_width=True):
+    st.session_state.page = "quiz"
+    st.rerun()
 
-        st.markdown(
-            f"""
-            <div style="background-color: #f7f9fa; border: 1px solid #dcdfe6; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;">
-                <div style="font-size: 38px; font-weight: bold; color: #303133; margin-bottom: 5px;">
-                    {qc['word']}
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+  if st.button("🔁 查看已学单词重温", use_container_width=True):
+    st.session_state.page = "review"
+    st.rerun()
 
-        st.write("请选择正确的中文释义：")
-
-        col_a, col_b = st.columns(2)
-        labels = ["A", "B", "C", "D"]
-
-        for idx, opt in enumerate(opts):
-            current_col = col_a if idx % 2 == 0 else col_b
-            with current_col:
-                btn_label = f"{labels[idx]}. {opt}"
-                if st.button(btn_label, use_container_width=True, key=f"opt_{idx}"):
-                    st.session_state.quiz_answered = True
-                    st.session_state.selected_option = opt
-
-        # 2. 只有当用户点击选项回答后，才显示详细的 P2 卡片并自动朗读
-        if st.session_state.get("quiz_answered", False):
-            selected = st.session_state.selected_option
-
-            # 自动读出单词
-            st.audio(audio_bytes, format="audio/mp3", autoplay=True)
-
-            if selected == qc["meaning"]:
-                st.success("✅ 回答正确！太棒了！")
-            else:
-                st.error(f"❌ 回答错误。正确答案是：{qc['meaning']}")
-
-            # 渲染完整的 P2 卡片详情
-            st.markdown(
-                f"""
-                <div style="background-color: #f7f9fa; border: 1px solid #dcdfe6; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                        <span style="background-color: #52c41a; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 14px; margin-right: 12px;">Lv.{st.session_state.grade} 核心</span>
-                        <span style="color: #606266; font-size: 16px; font-weight: 500;">{qc['phonetic']}</span>
-                    </div>
-                    <div style="font-size: 36px; font-weight: bold; color: #303133; margin-bottom: 10px;">
-                        {qc['word']}
-                    </div>
-                    <div style="font-size: 22px; color: #606266; margin-bottom: 20px; font-weight: 600;">
-                        {qc['meaning']}
-                    </div>
-                    <hr style="border: none; border-top: 1px solid #e4e7ed; margin: 15px 0;">
-                    <div style="font-size: 15px; color: #606266; font-style: italic;">
-                        📝 <b>例句：</b>{qc['example_en']} / {qc['example_cn']}
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
-
-            if st.button("➡️ 下一题", use_container_width=True):
-                q_item = random.choice(all_learned_pool)
-                st.session_state.quiz_current = q_item
-                wrong_meanings = [
-                    v["meaning"]
-                    for v in VOCAB_GRADE_5 + VOCAB_GRADE_6
-                    if v["meaning"] != q_item["meaning"]
-                ]
-                distractors = random.sample(wrong_meanings, min(3, len(wrong_meanings)))
-                options = distractors + [q_item["meaning"]]
-                random.shuffle(options)
-                st.session_state.quiz_options = options
-                st.session_state.quiz_answered = False
-                st.session_state.selected_option = None
-                st.rerun()
+  st.sidebar.write(f"👤 账号: {st.session_state.user.email}")
+  if st.sidebar.button("退出登录"):
+    st.session_state.user = None
+    st.rerun()
 
 # ==========================================
-# 2. 已学单词重温面板
-# ==========================================
-elif st.session_state.mode == "review":
-    st.subheader("🔁 已掌握单词重温大本营")
-    if not mastered_list:
-        st.info("你还没有完全掌握任何单词哦！先去“背单词模式”攻克单词吧。")
-    else:
-        if "review_current" not in st.session_state:
-            st.session_state.review_current = random.choice(mastered_list)
-
-        rc = st.session_state.review_current
-        with st.container():
-            st.markdown(f"## **{rc['word']}** (已掌握复习)")
-            st.audio(get_audio_bytes(rc["word"]), format="audio/mp3")
-
-            st.write(f"🔊 **音标**：`{rc['phonetic']}`")
-            st.write(f"💡 **释义**：**{rc['meaning']}**")
-            st.info(f"📝 **例句**：{rc['example_en']}\n\n🏷️ **翻译**：{rc['example_cn']}")
-
-            if st.button("🔊 朗读例句"):
-                st.audio(
-                    get_audio_bytes(rc["example_en"]), format="audio/mp3", autoplay=True
-                )
-
-        if st.button("➡️ 换一个复习", use_container_width=True):
-            st.session_state.review_current = random.choice(mastered_list)
-            st.rerun()
-
-# ==========================================
-# 3. 正常背诵与 AI 跟读模式
+# ⬅️ 子页面通用头部：返回首页按钮
 # ==========================================
 else:
+  # 左上角返回主页的精美按钮
+  if st.button("🏠 返回主页", type="secondary"):
+    st.session_state.page = "home"
+    st.rerun()
+
+  st.markdown("---")
+
+  # 1. 单词背诵与 AI 跟读模式
+  if st.session_state.page == "study":
     if st.session_state.grade == 5:
-        st.subheader("📖 小学五年级核心单词闯关")
+      st.subheader("📖 小学五年级核心单词闯关")
     else:
-        st.subheader("🚀 小学六年级进阶生活/日常英语单词闯关")
+      st.subheader("🚀 小学六年级进阶生活/日常英语单词闯关")
 
     if current_queue:
-        current = current_queue[0]
+      current = current_queue[0]
 
-        with st.container():
-            st.markdown(f"## **{current['word']}**")
-            st.audio(get_audio_bytes(current["word"]), format="audio/mp3")
+      with st.container():
+        st.markdown(f"## **{current['word']}**")
+        st.audio(get_audio_bytes(current["word"]), format="audio/mp3")
 
-            st.write(f"🔊 **音标**：`{current['phonetic']}`")
-            st.write(f"💡 **释义**：**{current['meaning']}**")
-            st.info(
-                f"📝 **例句**：{current['example_en']}\n\n🏷️ **翻译**："
-                f" {current['example_cn']}"
-            )
+        st.write(f"🔊 **音标**：`{current['phonetic']}`")
+        st.write(f"💡 **释义**：**{current['meaning']}**")
+        st.info(
+            f"📝 **例句**：{current['example_en']}\n\n🏷️ **翻译**："
+            f" {current['example_cn']}"
+        )
 
-            if st.button("🔊 朗读例句"):
-                st.audio(
-                    get_audio_bytes(current["example_en"]),
-                    format="audio/mp3",
-                    autoplay=True,
-                )
+        if st.button("🔊 朗读例句"):
+          st.audio(
+              get_audio_bytes(current["example_en"]),
+              format="audio/mp3",
+              autoplay=True,
+          )
 
-            # ---------------------------------------------------------
-            # 🎤 AI 语音跟读测评模块
-            # ---------------------------------------------------------
-            st.markdown("---")
-            st.markdown("#### 🎙️ AI 语音跟读评测")
-            st.write(
-                "点击下方按钮并对着麦克风大声读出上方单词，AI 会立即检测你的发音！"
-            )
+        # ---------------------------------------------------------
+        # 🎤 AI 语音跟读测评模块
+        # ---------------------------------------------------------
+        st.markdown("---")
+        st.markdown("#### 🎙️ AI 语音跟读评测")
+        st.write(
+            "点击下方按钮并对着麦克风大声读出上方单词，AI 会立即检测你的发音！"
+        )
 
-            target_word_lower = current["word"].lower()
+        target_word_lower = current["word"].lower()
 
-            speech_component_html = (
-                """
+        speech_component_html = (
+            """
                 <div style="font-family: sans-serif; text-align: center; padding: 10px;">
                     <button id="recordBtn" style="background-color: #ff4b4b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer;">🎙️ 点击开始说话跟读</button>
                     <p id="statusText" style="margin-top: 10px; color: #555; font-size: 14px;"></p>
@@ -1193,39 +1093,187 @@ else:
                     }
                 </script>
                 """
-                % target_word_lower
-            )
+            % target_word_lower
+        )
 
-            components.html(speech_component_html, height=120)
+        components.html(speech_component_html, height=120)
 
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("❌ 模糊 (放回队列重练)", use_container_width=True):
-                current_queue.append(current_queue.pop(0))
-                st.rerun()
-        with col2:
-            if st.button("✔ 认识 (下一个)", use_container_width=True):
-                done_word = current_queue.pop(0)
-                if done_word not in mastered_list:
-                    mastered_list.append(done_word)
-                
-                # 每次认识新单词，顺手将进度同步到云端数据库
-                sync_progress_to_cloud(st.session_state.user.id, st.session_state.grade, mastered_list)
-                st.rerun()
+      col1, col2 = st.columns(2)
+      with col1:
+        if st.button("❌ 模糊 (放回队列重练)", use_container_width=True):
+          current_queue.append(current_queue.pop(0))
+          st.rerun()
+      with col2:
+        if st.button("✔ 认识 (下一个)", use_container_width=True):
+          done_word = current_queue.pop(0)
+          if done_word not in mastered_list:
+            mastered_list.append(done_word)
+
+          sync_progress_to_cloud(
+              st.session_state.user.id,
+              st.session_state.grade,
+              mastered_list,
+          )
+          st.rerun()
     else:
-        if st.session_state.grade == 5:
-            st.success("🎉 太棒了！五年级单词已全部掌握，即将自动晋升到六年级！")
-            if st.button("🚀 点击开始升入六年级生活单词", use_container_width=True):
-                st.session_state.grade = 6
-                sync_progress_to_cloud(st.session_state.user.id, st.session_state.grade, mastered_list)
-                st.rerun()
+      if st.session_state.grade == 5:
+        st.success("🎉 太棒了！五年级单词已全部掌握，即将自动晋升到六年级！")
+        if st.button("🚀 点击开始升入六年级生活单词", use_container_width=True):
+          st.session_state.grade = 6
+          sync_progress_to_cloud(
+              st.session_state.user.id,
+              st.session_state.grade,
+              mastered_list,
+          )
+          st.rerun()
+      else:
+        st.success("🏆 恭喜你！六年级进阶日常词汇也已经全部通关大吉！")
+        if st.button("🔄 重新复习全部课程", use_container_width=True):
+          st.session_state.queue_g5 = list(VOCAB_GRADE_5)
+          random.shuffle(st.session_state.queue_g5)
+          st.session_state.queue_g6 = list(VOCAB_GRADE_6)
+          random.shuffle(st.session_state.queue_g6)
+          st.session_state.grade = 5
+          sync_progress_to_cloud(
+              st.session_state.user.id,
+              st.session_state.grade,
+              mastered_list,
+          )
+          st.rerun()
+
+  # 2. 小测验面板
+  elif st.session_state.page == "quiz":
+    st.markdown("### 🎯 已学单词小测验")
+
+    if not all_learned_pool:
+      st.info("当前还没有学过任何单词，请先去背诵页面学习！")
+    else:
+      if "quiz_current" not in st.session_state:
+        q_item = random.choice(all_learned_pool)
+        st.session_state.quiz_current = q_item
+        wrong_meanings = [
+            v["meaning"]
+            for v in VOCAB_GRADE_5 + VOCAB_GRADE_6
+            if v["meaning"] != q_item["meaning"]
+        ]
+        distractors = random.sample(
+            wrong_meanings, min(3, len(wrong_meanings))
+        )
+        options = distractors + [q_item["meaning"]]
+        random.shuffle(options)
+        st.session_state.quiz_options = options
+        st.session_state.quiz_answered = False
+        st.session_state.selected_option = None
+
+      qc = st.session_state.quiz_current
+      opts = st.session_state.quiz_options
+
+      audio_bytes = get_audio_bytes(qc["word"])
+      st.audio(audio_bytes, format="audio/mp3")
+
+      st.markdown(
+          f"""
+            <div style="background-color: #f7f9fa; border: 1px solid #dcdfe6; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;">
+                <div style="font-size: 38px; font-weight: bold; color: #303133; margin-bottom: 5px;">
+                    {qc['word']}
+                </div>
+            </div>
+            """,
+          unsafe_allow_html=True,
+      )
+
+      st.write("请选择正确的中文释义：")
+
+      col_a, col_b = st.columns(2)
+      labels = ["A", "B", "C", "D"]
+
+      for idx, opt in enumerate(opts):
+        current_col = col_a if idx % 2 == 0 else col_b
+        with current_col:
+          btn_label = f"{labels[idx]}. {opt}"
+          if st.button(btn_label, use_container_width=True, key=f"opt_{idx}"):
+            st.session_state.quiz_answered = True
+            st.session_state.selected_option = opt
+
+      if st.session_state.get("quiz_answered", False):
+        selected = st.session_state.selected_option
+        st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+
+        if selected == qc["meaning"]:
+          st.success("✅ 回答正确！太棒了！")
         else:
-            st.success("🏆 恭喜你！六年级进阶日常词汇也已经全部通关大吉！")
-            if st.button("🔄 重新复习全部课程", use_container_width=True):
-                st.session_state.queue_g5 = list(VOCAB_GRADE_5)
-                random.shuffle(st.session_state.queue_g5)
-                st.session_state.queue_g6 = list(VOCAB_GRADE_6)
-                random.shuffle(st.session_state.queue_g6)
-                st.session_state.grade = 5
-                sync_progress_to_cloud(st.session_state.user.id, st.session_state.grade, mastered_list)
-                st.rerun()
+          st.error(f"❌ 回答错误。正确答案是：{qc['meaning']}")
+
+        st.markdown(
+            f"""
+                <div style="background-color: #f7f9fa; border: 1px solid #dcdfe6; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                        <span style="background-color: #52c41a; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 14px; margin-right: 12px;">Lv.{st.session_state.grade} 核心</span>
+                        <span style="color: #606266; font-size: 16px; font-weight: 500;">{qc['phonetic']}</span>
+                    </div>
+                    <div style="font-size: 36px; font-weight: bold; color: #303133; margin-bottom: 10px;">
+                        {qc['word']}
+                    </div>
+                    <div style="font-size: 22px; color: #606266; margin-bottom: 20px; font-weight: 600;">
+                        {qc['meaning']}
+                    </div>
+                    <hr style="border: none; border-top: 1px solid #e4e7ed; margin: 15px 0;">
+                    <div style="font-size: 15px; color: #606266; font-style: italic;">
+                        📝 <b>例句：</b>{qc['example_en']} / {qc['example_cn']}
+                    </div>
+                </div>
+                """,
+            unsafe_allow_html=True,
+        )
+
+        if st.button("➡️ 下一题", use_container_width=True):
+          q_item = random.choice(all_learned_pool)
+          st.session_state.quiz_current = q_item
+          wrong_meanings = [
+              v["meaning"]
+              for v in VOCAB_GRADE_5 + VOCAB_GRADE_6
+              if v["meaning"] != q_item["meaning"]
+          ]
+          distractors = random.sample(
+              wrong_meanings, min(3, len(wrong_meanings))
+          )
+          options = distractors + [q_item["meaning"]]
+          random.shuffle(options)
+          st.session_state.quiz_options = options
+          st.session_state.quiz_answered = False
+          st.session_state.selected_option = None
+          st.rerun()
+
+  # 3. 已学单词重温面板
+  elif st.session_state.page == "review":
+    st.subheader("🔁 已掌握单词重温大本营")
+    if not mastered_list:
+      st.info(
+          "你还没有完全掌握任何单词哦！先去“背单词模式”攻克单词吧。"
+      )
+    else:
+      if "review_current" not in st.session_state:
+        st.session_state.review_current = random.choice(mastered_list)
+
+      rc = st.session_state.review_current
+      with st.container():
+        st.markdown(f"## **{rc['word']}** (已掌握复习)")
+        st.audio(get_audio_bytes(rc["word"]), format="audio/mp3")
+
+        st.write(f"🔊 **音标**：`{rc['phonetic']}`")
+        st.write(f"💡 **释义**：**{rc['meaning']}**")
+        st.info(
+            f"📝 **例句**：{rc['example_en']}\n\n🏷️ **翻译**："
+            f" {rc['example_cn']}"
+        )
+
+        if st.button("🔊 朗读例句"):
+          st.audio(
+              get_audio_bytes(rc["example_en"]),
+              format="audio/mp3",
+              autoplay=True,
+          )
+
+      if st.button("➡️ 换一个复习", use_container_width=True):
+        st.session_state.review_current = random.choice(mastered_list)
+        st.rerun()
