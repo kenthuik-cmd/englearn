@@ -115,6 +115,50 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词"):
     """
     components.html(html_code, height=55)
 
+# === 新增：盲听专属的双重发音按钮 (快+慢) ===
+def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常速+慢速)"):
+    html_code = f"""
+    <style>
+        body {{ margin: 0; padding: 0; font-family: sans-serif; }}
+        button {{
+            width: 100%; 
+            background-color: #9c27b0; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            font-size: 15px; 
+            font-weight: bold; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 0px rgba(156, 39, 176, 0.3); 
+            transition: transform 0.1s, box-shadow 0.1s;
+        }}
+        button:active {{ transform: translateY(4px); box-shadow: 0 0px 0px rgba(0,0,0,0.1); }}
+    </style>
+    <script>
+        function playTwice() {{
+            window.speechSynthesis.cancel();
+            
+            // 第一遍：常速
+            let u1 = new SpeechSynthesisUtterance('{word}');
+            u1.lang = 'en-US';
+            u1.rate = 1.0;
+            
+            // 第二遍：慢速
+            let u2 = new SpeechSynthesisUtterance('{word}');
+            u2.lang = 'en-US';
+            u2.rate = 0.6; // 0.6 是既能听清细节，又不会过于失真的最佳慢速
+            
+            window.speechSynthesis.speak(u1);
+            window.speechSynthesis.speak(u2);
+        }}
+    </script>
+    <button onclick="playTwice()">
+        {button_text}
+    </button>
+    """
+    components.html(html_code, height=55)
+
 # === 动态高亮例句组件 ===
 def render_highlight_example(example_en, example_cn):
     escaped_en = example_en.replace("'", "\\'")
@@ -307,7 +351,6 @@ else:
         # === 专项测验分类区 ===
         st.markdown("<div class='section-title'>— 🎯 专项测验 —</div>", unsafe_allow_html=True)
         
-        # 封装进入测验的函数，确保清理旧状态
         def enter_quiz(mode):
             st.session_state.quiz_mode = mode
             st.session_state.page = "quiz"
@@ -404,7 +447,7 @@ else:
                         st.rerun()
 
         # ==========================================
-        # 🎯 专项大测验 
+        # 🎯 专项大测验
         # ==========================================
         elif st.session_state.page == "quiz":
             if not all_learned_pool:
@@ -416,7 +459,6 @@ else:
                         st.session_state.hearts = 5
                         st.rerun()
                 else:
-                    # --- 安全兜底读取模式 ---
                     q_type = st.session_state.get("quiz_mode", "normal")
                     
                     if "quiz_current" not in st.session_state:
@@ -447,7 +489,6 @@ else:
                         st.session_state.quiz_answered = False
                         st.session_state.selected_option = None
 
-                    # 安全读取变量
                     qc = st.session_state.quiz_current
                     q_type = st.session_state.get("quiz_type", "normal")
                     opts = st.session_state.get("quiz_options", [])
@@ -495,8 +536,9 @@ else:
                             st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:38px; font-weight:bold; color:#303133;'>{qc['word']}</div></div>", unsafe_allow_html=True)
                             
                         elif q_type == "listen":
-                            st.markdown("<h4 style='text-align:center; color:#1cb0f6;'>🎧 盲听辨义</h4>", unsafe_allow_html=True)
-                            render_word_audio_button(qc["word"], "🔊 播放神秘音频")
+                            st.markdown("<h4 style='text-align:center; color:#9c27b0;'>🎧 盲听辨义</h4>", unsafe_allow_html=True)
+                            # 使用专属的双重发音按钮！
+                            render_blind_listen_button(qc["word"], "🔊 播放神秘音频 (常速+慢速)")
                             st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:20px; font-weight:bold; color:#afafaf;'>❓❓❓</div></div>", unsafe_allow_html=True)
 
                         elif q_type == "fill_blank":
