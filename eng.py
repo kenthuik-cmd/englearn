@@ -15,7 +15,7 @@ st.set_page_config(
     page_title="AI 英语背单词", page_icon="📖", layout="centered"
 )
 
-# 注入自定义 CSS 样式与自动回顶部的 JavaScript 脚本
+# 注入自定义 CSS 样式（包含卡片切换的丝滑淡入放大动画）
 st.markdown(
     """
     <style>
@@ -26,7 +26,7 @@ st.markdown(
         
         /* 调整整体页面内边距，使手机端左右自适应 */
         .block-container {
-            padding-top: 1.5rem;
+            padding-top: 1.0rem;
             padding-bottom: 2rem;
             padding-left: 1rem;
             padding-right: 1rem;
@@ -42,7 +42,7 @@ st.markdown(
             transition: all 0.2s ease;
         }
         
-        /* 选项卡片样式 */
+        /* 原生 App 感的单词卡片 + 切换加载动画 */
         .quiz-card {
             background-color: #ffffff;
             border: 1px solid #e4e7ed;
@@ -51,13 +51,20 @@ st.markdown(
             box-shadow: 0 6px 16px rgba(0,0,0,0.06);
             margin-bottom: 20px;
             text-align: center;
+            animation: cardAppear 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
         }
     </style>
-    
-    <script>
-        // 每次页面重新加载或刷新时，自动滚动到屏幕最顶部
-        window.scrollTo({top: 0, behavior: 'smooth'});
-    </script>
     """,
     unsafe_allow_html=True,
 )
