@@ -205,8 +205,16 @@ if "mastered" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "home"
 
+# --- 防崩溃兜底初始化区 ---
 if "quiz_mode" not in st.session_state:
     st.session_state.quiz_mode = "normal"
+if "quiz_type" not in st.session_state:
+    st.session_state.quiz_type = "normal"
+if "quiz_options" not in st.session_state:
+    st.session_state.quiz_options = []
+if "correct_ans" not in st.session_state:
+    st.session_state.correct_ans = ""
+# --------------------------
 
 if "hearts" not in st.session_state:
     st.session_state.hearts = 5
@@ -396,7 +404,7 @@ else:
                         st.rerun()
 
         # ==========================================
-        # 🎯 专项测验模式
+        # 🎯 综合大测验 (四种题型独立化)
         # ==========================================
         elif st.session_state.page == "quiz":
             if not all_learned_pool:
@@ -408,13 +416,12 @@ else:
                         st.session_state.hearts = 5
                         st.rerun()
                 else:
-                    # --- 抽取题目逻辑 ---
+                    # --- 安全兜底读取模式 ---
+                    q_type = st.session_state.get("quiz_mode", "normal")
+                    
                     if "quiz_current" not in st.session_state:
                         q_item = random.choice(all_learned_pool)
                         st.session_state.quiz_current = q_item
-                        
-                        # 直接读取首页选择的模式
-                        q_type = st.session_state.quiz_mode
                         st.session_state.quiz_type = q_type
                         
                         all_flat_words = [item for lvl_items in GLOBAL_VOCAB_DB.values() for item in lvl_items]
@@ -440,17 +447,17 @@ else:
                         st.session_state.quiz_answered = False
                         st.session_state.selected_option = None
 
+                    # 安全读取变量
                     qc = st.session_state.quiz_current
-                    q_type = st.session_state.quiz_type
-                    opts = st.session_state.quiz_options
-                    correct_ans = st.session_state.correct_ans
+                    q_type = st.session_state.get("quiz_type", "normal")
+                    opts = st.session_state.get("quiz_options", [])
+                    correct_ans = st.session_state.get("correct_ans", "")
 
                     # --- 答题后展现结果 ---
                     if st.session_state.get("quiz_answered", False):
                         selected = st.session_state.selected_option
                         render_word_audio_button(qc["word"], "🔊 再次朗读单词")
 
-                        # 判断对错
                         is_correct = (selected == correct_ans)
 
                         if is_correct:
@@ -478,7 +485,7 @@ else:
                         render_highlight_example(qc["example_en"], qc["example_cn"])
 
                         if st.button("➡️ 继续下一题", use_container_width=True, type="primary"):
-                            del st.session_state["quiz_current"] # 清理标记，触发下一题抽取
+                            del st.session_state["quiz_current"]
                             st.rerun()
 
                     # --- 未答题状态 ---
@@ -494,7 +501,6 @@ else:
 
                         elif q_type == "fill_blank":
                             st.markdown("<h4 style='text-align:center; color:#1cb0f6;'>🔤 语境填空</h4>", unsafe_allow_html=True)
-                            # 动态把单词替换为横线
                             masked_en = re.sub(r'(?i)\b' + re.escape(qc['word']) + r'\b', '____', qc['example_en'])
                             st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:22px; font-weight:bold; color:#303133; line-height: 1.5;'>{masked_en}</div><div style='font-size:14px; color:#afafaf; margin-top:8px;'>{qc['example_cn']}</div></div>", unsafe_allow_html=True)
 
