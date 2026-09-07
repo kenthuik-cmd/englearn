@@ -15,7 +15,7 @@ st.set_page_config(
     page_title="AI 英语背单词", page_icon="📖", layout="centered"
 )
 
-# 注入极简紧凑的 CSS 样式，确保单屏一页显示完毕
+# 注入 CSS 样式：放大单词卡片，同时保持整体手机端单屏可容纳
 st.markdown(
     """
     <style>
@@ -24,7 +24,7 @@ st.markdown(
         footer {visibility: hidden;}
         header {visibility: hidden;}
         
-        /* 极致压缩上下留白，确保手机一屏装下 */
+        /* 页面整体内边距 */
         .block-container {
             padding-top: 0.5rem;
             padding-bottom: 1rem;
@@ -33,23 +33,23 @@ st.markdown(
             max-width: 500px;
         }
 
-        /* 手机端大按钮紧凑化 */
+        /* 手机端按钮美化 */
         .stButton > button {
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: 600;
-            padding: 0.4rem 0.8rem;
+            padding: 0.5rem 0.8rem;
             font-size: 14px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
         
-        /* 单屏精简卡片 */
+        /* 放大后的单词背诵卡片样式 */
         .quiz-card {
             background-color: #ffffff;
             border: 1px solid #e4e7ed;
-            padding: 12px 16px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            margin-bottom: 10px;
+            padding: 24px 20px;
+            border-radius: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            margin-bottom: 15px;
             text-align: center;
         }
     </style>
@@ -384,7 +384,7 @@ if not st.session_state.user:
           st.error(f"注册失败: {e}")
 
 # ==========================================
-# 👤 已登录状态：手机单屏单页布局
+# 👤 已登录状态：手机端主页与功能页
 # ==========================================
 else:
   # ------------------------------------------
@@ -423,7 +423,7 @@ else:
       st.rerun()
 
   # ------------------------------------------
-  # ⬅️ 手机端子页面 (单屏紧凑布局)
+  # ⬅️ 手机端子页面
   # ------------------------------------------
   else:
     if st.button("⬅️ 返回主页", type="secondary"):
@@ -435,37 +435,42 @@ else:
       if current_queue:
         current = current_queue[0]
 
-        # 极简紧凑的单屏卡片
+        # 放大、高质感的单词卡片
         st.markdown(
             f"""
-                <div class="quiz-card" style="padding: 10px 14px; margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 26px; font-weight: bold; color: #303133;">{current['word']}</span>
-                        <span style="font-size: 13px; color: #909399;">{current['phonetic']}</span>
-                    </div>
-                    <div style="font-size: 16px; font-weight: 600; color: #409EFF; text-align: left; margin: 4px 0;">{current['meaning']}</div>
-                    <div style="font-size: 12px; color: #606266; font-style: italic; text-align: left; border-top: 1px solid #f2f3f5; padding-top: 4px; margin-top: 4px;">
-                        📝 {current['example_en']} ({current['example_cn']})
+                <div class="quiz-card">
+                    <div style="font-size: 36px; font-weight: bold; color: #303133; margin-bottom: 4px;">{current['word']}</div>
+                    <div style="font-size: 14px; color: #909399; margin-bottom: 10px;">{current['phonetic']}</div>
+                    <div style="font-size: 19px; font-weight: 600; color: #409EFF; margin-bottom: 12px;">{current['meaning']}</div>
+                    <hr style="border: none; border-top: 1px solid #ebeef5; margin: 10px 0;">
+                    <div style="font-size: 13px; color: #606266; font-style: italic; text-align: left;">
+                        📝 <b>例句：</b>{current['example_en']}<br>🏷️ <b>翻译：</b>{current['example_cn']}
                     </div>
                 </div>
                 """,
             unsafe_allow_html=True,
         )
 
-        # 紧凑的音频与发音评测组件
-        c_audio, c_speak = st.columns([1, 3])
+        # 紧凑的音频朗读与跟读组件
+        c_audio, c_speak = st.columns(2)
         with c_audio:
-          if st.button("🔊 读词", use_container_width=True):
-            st.audio(get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True)
+          if st.button("🔊 朗读单词", use_container_width=True):
+            st.audio(
+                get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True
+            )
         with c_speak:
-          if st.button("🔊 读例句", use_container_width=True):
-            st.audio(get_audio_bytes(current["example_en"]), format="audio/mp3", autoplay=True)
+          if st.button("🔊 朗读例句", use_container_width=True):
+            st.audio(
+                get_audio_bytes(current["example_en"]),
+                format="audio/mp3",
+                autoplay=True,
+            )
 
         target_word_lower = current["word"].lower()
         speech_component_html = (
             """
-                <div style="font-family: sans-serif; text-align: center; margin-top: 4px;">
-                    <button id="recordBtn" style="background-color: #ff4b4b; color: white; border: none; padding: 8px 16px; font-size: 14px; border-radius: 10px; cursor: pointer; width: 100%;">🎙️ 点击进行 AI 语音跟读</button>
+                <div style="font-family: sans-serif; text-align: center; margin-top: 2px;">
+                    <button id="recordBtn" style="background-color: #ff4b4b; color: white; border: none; padding: 10px 16px; font-size: 14px; border-radius: 12px; cursor: pointer; width: 100%;">🎙️ 点击进行 AI 语音跟读</button>
                     <p id="statusText" style="margin-top: 4px; color: #555; font-size: 12px;"></p>
                 </div>
                 <script>
@@ -591,17 +596,16 @@ else:
         qc = st.session_state.quiz_current
         opts = st.session_state.quiz_options
 
-        # 顶部极简卡片
+        # 放大后的测验单词卡片
         st.markdown(
             f"""
-                <div class="quiz-card" style="padding: 10px; margin-bottom: 6px;">
-                    <div style="font-size: 28px; font-weight: bold; color: #303133;">{qc['word']}</div>
+                <div class="quiz-card">
+                    <div style="font-size: 36px; font-weight: bold; color: #303133;">{qc['word']}</div>
                 </div>
                 """,
             unsafe_allow_html=True,
         )
 
-        # 选项按钮（2x2 紧凑排列）
         col_a, col_b = st.columns(2)
         labels = ["A", "B", "C", "D"]
 
@@ -625,9 +629,9 @@ else:
 
           st.markdown(
               f"""
-                    <div class="quiz-card" style="text-align: left; padding: 8px 12px; margin-top: 6px;">
+                    <div class="quiz-card" style="text-align: left; padding: 12px 16px; margin-top: 8px;">
                         <span style="font-size: 13px; font-weight: bold; color: #409EFF;">{qc['word']}</span> <span style="font-size: 11px; color: #909399;">{qc['phonetic']}</span>
-                        <div style="font-size: 13px; font-weight: 600; color: #67C23A;">{qc['meaning']}</div>
+                        <div style="font-size: 15px; font-weight: 600; color: #67C23A; margin: 2px 0;">{qc['meaning']}</div>
                     </div>
                     """,
               unsafe_allow_html=True,
@@ -663,14 +667,13 @@ else:
         with st.container():
           st.markdown(
               f"""
-                <div class="quiz-card" style="padding: 10px 14px; margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 26px; font-weight: bold; color: #303133;">{rc['word']}</span>
-                        <span style="font-size: 13px; color: #909399;">{rc['phonetic']}</span>
-                    </div>
-                    <div style="font-size: 16px; font-weight: 600; color: #67C23A; text-align: left; margin: 4px 0;">{rc['meaning']}</div>
-                    <div style="font-size: 12px; color: #606266; font-style: italic; text-align: left; border-top: 1px solid #f2f3f5; padding-top: 4px; margin-top: 4px;">
-                        📝 {rc['example_en']} ({rc['example_cn']})
+                <div class="quiz-card">
+                    <div style="font-size: 36px; font-weight: bold; color: #303133; margin-bottom: 4px;">{rc['word']}</div>
+                    <div style="font-size: 14px; color: #909399; margin-bottom: 10px;">{rc['phonetic']}</div>
+                    <div style="font-size: 19px; font-weight: 600; color: #67C23A; margin-bottom: 12px;">{rc['meaning']}</div>
+                    <hr style="border: none; border-top: 1px solid #ebeef5; margin: 10px 0;">
+                    <div style="font-size: 13px; color: #606266; font-style: italic; text-align: left;">
+                        📝 <b>例句：</b>{rc['example_en']}<br>🏷️ <b>翻译：</b>{rc['example_cn']}
                     </div>
                 </div>
                 """,
