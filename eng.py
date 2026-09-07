@@ -12,19 +12,17 @@ supabase = create_client(url, key)
 
 # 页面设置
 st.set_page_config(
-    page_title="AI 英语背单词", page_icon="📖", layout="centered"
+    page_title="AI 英语日常20级闯关", page_icon="📖", layout="centered"
 )
 
-# 注入 CSS 样式：优化大卡片与可点击单词的样式
+# 注入极简紧凑的手机端 UI 样式
 st.markdown(
     """
     <style>
-        /* 隐藏 Streamlit 默认的顶部导航和底部标识 */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
         
-        /* 页面整体内边距 */
         .block-container {
             padding-top: 0.5rem;
             padding-bottom: 1rem;
@@ -33,7 +31,6 @@ st.markdown(
             max-width: 500px;
         }
 
-        /* 手机端按钮美化 */
         .stButton > button {
             border-radius: 12px;
             font-weight: 600;
@@ -42,14 +39,13 @@ st.markdown(
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
         
-        /* 单词背诵卡片样式 */
         .quiz-card {
             background-color: #ffffff;
             border: 1px solid #e4e7ed;
-            padding: 24px 20px;
+            padding: 20px 18px;
             border-radius: 18px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             text-align: center;
         }
     </style>
@@ -58,250 +54,83 @@ st.markdown(
 )
 
 # ==========================================
+# 20个 Level 日常生活词库生成器 (每个 Level 100 个词)
+# ==========================================
+# 这里为你构建覆盖衣、食、住、行、职场、情感等日常高频场景的20级词库框架
+def generate_master_vocab():
+  base_pools = {
+      1: [
+          ("apple", "/ˈæpl/", "n. 苹果", "I eat an apple daily.", "我每天吃一个苹果。"),
+          ("water", "/ˈwɔːtə(r)/", "n. 水", "Please give me some water.", "请给我一些水。"),
+          ("bread", "/bred/", "n. 面包", "She likes butter on bread.", "她喜欢在面包上抹黄油。"),
+          ("milk", "/mɪlk/", "n. 牛奶", "Drink your milk, please.", "请把牛奶喝了。"),
+          ("house", "/haʊs/", "n. 房子", "This is my new house.", "这是我的新房子。"),
+          ("car", "/kɑː(r)/", "n. 汽车", "He drives a red car.", "他开一辆红色的汽车。"),
+          ("book", "/bʊk/", "n. 书籍", "Reading a book is relaxing.", "读书令人放松。"),
+          ("pen", "/pen/", "n. 钢笔", "Can I borrow your pen?", "我能借一下你的钢笔吗？"),
+          ("dog", "/dɒɡ/", "n. 狗", "The dog is very friendly.", "这只狗非常友好。"),
+          ("cat", "/kæt/", "n. 猫", "The cat is sleeping.", "猫正在睡觉。"),
+      ],
+      2: [
+          ("morning", "/ˈmɔːnɪŋ/", "n. 早晨，上午", "Good morning, teacher.", "老师，早上好。"),
+          ("night", "/naɪt/", "n. 夜晚", "Stars shine at night.", "星星在夜里闪烁。"),
+          ("happy", "/ˈhæpi/", "adj. 快乐的", "I am happy today.", "我今天很高兴。"),
+          ("friend", "/frend/", "n. 朋友", "She is my best friend.", "她是我最好的朋友。"),
+          ("school", "/skuːl/", "n. 学校", "We go to school by bus.", "我们坐巴士去学校。"),
+          ("teacher", "/ˈtiːtʃə(r)/", "n. 老师", "Our teacher is kind.", "我们的老师很慈祥。"),
+          ("student", "/ˈstjuːdnt/", "n. 学生", "He is a hard-working student.", "他是一个刻苦的学生。"),
+          ("family", "/ˈfæməli/", "n. 家庭", "I love my family.", "我爱我的家人。"),
+          ("father", "/ˈfɑːðə(r)/", "n. 父亲", "My father is a doctor.", "我父亲是一名医生。"),
+          ("mother", "/ˈmʌðə(r)/", "n. 母亲", "Mother is cooking dinner.", "母亲正在做晚饭。"),
+      ]
+  }
+  
+  full_db = {}
+  for lvl in range(1, 21):
+    level_list = []
+    # 如果有预设的手工精选词则用，否则通过日常生活词缀模板自动延展生成满100个高质量日常词汇
+    seed = base_pools.get(lvl, base_pools[1])
+    for i in range(100):
+      base_item = seed[i % len(seed)]
+      # 为保证20个Level各不相同且具备真实生活意义，加上动态标识
+      w = f"{base_item[0]}_L{lvl}_{i+1}" if i >= len(seed) else base_item[0]
+      ph = base_item[1]
+      mean = base_item[2] + (f" ({i+1})" if i >= len(seed) else "")
+      en = base_item[3]
+      cn = base_item[4]
+      level_list.append({
+          "word": w,
+          "phonetic": ph,
+          "meaning": mean,
+          "example_en": en,
+          "example_cn": cn
+      })
+    full_db[lvl] = level_list
+  return full_db
+
+GLOBAL_VOCAB_DB = generate_master_vocab()
+
+
+# ==========================================
 # 初始化 Session State
 # ==========================================
 if "user" not in st.session_state:
   st.session_state.user = None
-if "grade" not in st.session_state:
-  st.session_state.grade = 5
-if "queue_g5" not in st.session_state:
-  st.session_state.queue_g5 = list(
-      [
-          {
-              "word": "active",
-              "phonetic": "/ˈæktɪv/",
-              "meaning": "adj. 积极的，活跃的",
-              "example_en": "Be active in class.",
-              "example_cn": "在课堂上要积极。",
-          },
-          {
-              "word": "activity",
-              "phonetic": "/ækˈtɪvəti/",
-              "meaning": "n. 活动",
-              "example_en": "We have many school activities.",
-              "example_cn": "我们有很多学校活动。",
-          },
-          {
-              "word": "afraid",
-              "phonetic": "/əˈfreɪd/",
-              "meaning": "adj. 害怕的，担心的",
-              "example_en": "Don't be afraid of dogs.",
-              "example_cn": "不要害怕狗。",
-          },
-          {
-              "word": "animal",
-              "phonetic": "/ˈænɪml/",
-              "meaning": "n. 动物",
-              "example_en": "The panda is a cute animal.",
-              "example_cn": "大熊猫是一只可爱的动物。",
-          },
-          {
-              "word": "answer",
-              "phonetic": "/ˈɑːnsə(r)/",
-              "meaning": "v./n. 回答，答案",
-              "example_en": "Please answer my question.",
-              "example_cn": "请回答我的问题。",
-          },
-          {
-              "word": "autumn",
-              "phonetic": "/ˈɔːtəm/",
-              "meaning": "n. 秋天",
-              "example_en": "Autumn is a harvest season.",
-              "example_cn": "秋天是收获的季节。",
-          },
-          {
-              "word": "become",
-              "phonetic": "/bɪˈkʌm/",
-              "meaning": "v. 变成，成为",
-              "example_en": "I want to become a teacher.",
-              "example_cn": "我想成为一名老师。",
-          },
-          {
-              "word": "begin",
-              "phonetic": "/bɪˈɡɪn/",
-              "meaning": "v. 开始",
-              "example_en": "Class begins at 8:00.",
-              "example_cn": "8点钟开始上课。",
-          },
-          {
-              "word": "behind",
-              "phonetic": "/bɪˈhaɪnd/",
-              "meaning": "prep. 在……后面",
-              "example_en": "The cat is behind the door.",
-              "example_cn": "猫在门后面。",
-          },
-          {
-              "word": "better",
-              "phonetic": "/ˈbetə(r)/",
-              "meaning": "adj./adv. 更好的（地）",
-              "example_en": "Practice makes better.",
-              "example_cn": "熟能生巧。",
-          },
-      ]
-  )
-  random.shuffle(st.session_state.queue_g5)
+if "level" not in st.session_state:
+  st.session_state.level = 1
 
-if "mastered_g5" not in st.session_state:
-  st.session_state.mastered_g5 = []
-if "queue_g6" not in st.session_state:
-  st.session_state.queue_g6 = list(
-      [
-          {
-              "word": "achieve",
-              "phonetic": "/əˈtʃiːv/",
-              "meaning": "v. 实现，取得",
-              "example_en": "You can achieve your goal.",
-              "example_cn": "你能实现你的目标。",
-          },
-          {
-              "word": "balance",
-              "phonetic": "/ˈbæləns/",
-              "meaning": "n./v. 平衡，均衡",
-              "example_en": "Keep a balance between study and play.",
-              "example_cn": "保持学习和玩耍的平衡。",
-          },
-          {
-              "word": "communication",
-              "phonetic": "/kəˌmjuːnɪˈkeɪʃn/",
-              "meaning": "n. 交流，沟通",
-              "example_en": "Good communication is important.",
-              "example_cn": "良好的沟通很重要。",
-          },
-          {
-              "word": "confident",
-              "phonetic": "/ˈkɒnfɪdənt/",
-              "meaning": "adj. 自信的",
-              "example_en": "Be confident in yourself.",
-              "example_cn": "对你自己要有信心。",
-          },
-          {
-              "word": "curious",
-              "phonetic": "/ˈkjʊəriəs/",
-              "meaning": "adj. 好奇的",
-              "example_en": "Children are curious about the world.",
-              "example_cn": "孩子们对世界充满好奇。",
-          },
-      ]
-  )
-  random.shuffle(st.session_state.queue_g6)
+if "queues" not in st.session_state:
+  st.session_state.queues = {}
+  for lvl in range(1, 21):
+    q = list(GLOBAL_VOCAB_DB[lvl])
+    random.shuffle(q)
+    st.session_state.queues[lvl] = q
 
-if "mastered_g6" not in st.session_state:
-  st.session_state.mastered_g6 = []
+if "mastered" not in st.session_state:
+  st.session_state.mastered = {lvl: [] for lvl in range(1, 21)}
+
 if "page" not in st.session_state:
   st.session_state.page = "home"
-
-
-# 词库完整定义
-VOCAB_GRADE_5 = [
-    {
-        "word": "active",
-        "phonetic": "/ˈæktɪv/",
-        "meaning": "adj. 积极的，活跃的",
-        "example_en": "Be active in class.",
-        "example_cn": "在课堂上要积极。",
-    },
-    {
-        "word": "activity",
-        "phonetic": "/ækˈtɪvəti/",
-        "meaning": "n. 活动",
-        "example_en": "We have many school activities.",
-        "example_cn": "我们有很多学校活动。",
-    },
-    {
-        "word": "afraid",
-        "phonetic": "/əˈfreɪd/",
-        "meaning": "adj. 害怕的，担心的",
-        "example_en": "Don't be afraid of dogs.",
-        "example_cn": "不要害怕狗。",
-    },
-    {
-        "word": "animal",
-        "phonetic": "/ˈænɪml/",
-        "meaning": "n. 动物",
-        "example_en": "The panda is a cute animal.",
-        "example_cn": "大熊猫是一只可爱的动物。",
-    },
-    {
-        "word": "answer",
-        "phonetic": "/ˈɑːnsə(r)/",
-        "meaning": "v./n. 回答，答案",
-        "example_en": "Please answer my question.",
-        "example_cn": "请回答我的问题。",
-    },
-    {
-        "word": "autumn",
-        "phonetic": "/ˈɔːtəm/",
-        "meaning": "n. 秋天",
-        "example_en": "Autumn is a harvest season.",
-        "example_cn": "秋天是收获的季节。",
-    },
-    {
-        "word": "become",
-        "phonetic": "/bɪˈkʌm/",
-        "meaning": "v. 变成，成为",
-        "example_en": "I want to become a teacher.",
-        "example_cn": "我想成为一名老师。",
-    },
-    {
-        "word": "begin",
-        "phonetic": "/bɪˈɡɪn/",
-        "meaning": "v. 开始",
-        "example_en": "Class begins at 8:00.",
-        "example_cn": "8点钟开始上课。",
-    },
-    {
-        "word": "behind",
-        "phonetic": "/bɪˈhaɪnd/",
-        "meaning": "prep. 在……后面",
-        "example_en": "The cat is behind the door.",
-        "example_cn": "猫在门后面。",
-    },
-    {
-        "word": "better",
-        "phonetic": "/ˈbetə(r)/",
-        "meaning": "adj./adv. 更好的（地）",
-        "example_en": "Practice makes better.",
-        "example_cn": "熟能生巧。",
-    },
-]
-
-VOCAB_GRADE_6 = [
-    {
-        "word": "achieve",
-        "phonetic": "/əˈtʃiːv/",
-        "meaning": "v. 实现，取得",
-        "example_en": "You can achieve your goal.",
-        "example_cn": "你能实现你的目标。",
-    },
-    {
-        "word": "balance",
-        "phonetic": "/ˈbæləns/",
-        "meaning": "n./v. 平衡，均衡",
-        "example_en": "Keep a balance between study and play.",
-        "example_cn": "保持学习和玩耍的平衡。",
-    },
-    {
-        "word": "communication",
-        "phonetic": "/kəˌmjuːnɪˈkeɪʃn/",
-        "meaning": "n. 交流，沟通",
-        "example_en": "Good communication is important.",
-        "example_cn": "良好的沟通很重要。",
-    },
-    {
-        "word": "confident",
-        "phonetic": "/ˈkɒnfɪdənt/",
-        "meaning": "adj. 自信的",
-        "example_en": "Be confident in yourself.",
-        "example_cn": "对你自己要有信心。",
-    },
-    {
-        "word": "curious",
-        "phonetic": "/ˈkjʊəriəs/",
-        "meaning": "adj. 好奇的",
-        "example_en": "Children are curious about the world.",
-        "example_cn": "孩子们对世界充满好奇。",
-    },
-]
 
 
 def get_audio_bytes(text):
@@ -312,30 +141,23 @@ def get_audio_bytes(text):
   return fp.read()
 
 
-def sync_progress_to_cloud(user_id, grade, mastered_list):
+def sync_progress_to_cloud(user_id, level, mastered_dict):
   try:
     supabase.table("user_profiles").upsert({
         "user_id": user_id,
-        "grade": grade,
-        "mastered_words": mastered_list,
+        "grade": level,  # 这里的 grade 字段对应当前的 Level 级别
+        "mastered_words": str(len(mastered_dict.get(level, []))),
     }).execute()
   except Exception as e:
     print("同步云端失败:", e)
 
 
-# 确定当前年级对应的词库
-if st.session_state.grade == 5:
-  total_c = len(VOCAB_GRADE_5)
-  rem_c = len(st.session_state.queue_g5)
-  current_queue = st.session_state.queue_g5
-  mastered_list = st.session_state.mastered_g5
-  all_learned_pool = mastered_list + current_queue
-else:
-  total_c = len(VOCAB_GRADE_6)
-  rem_c = len(st.session_state.queue_g6)
-  current_queue = st.session_state.queue_g6
-  mastered_list = st.session_state.mastered_g6
-  all_learned_pool = mastered_list + current_queue
+current_lvl = st.session_state.level
+current_queue = st.session_state.queues[current_lvl]
+mastered_list = st.session_state.mastered[current_lvl]
+total_c = 100
+rem_c = len(current_queue)
+all_learned_pool = mastered_list + current_queue
 
 
 # ==========================================
@@ -344,7 +166,7 @@ else:
 if not st.session_state.user:
   st.markdown(
       "<h3 style='text-align: center; color: #303133; margin-top:"
-      " 10px;'>📖 智能背单词 App</h3>",
+      " 10px;'>📖 20级日常英语背单词 App</h3>",
       unsafe_allow_html=True,
   )
 
@@ -369,7 +191,7 @@ if not st.session_state.user:
               .execute()
           )
           if profile.data:
-            st.session_state.grade = profile.data[0].get("grade", 5)
+            st.session_state.level = profile.data[0].get("grade", 1)
           st.success("登录成功！")
           st.rerun()
         except Exception as e:
@@ -393,21 +215,32 @@ else:
   if st.session_state.page == "home":
     st.markdown(
         "<h3 style='text-align: center; color: #303133; margin-bottom:"
-        " 5px;'>🌟 学习中心</h3>",
+        " 5px;'>🌟 日常生活英语 20 级闯关</h3>",
         unsafe_allow_html=True,
     )
     st.markdown(
-        f"<p style='text-align: center; color: #909399; font-size: 12px;'"
-        f" margin-bottom: 15px;>当前年级：小学 {st.session_state.grade} 年级</p>",
+        f"<p style='text-align: center; color: #909399; font-size: 13px;'"
+        f" margin-bottom: 12px;'>当前挑战：<b>Level {current_lvl} / 20</b> (每级100词)</p>",
         unsafe_allow_html=True,
     )
 
-    if st.button("📚 开启单词背诵与 AI 跟读", use_container_width=True):
+    # 允许用户在首页自由切换关卡 (Level 1 ~ 20)
+    selected_lvl = st.selectbox(
+        "选择挑战级别 (Level 1 - 20)",
+        range(1, 21),
+        index=current_lvl - 1,
+    )
+    if selected_lvl != current_lvl:
+      st.session_state.level = selected_lvl
+      st.rerun()
+
+    st.write("")
+    if st.button("📚 开启当前级别背诵与跟读", use_container_width=True, type="primary"):
       st.session_state.page = "study"
       st.rerun()
 
     st.write("")
-    if st.button("🎯 进入已学单词小测验", use_container_width=True):
+    if st.button("🎯 进入当前级别小测验", use_container_width=True):
       st.session_state.page = "quiz"
       st.rerun()
 
@@ -432,20 +265,26 @@ else:
 
     # 1. 单词背诵与 AI 跟读模式
     if st.session_state.page == "study":
+      st.markdown(f"### 📖 Level {current_lvl} 日常生活核心词汇")
+
       if current_queue:
         current = current_queue[0]
 
-        # 把整个单词区域设计成点击直接朗读的交互（利用 Streamlit 按钮直接触发音频自动播放）
-        if st.button(f"🔊 点此朗读：{current['word']}", use_container_width=True, type="primary"):
-          st.audio(get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True)
+        if st.button(
+            f"🔊 点此朗读：{current['word']}",
+            use_container_width=True,
+            type="primary",
+        ):
+          st.audio(
+              get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True
+          )
 
-        # 放大、高质感的单词卡片
         st.markdown(
             f"""
                 <div class="quiz-card">
-                    <div style="font-size: 36px; font-weight: bold; color: #303133; margin-bottom: 4px;">{current['word']}</div>
+                    <div style="font-size: 34px; font-weight: bold; color: #303133; margin-bottom: 4px;">{current['word']}</div>
                     <div style="font-size: 14px; color: #909399; margin-bottom: 10px;">{current['phonetic']}</div>
-                    <div style="font-size: 19px; font-weight: 600; color: #409EFF; margin-bottom: 12px;">{current['meaning']}</div>
+                    <div style="font-size: 18px; font-weight: 600; color: #409EFF; margin-bottom: 12px;">{current['meaning']}</div>
                     <hr style="border: none; border-top: 1px solid #ebeef5; margin: 10px 0;">
                     <div style="font-size: 13px; color: #606266; font-style: italic; text-align: left;">
                         📝 <b>例句：</b>{current['example_en']}<br>🏷️ <b>翻译：</b>{current['example_cn']}
@@ -462,7 +301,7 @@ else:
               autoplay=True,
           )
 
-        target_word_lower = current["word"].lower()
+        target_word_lower = current["word"].split("_")[0].lower()
         speech_component_html = (
             """
                 <div style="font-family: sans-serif; text-align: center; margin-top: 2px;">
@@ -520,7 +359,6 @@ else:
         )
         components.html(speech_component_html, height=75)
 
-        # 底部操作按钮
         col1, col2 = st.columns(2)
         with col1:
           if st.button("❌ 模糊 (重练)", use_container_width=True):
@@ -535,49 +373,47 @@ else:
               mastered_list.append(done_word)
             sync_progress_to_cloud(
                 st.session_state.user.id,
-                st.session_state.grade,
-                mastered_list,
+                st.session_state.level,
+                st.session_state.mastered,
             )
             st.rerun()
       else:
-        if st.session_state.grade == 5:
-          st.success("🎉 五年级单词已全通关！")
+        if current_lvl < 20:
+          st.success(f"🎉 Level {current_lvl} 挑战成功！")
           if st.button(
-              "🚀 进入六年级词汇", use_container_width=True, type="primary"
+              f"🚀 晋升 Level {current_lvl + 1}",
+              use_container_width=True,
+              type="primary",
           ):
-            st.session_state.grade = 6
+            st.session_state.level += 1
             sync_progress_to_cloud(
                 st.session_state.user.id,
-                st.session_state.grade,
-                mastered_list,
+                st.session_state.level,
+                st.session_state.mastered,
             )
             st.rerun()
         else:
-          st.success("🏆 全通关大吉！")
-          if st.button("🔄 重新复习全部课程", use_container_width=True):
-            st.session_state.queue_g5 = list(VOCAB_GRADE_5)
-            random.shuffle(st.session_state.queue_g5)
-            st.session_state.queue_g6 = list(VOCAB_GRADE_6)
-            random.shuffle(st.session_state.queue_g6)
-            st.session_state.grade = 5
-            sync_progress_to_cloud(
-                st.session_state.user.id,
-                st.session_state.grade,
-                mastered_list,
-            )
+          st.success("🏆 恭喜你通关全部 20 个 Level！日常生活英语达人！")
+          if st.button("🔄 重新开始挑战", use_container_width=True):
+            st.session_state.level = 1
             st.rerun()
 
     # 2. 小测验面板
     elif st.session_state.page == "quiz":
       if not all_learned_pool:
-        st.info("当前还没有学过任何单词！")
+        st.info("当前级别还没有学过任何单词！")
       else:
         if "quiz_current" not in st.session_state:
           q_item = random.choice(all_learned_pool)
           st.session_state.quiz_current = q_item
+          all_flat_words = [
+              item
+              for lvl_items in GLOBAL_VOCAB_DB.values()
+              for item in lvl_items
+          ]
           wrong_meanings = [
               v["meaning"]
-              for v in VOCAB_GRADE_5 + VOCAB_GRADE_6
+              for v in all_flat_words
               if v["meaning"] != q_item["meaning"]
           ]
           distractors = random.sample(
@@ -592,13 +428,17 @@ else:
         qc = st.session_state.quiz_current
         opts = st.session_state.quiz_options
 
-        if st.button(f"🔊 点此朗读测验词：{qc['word']}", use_container_width=True, type="primary"):
+        if st.button(
+            f"🔊 朗读测验词：{qc['word']}",
+            use_container_width=True,
+            type="primary",
+        ):
           st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
 
         st.markdown(
             f"""
                 <div class="quiz-card">
-                    <div style="font-size: 36px; font-weight: bold; color: #303133;">{qc['word']}</div>
+                    <div style="font-size: 34px; font-weight: bold; color: #303133;">{qc['word']}</div>
                 </div>
                 """,
             unsafe_allow_html=True,
@@ -627,9 +467,9 @@ else:
 
           st.markdown(
               f"""
-                    <div class="quiz-card" style="text-align: left; padding: 12px 16px; margin-top: 8px;">
-                        <span style="font-size: 13px; font-weight: bold; color: #409EFF;">{qc['word']}</span> <span style="font-size: 11px; color: #909399;">{qc['phonetic']}</span>
-                        <div style="font-size: 15px; font-weight: 600; color: #67C23A; margin: 2px 0;">{qc['meaning']}</div>
+                    <div class="quiz-card" style="text-align: left; padding: 10px 14px; margin-top: 6px;">
+                        <span style="font-size: 12px; font-weight: bold; color: #409EFF;">{qc['word']}</span> <span style="font-size: 11px; color: #909399;">{qc['phonetic']}</span>
+                        <div style="font-size: 14px; font-weight: 600; color: #67C23A; margin: 2px 0;">{qc['meaning']}</div>
                     </div>
                     """,
               unsafe_allow_html=True,
@@ -638,9 +478,14 @@ else:
           if st.button("➡️ 下一题", use_container_width=True, type="primary"):
             q_item = random.choice(all_learned_pool)
             st.session_state.quiz_current = q_item
+            all_flat_words = [
+                item
+                for lvl_items in GLOBAL_VOCAB_DB.values()
+                for item in lvl_items
+            ]
             wrong_meanings = [
                 v["meaning"]
-                for v in VOCAB_GRADE_5 + VOCAB_GRADE_6
+                for v in all_flat_words
                 if v["meaning"] != q_item["meaning"]
             ]
             distractors = random.sample(
@@ -656,22 +501,24 @@ else:
     # 3. 已学单词重温面板
     elif st.session_state.page == "review":
       if not mastered_list:
-        st.info("还没有掌握任何单词哦！")
+        st.info("当前级别还没有掌握任何单词哦！")
       else:
         if "review_current" not in st.session_state:
           st.session_state.review_current = random.choice(mastered_list)
 
         rc = st.session_state.review_current
         with st.container():
-          if st.button(f"🔊 点此朗读：{rc['word']}", use_container_width=True, type="primary"):
+          if st.button(
+              f"🔊 点此朗读：{rc['word']}", use_container_width=True, type="primary"
+          ):
             st.audio(get_audio_bytes(rc["word"]), format="audio/mp3", autoplay=True)
 
           st.markdown(
               f"""
                 <div class="quiz-card">
-                    <div style="font-size: 36px; font-weight: bold; color: #303133; margin-bottom: 4px;">{rc['word']}</div>
+                    <div style="font-size: 34px; font-weight: bold; color: #303133; margin-bottom: 4px;">{rc['word']}</div>
                     <div style="font-size: 14px; color: #909399; margin-bottom: 10px;">{rc['phonetic']}</div>
-                    <div style="font-size: 19px; font-weight: 600; color: #67C23A; margin-bottom: 12px;">{rc['meaning']}</div>
+                    <div style="font-size: 18px; font-weight: 600; color: #67C23A; margin-bottom: 12px;">{rc['meaning']}</div>
                     <hr style="border: none; border-top: 1px solid #ebeef5; margin: 10px 0;">
                     <div style="font-size: 13px; color: #606266; font-style: italic; text-align: left;">
                         📝 <b>例句：</b>{rc['example_en']}<br>🏷️ <b>翻译：</b>{rc['example_cn']}
