@@ -1,6 +1,4 @@
 import random
-from io import BytesIO
-from gtts import gTTS
 import streamlit as st
 import streamlit.components.v1 as components
 from supabase import create_client
@@ -15,17 +13,13 @@ st.set_page_config(
     page_title="AI 英语进阶闯关", page_icon="🦉", layout="centered"
 )
 
-# 注入手机端极简样式（隐藏原生音频播放器，优化进度条颜色）
+# 注入手机端极简样式
 st.markdown(
     """
     <style>
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
-        
-        [data-testid="stAudio"] {
-            display: none !important;
-        }
         
         /* 多邻国风格进度条 */
         .stProgress > div > div > div > div {
@@ -67,7 +61,36 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# === 动态高亮例句组件封装 ===
+# === 核心武器 1：原生前端单词朗读按钮 (完美突破手机静音限制) ===
+def render_word_audio_button(word, button_text="🔊 点此朗读单词"):
+    html_code = f"""
+    <style>
+        body {{ margin: 0; padding: 0; font-family: sans-serif; }}
+        button {{
+            width: 100%; 
+            background-color: #ff4b4b; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            font-size: 15px; 
+            font-weight: bold; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            box-shadow: 0 4px 0px rgba(255, 75, 75, 0.3); 
+            transition: transform 0.1s, box-shadow 0.1s;
+        }}
+        button:active {{
+            transform: translateY(4px);
+            box-shadow: 0 0px 0px rgba(0,0,0,0.1);
+        }}
+    </style>
+    <button onclick="window.speechSynthesis.cancel(); let u = new SpeechSynthesisUtterance('{word}'); u.lang='en-US'; window.speechSynthesis.speak(u);">
+        {button_text}
+    </button>
+    """
+    components.html(html_code, height=55)
+
+# === 核心武器 2：动态高亮例句组件 ===
 def render_highlight_example(example_en, example_cn):
     escaped_en = example_en.replace("'", "\\'")
     html_code = f"""
@@ -107,7 +130,6 @@ def render_highlight_example(example_en, example_cn):
     <script>
         const sentenceStr = "{escaped_en}";
         const container = document.getElementById("sentence-box");
-        // 正则仅匹配英文单词并包裹span，精准实现仅英文高亮
         container.innerHTML = sentenceStr.replace(/([a-zA-Z0-9']+)/g, '<span class="word">$1</span>');
         
         const wordSpans = container.querySelectorAll('.word');
@@ -173,14 +195,6 @@ if "page" not in st.session_state:
 
 if "hearts" not in st.session_state:
     st.session_state.hearts = 5
-
-
-def get_audio_bytes(text):
-    tts = gTTS(text=text, lang="en")
-    fp = BytesIO()
-    tts.write_to_fp(fp)
-    fp.seek(0)
-    return fp.read()
 
 
 def sync_progress_to_cloud(user_id, level, mastered_dict):
@@ -292,8 +306,8 @@ else:
             if current_queue:
                 current = current_queue[0]
 
-                if st.button(f"🔊 点此朗读单词", use_container_width=True, type="primary"):
-                    st.audio(get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True)
+                # 替换为全新的手机端无敌发音按钮
+                render_word_audio_button(current["word"], "🔊 点此朗读单词")
 
                 st.markdown(
                     f"""
@@ -306,7 +320,6 @@ else:
                     unsafe_allow_html=True,
                 )
                 
-                # 渲染独立的例句高亮卡片
                 render_highlight_example(current["example_en"], current["example_cn"])
 
                 # --- 操作按钮区域 ---
@@ -380,7 +393,9 @@ else:
                     # 答题后展现结果
                     if st.session_state.get("quiz_answered", False):
                         selected = st.session_state.selected_option
-                        st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
+                        
+                        # 在结果面板顶部放置发音按钮
+                        render_word_audio_button(qc["word"], "🔊 再次朗读单词")
 
                         if selected == qc["meaning"]:
                             status_msg = "✅ 完美！回答正确"
@@ -391,7 +406,7 @@ else:
 
                         st.markdown(
                             f"""
-                            <div class="quiz-card" style="border-color: {status_color}; margin-bottom: 12px;">
+                            <div class="quiz-card" style="border-color: {status_color}; margin-bottom: 12px; margin-top: 10px;">
                                 <div style="font-size: 36px; font-weight: bold; color: {status_color}; margin-bottom: 4px;">{qc['word']}</div>
                                 <div style="font-size: 16px; font-weight: bold; color: {status_color}; margin-bottom: 10px;">{status_msg}</div>
                                 <hr style="border: none; border-top: 2px dashed #f2f2f2; margin: 10px 0;">
@@ -402,7 +417,6 @@ else:
                             unsafe_allow_html=True,
                         )
                         
-                        # 渲染独立的例句高亮卡片
                         render_highlight_example(qc["example_en"], qc["example_cn"])
 
                         if st.button("➡️ 继续下一题", use_container_width=True, type="primary"):
@@ -420,12 +434,11 @@ else:
 
                     # 未答题状态
                     else:
-                        if st.button(f"🔊 点击听音", use_container_width=True):
-                            st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
+                        render_word_audio_button(qc["word"], "🔊 点击听音")
 
                         st.markdown(
                             f"""
-                            <div class="quiz-card">
+                            <div class="quiz-card" style="margin-top: 10px;">
                                 <div style="font-size: 38px; font-weight: bold; color: #303133;">{qc['word']}</div>
                             </div>
                             """,
@@ -463,12 +476,11 @@ else:
 
                 rc = st.session_state.review_current
                 
-                if st.button(f"🔊 点此朗读单词", use_container_width=True, type="primary"):
-                    st.audio(get_audio_bytes(rc["word"]), format="audio/mp3", autoplay=True)
+                render_word_audio_button(rc["word"], "🔊 点此朗读单词")
 
                 st.markdown(
                     f"""
-                        <div class="quiz-card" style="margin-bottom: 12px;">
+                        <div class="quiz-card" style="margin-bottom: 12px; margin-top: 10px;">
                             <div style="font-size: 38px; font-weight: bold; color: #303133; margin-bottom: 4px;">{rc['word']}</div>
                             <div style="font-size: 14px; color: #afafaf; margin-bottom: 10px;">{rc['phonetic']}</div>
                             <div style="font-size: 18px; font-weight: 600; color: #1cb0f6;">{rc['meaning']}</div>
@@ -477,7 +489,6 @@ else:
                     unsafe_allow_html=True,
                 )
                 
-                # 渲染独立的例句高亮卡片
                 render_highlight_example(rc["example_en"], rc["example_cn"])
 
                 st.write("")
