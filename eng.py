@@ -5,7 +5,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 from supabase import create_client
 
-from vocab_data import GLOBAL_VOCAB_DB
+                     from vocab_data import GLOBAL_VOCAB_DB
 
 # 读取 Supabase 配置
 url = st.secrets["SUPABASE_URL"]
