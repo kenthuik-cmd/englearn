@@ -95,17 +95,7 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词"):
     <style>
         body {{ margin: 0; padding: 0; font-family: sans-serif; }}
         button {{
-            width: 100%; 
-            background-color: #ff4b4b; 
-            color: white; 
-            border: none; 
-            padding: 12px; 
-            font-size: 15px; 
-            font-weight: bold; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            box-shadow: 0 4px 0px rgba(255, 75, 75, 0.3); 
-            transition: transform 0.1s, box-shadow 0.1s;
+            width: 100%; background-color: #ff4b4b; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0px rgba(255, 75, 75, 0.3); transition: transform 0.1s, box-shadow 0.1s;
         }}
         button:active {{ transform: translateY(4px); box-shadow: 0 0px 0px rgba(0,0,0,0.1); }}
     </style>
@@ -115,47 +105,25 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词"):
     """
     components.html(html_code, height=55)
 
-# === 新增：盲听专属的双重发音按钮 (快+慢) ===
+# === 盲听双重发音按钮 ===
 def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常速+慢速)"):
     html_code = f"""
     <style>
         body {{ margin: 0; padding: 0; font-family: sans-serif; }}
         button {{
-            width: 100%; 
-            background-color: #9c27b0; 
-            color: white; 
-            border: none; 
-            padding: 12px; 
-            font-size: 15px; 
-            font-weight: bold; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            box-shadow: 0 4px 0px rgba(156, 39, 176, 0.3); 
-            transition: transform 0.1s, box-shadow 0.1s;
+            width: 100%; background-color: #9c27b0; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0px rgba(156, 39, 176, 0.3); transition: transform 0.1s, box-shadow 0.1s;
         }}
         button:active {{ transform: translateY(4px); box-shadow: 0 0px 0px rgba(0,0,0,0.1); }}
     </style>
     <script>
         function playTwice() {{
             window.speechSynthesis.cancel();
-            
-            // 第一遍：常速
-            let u1 = new SpeechSynthesisUtterance('{word}');
-            u1.lang = 'en-US';
-            u1.rate = 1.0;
-            
-            // 第二遍：慢速
-            let u2 = new SpeechSynthesisUtterance('{word}');
-            u2.lang = 'en-US';
-            u2.rate = 0.6; // 0.6 是既能听清细节，又不会过于失真的最佳慢速
-            
-            window.speechSynthesis.speak(u1);
-            window.speechSynthesis.speak(u2);
+            let u1 = new SpeechSynthesisUtterance('{word}'); u1.lang = 'en-US'; u1.rate = 1.0;
+            let u2 = new SpeechSynthesisUtterance('{word}'); u2.lang = 'en-US'; u2.rate = 0.6; 
+            window.speechSynthesis.speak(u1); window.speechSynthesis.speak(u2);
         }}
     </script>
-    <button onclick="playTwice()">
-        {button_text}
-    </button>
+    <button onclick="playTwice()">{button_text}</button>
     """
     components.html(html_code, height=55)
 
@@ -198,7 +166,6 @@ def render_highlight_example(example_en, example_cn):
             const utterance = new SpeechSynthesisUtterance(sentenceStr);
             utterance.lang = 'en-US';
             utterance.rate = 0.85;
-            
             let currentWordIndex = 0;
             utterance.onboundary = (event) => {{
                 if (event.name === 'word') {{
@@ -216,33 +183,36 @@ def render_highlight_example(example_en, example_cn):
     """
     components.html(html_code, height=205)
 
+# === 核心函数：从云端完美恢复进度 ===
+def restore_progress_from_db(profile_data):
+    if profile_data:
+        db_lvl = profile_data[0].get("grade", 1)
+        st.session_state.level = db_lvl
+        
+        # 读取云端保存的已掌握单词字符串 (例如: "apple,book,cat")
+        saved_str = str(profile_data[0].get("mastered_words", ""))
+        
+        # 兼容旧版本的数字长度，只解析真实的字符串
+        if saved_str and not saved_str.isdigit():
+            saved_words = saved_str.split(",")
+            full_level_words = GLOBAL_VOCAB_DB.get(db_lvl, [])
+            
+            # 精准重建掌握列表和未背队列
+            st.session_state.mastered[db_lvl] = [w for w in full_level_words if w["word"] in saved_words]
+            remaining = [w for w in full_level_words if w["word"] not in saved_words]
+            random.shuffle(remaining)
+            st.session_state.queues[db_lvl] = remaining
+
+
 # === 初始化 Session State ===
-if "user" not in st.session_state:
-    st.session_state.user = None
-
-if not st.session_state.user and "uid" in st.query_params:
-    saved_uid = st.query_params["uid"]
-    class AutoLoginUser:
-        def __init__(self, uid):
-            self.id = uid
-    st.session_state.user = AutoLoginUser(saved_uid)
-    try:
-        profile = supabase.table("user_profiles").select("*").eq("user_id", saved_uid).execute()
-        if profile.data:
-            st.session_state.level = profile.data[0].get("grade", 1)
-    except Exception:
-        pass
-
 if "level" not in st.session_state:
     st.session_state.level = 1
-
 if "queues" not in st.session_state:
     st.session_state.queues = {}
     for lvl in range(1, 21):
         q = list(GLOBAL_VOCAB_DB[lvl])
         random.shuffle(q)
         st.session_state.queues[lvl] = q
-
 if "mastered" not in st.session_state:
     st.session_state.mastered = {lvl: [] for lvl in range(1, 21)}
 
@@ -258,18 +228,38 @@ if "quiz_options" not in st.session_state:
 if "correct_ans" not in st.session_state:
     st.session_state.correct_ans = ""
 
+# 通过 URL 参数强制记住红心和连胜
 if "hearts" not in st.session_state:
-    st.session_state.hearts = 5
+    st.session_state.hearts = int(st.query_params.get("hearts", 5))
 if "streak" not in st.session_state:
-    st.session_state.streak = 1
+    st.session_state.streak = int(st.query_params.get("streak", 1))
+
+# === 免密自动登录触发恢复机制 ===
+if "user" not in st.session_state:
+    st.session_state.user = None
+
+if not st.session_state.user and "uid" in st.query_params:
+    saved_uid = st.query_params["uid"]
+    class AutoLoginUser:
+        def __init__(self, uid):
+            self.id = uid
+    st.session_state.user = AutoLoginUser(saved_uid)
+    try:
+        profile = supabase.table("user_profiles").select("*").eq("user_id", saved_uid).execute()
+        restore_progress_from_db(profile.data)
+    except Exception:
+        pass
 
 
 def sync_progress_to_cloud(user_id, level, mastered_dict):
     try:
+        # 修改为：将所有已掌握的单词拼接成字符串保存，真实锁死进度！
+        mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
+        mastered_str = ",".join(mastered_words_list)
         supabase.table("user_profiles").upsert({
             "user_id": user_id,
             "grade": level,
-            "mastered_words": str(len(mastered_dict.get(level, []))),
+            "mastered_words": mastered_str,
         }).execute()
     except Exception as e:
         pass
@@ -297,8 +287,8 @@ if not st.session_state.user:
                     st.session_state.user = res.user
                     st.query_params["uid"] = res.user.id
                     profile = supabase.table("user_profiles").select("*").eq("user_id", res.user.id).execute()
-                    if profile.data:
-                        st.session_state.level = profile.data[0].get("grade", 1)
+                    # 登录时触发进度完美恢复
+                    restore_progress_from_db(profile.data)
                     st.success("登录成功！")
                     st.rerun()
                 except Exception as e:
@@ -374,8 +364,7 @@ else:
         if st.button("🚪 退出登录", use_container_width=True):
             st.session_state.user = None
             st.session_state.page = "home"
-            if "uid" in st.query_params:
-                del st.query_params["uid"]
+            st.query_params.clear() # 退出时清空所有网址参数
             st.rerun()
 
     # ---------------- 子页面 ----------------
@@ -457,6 +446,7 @@ else:
                     st.error("💔 你的红心耗尽了！测验被迫中断。")
                     if st.button("🔄 满血复活 (恢复 5 颗红心)", use_container_width=True, type="primary"):
                         st.session_state.hearts = 5
+                        st.query_params["hearts"] = 5  # 写入网址
                         st.rerun()
                 else:
                     q_type = st.session_state.get("quiz_mode", "normal")
@@ -537,7 +527,6 @@ else:
                             
                         elif q_type == "listen":
                             st.markdown("<h4 style='text-align:center; color:#9c27b0;'>🎧 盲听辨义</h4>", unsafe_allow_html=True)
-                            # 使用专属的双重发音按钮！
                             render_blind_listen_button(qc["word"], "🔊 播放神秘音频 (常速+慢速)")
                             st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:20px; font-weight:bold; color:#afafaf;'>❓❓❓</div></div>", unsafe_allow_html=True)
 
@@ -561,6 +550,7 @@ else:
                                     st.session_state.selected_option = user_spell.strip().lower()
                                     if st.session_state.selected_option != correct_ans:
                                         st.session_state.hearts -= 1
+                                        st.query_params["hearts"] = st.session_state.hearts # 同步扣心到网址
                                     st.rerun()
                         else:
                             col_a, col_b = st.columns(2)
@@ -579,6 +569,7 @@ else:
                                         st.session_state.selected_option = opt
                                         if opt != correct_ans:
                                             st.session_state.hearts -= 1
+                                            st.query_params["hearts"] = st.session_state.hearts # 同步扣心到网址
                                         st.rerun()
 
         # ==========================================
