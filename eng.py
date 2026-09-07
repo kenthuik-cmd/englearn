@@ -2,6 +2,7 @@ from io import BytesIO
 import random
 from gtts import gTTS
 import streamlit as st
+import streamlit.components.v1 as components
 
 # 五年级单词库 (100个)
 VOCAB_GRADE_5 = [
@@ -584,7 +585,7 @@ VOCAB_GRADE_5 = [
         "phonetic": "/mjuˈziːəm/",
         "meaning": "n. 博物馆",
         "example_en": "We visited the science museum.",
-        "example_cn": "We visited the science museum.",
+        "example_cn": "我们参观了科学博物馆。",
     },
     {
         "word": "natural",
@@ -707,7 +708,7 @@ VOCAB_GRADE_5 = [
     },
 ]
 
-# 六年级升级单词库（聚焦日常生活、社交、校园与生活高频词）
+# 六年级升级单词库
 VOCAB_GRADE_6 = [
     {
         "word": "achieve",
@@ -860,16 +861,16 @@ def get_audio_bytes(text):
   return fp.read()
 
 
-st.title("📖 校园英语闯关与重温系统")
+st.title("📖 AI 智能语音跟读与闯关系统")
 
-# 初始化 Session 状态
+# 初始化状态
 if "grade" not in st.session_state:
-  st.session_state.grade = 5  # 默认从五年级开始
+  st.session_state.grade = 5
 if "queue_g5" not in st.session_state:
   st.session_state.queue_g5 = list(VOCAB_GRADE_5)
   random.shuffle(st.session_state.queue_g5)
 if "mastered_g5" not in st.session_state:
-  st.session_state.mastered_g5 = []  # 保存已掌握的五年级单词用于重温
+  st.session_state.mastered_g5 = []
 
 if "queue_g6" not in st.session_state:
   st.session_state.queue_g6 = list(VOCAB_GRADE_6)
@@ -878,13 +879,12 @@ if "mastered_g6" not in st.session_state:
   st.session_state.mastered_g6 = []
 
 if "mode" not in st.session_state:
-  st.session_state.mode = "study"  # "study" 或 "review"
+  st.session_state.mode = "study"
 
-# 侧边栏：显示当前年级、进度与重温功能入口
+# 侧边栏
 st.sidebar.title("📌 学习面板")
 st.sidebar.write(f"当前年级：**小学 {st.session_state.grade} 年级**")
 
-# 计算进度
 if st.session_state.grade == 5:
   total_c = len(VOCAB_GRADE_5)
   rem_c = len(st.session_state.queue_g5)
@@ -896,8 +896,7 @@ else:
   current_queue = st.session_state.queue_g6
   mastered_list = st.session_state.mastered_g6
 
-progress_val = (total_c - rem_c) / total_c
-st.sidebar.progress(progress_val)
+st.sidebar.progress((total_c - rem_c) / total_c)
 st.sidebar.write(
     f"📊 本阶段总数：{total_c} 个 | 待学习：{rem_c} 个 | 已掌握："
     f" {len(mastered_list)} 个"
@@ -905,7 +904,7 @@ st.sidebar.write(
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("🔄 功能切换")
-if st.sidebar.button("📚 正常背诵模式", use_container_width=True):
+if st.sidebar.button("📚 正常背诵与AI跟读", use_container_width=True):
   st.session_state.mode = "study"
   st.rerun()
 
@@ -915,36 +914,32 @@ if st.sidebar.button("🔁 已掌握单词重温", use_container_width=True):
 
 # 主界面逻辑
 if st.session_state.mode == "review":
-  st.subheader(f"🔁 【六年级/五年级】已掌握单词重温大本营")
+  st.subheader("🔁 已掌握单词重温大本营")
   if not mastered_list:
-    st.info(
-        "你还没有完全掌握任何单词哦！先去“正常背诵模式”攻克单词吧。"
-    )
+    st.info("你还没有完全掌握任何单词哦！先去“正常背诵模式”攻克单词吧。")
   else:
-    # 随机展示一个已掌握的单词进行重温
     if "review_current" not in st.session_state:
       st.session_state.review_current = random.choice(mastered_list)
 
     rc = st.session_state.review_current
     with st.container():
       st.markdown(f"## **{rc['word']}** (已掌握复习)")
-      w_audio = get_audio_bytes(rc["word"])
-      st.audio(w_audio, format="audio/mp3")
+      st.audio(get_audio_bytes(rc["word"]), format="audio/mp3")
 
       st.write(f"🔊 **音标**：`{rc['phonetic']}`")
       st.write(f"💡 **释义**：**{rc['meaning']}**")
       st.info(f"📝 **例句**：{rc['example_en']}\n\n🏷️ **翻译**：{rc['example_cn']}")
 
       if st.button("🔊 朗读例句"):
-        e_audio = get_audio_bytes(rc["example_en"])
-        st.audio(e_audio, format="audio/mp3", autoplay=True)
+        st.audio(
+            get_audio_bytes(rc["example_en"]), format="audio/mp3", autoplay=True
+        )
 
     if st.button("➡️ 换一个复习", use_container_width=True):
       st.session_state.review_current = random.choice(mastered_list)
       st.rerun()
 
 else:
-  # 正常背诵模式
   if st.session_state.grade == 5:
     st.subheader("📖 小学五年级核心单词闯关")
   else:
@@ -955,8 +950,7 @@ else:
 
     with st.container():
       st.markdown(f"## **{current['word']}**")
-      word_audio = get_audio_bytes(current["word"])
-      st.audio(word_audio, format="audio/mp3")
+      st.audio(get_audio_bytes(current["word"]), format="audio/mp3")
 
       st.write(f"🔊 **音标**：`{current['phonetic']}`")
       st.write(f"💡 **释义**：**{current['meaning']}**")
@@ -966,8 +960,76 @@ else:
       )
 
       if st.button("🔊 朗读例句"):
-        example_audio = get_audio_bytes(current["example_en"])
-        st.audio(example_audio, format="audio/mp3", autoplay=True)
+        st.audio(
+            get_audio_bytes(current["example_en"]),
+            format="audio/mp3",
+            autoplay=True,
+        )
+
+      # ---------------------------------------------------------
+      # 🎤 AI 语音跟读测评模块 (基于浏览器原生语音识别，全平台免费免配置)
+      # ---------------------------------------------------------
+      st.markdown("---")
+      st.markdown("#### 🎙️ AI 语音跟读评测")
+      st.write(
+          "点击下方按钮并对着麦克风大声读出上方单词，AI 会立即检测你的发音！"
+      )
+
+      # 动态构建针对当前单词校验的前端 HTML/JS 组件
+      target_word_lower = current["word"].lower()
+      speech_component_html = f"""
+            <div style="font-family: sans-serif; text-align: center; padding: 10px;">
+                <button id="recordBtn" style="background-color: #ff4b4b; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 8px; cursor: pointer;">🎙️ 点击开始说话跟读</button>
+                <p id="statusText" style="margin-top: 10px; color: #555; font-size: 14px;"></p>
+            </div>
+            <script>
+                const targetWord = "{target_word_lower}";
+                const btn = document.getElementById('recordBtn');
+                const statusText = document.getElementById('statusText');
+
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SpeechRecognition) {
+                    statusText.innerHTML = "❌ 你的浏览器不支持语音识别，请使用 Chrome 或手机自带浏览器。";
+                    btn.disabled = true;
+                } else {
+                    const recognition = new SpeechRecognition();
+                    recognition.lang = 'en-US';
+                    recognition.interimResults = false;
+                    recognition.maxAlternatives = 1;
+
+                    btn.onclick = function() {{
+                        statusText.innerHTML = "👂 正在听你发音，请说话...";
+                        btn.style.backgroundColor = "#ffa500";
+                        recognition.start();
+                    }};
+
+                    recognition.onresult = function(event) {{
+                        const speechResult = event.results[0][0].transcript.trim().toLowerCase();
+                        // 去除末尾可能带有的标点符号
+                        const cleanResult = speechResult.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+                        
+                        if (cleanResult.includes(targetWord)) {{
+                            statusText.innerHTML = "✅ 识别成功！你读的是: <b>" + speechResult + "</b> 🎉 发音标准！";
+                            btn.style.backgroundColor = "#28a745";
+                        }} else {{
+                            statusText.innerHTML = "❌ 识别结果为: <b>" + speechResult + "</b>，再试一次哦！";
+                            btn.style.backgroundColor = "#dc3545";
+                        }}
+                    }};
+
+                    recognition.onerror = function(event) {{
+                        statusText.innerHTML = "⚠️ 识别出错: " + event.error + "，请重试。";
+                        btn.style.backgroundColor = "#ff4b4b";
+                    }};
+
+                    recognition.onspeechend = function() {{
+                        recognition.stop();
+                        btn.innerHTML = "🎙️ 再次跟读";
+                    }};
+                }}
+            </script>
+            """
+      components.html(speech_component_html, height=120)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -981,7 +1043,6 @@ else:
           mastered_list.append(done_word)
         st.rerun()
   else:
-    # 当前年级学完了
     if st.session_state.grade == 5:
       st.success(
           "🎉 太棒了！五年级 100 个单词你已经全部顺利掌握，即将自动晋升到"
