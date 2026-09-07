@@ -10,7 +10,7 @@ url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_ANON_KEY"]
 supabase = create_client(url, key)
 
-# 页面设置：开启移动端紧凑布局，并隐藏默认菜单与页脚
+# 页面设置
 st.set_page_config(
     page_title="AI 英语背单词", page_icon="📖", layout="centered"
 )
@@ -19,12 +19,12 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-        /* 隐藏 Streamlit 默认的顶部导航和底部 Powered by 标识 */
+        /* 隐藏 Streamlit 默认的顶部导航和底部标识 */
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
         
-        /* 调整整体页面内边距，使手机端左右不留白过多 */
+        /* 调整整体页面内边距，使手机端左右自适应 */
         .block-container {
             padding-top: 1.5rem;
             padding-bottom: 2rem;
@@ -33,7 +33,7 @@ st.markdown(
             max-width: 600px;
         }
 
-        /* 手机端大按钮美化（圆角、高触感） */
+        /* 手机端大按钮美化 */
         .stButton > button {
             border-radius: 12px;
             font-weight: 600;
@@ -65,120 +65,124 @@ if "user" not in st.session_state:
 if "grade" not in st.session_state:
   st.session_state.grade = 5
 if "queue_g5" not in st.session_state:
-  st.session_state.queue_g5 = list(VOCAB_GRADE_5 := [
-      {
-          "word": "active",
-          "phonetic": "/ˈæktɪv/",
-          "meaning": "adj. 积极的，活跃的",
-          "example_en": "Be active in class.",
-          "example_cn": "在课堂上要积极。",
-      },
-      {
-          "word": "activity",
-          "phonetic": "/ækˈtɪvəti/",
-          "meaning": "n. 活动",
-          "example_en": "We have many school activities.",
-          "example_cn": "我们有很多学校活动。",
-      },
-      {
-          "word": "afraid",
-          "phonetic": "/əˈfreɪd/",
-          "meaning": "adj. 害怕的，担心的",
-          "example_en": "Don't be afraid of dogs.",
-          "example_cn": "不要害怕狗。",
-      },
-      {
-          "word": "animal",
-          "phonetic": "/ˈænɪml/",
-          "meaning": "n. 动物",
-          "example_en": "The panda is a cute animal.",
-          "example_cn": "大熊猫是一只可爱的动物。",
-      },
-      {
-          "word": "answer",
-          "phonetic": "/ˈɑːnsə(r)/",
-          "meaning": "v./n. 回答，答案",
-          "example_en": "Please answer my question.",
-          "example_cn": "请回答我的问题。",
-      },
-      {
-          "word": "autumn",
-          "phonetic": "/ˈɔːtəm/",
-          "meaning": "n. 秋天",
-          "example_en": "Autumn is a harvest season.",
-          "example_cn": "秋天是收获的季节。",
-      },
-      {
-          "word": "become",
-          "phonetic": "/bɪˈkʌm/",
-          "meaning": "v. 变成，成为",
-          "example_en": "I want to become a teacher.",
-          "example_cn": "我想成为一名老师。",
-      },
-      {
-          "word": "begin",
-          "phonetic": "/bɪˈɡɪn/",
-          "meaning": "v. 开始",
-          "example_en": "Class begins at 8:00.",
-          "example_cn": "8点钟开始上课。",
-      },
-      {
-          "word": "behind",
-          "phonetic": "/bɪˈhaɪnd/",
-          "meaning": "prep. 在……后面",
-          "example_en": "The cat is behind the door.",
-          "example_cn": "猫在门后面。",
-      },
-      {
-          "word": "better",
-          "phonetic": "/ˈbetə(r)/",
-          "meaning": "adj./adv. 更好的（地）",
-          "example_en": "Practice makes better.",
-          "example_cn": "熟能生巧。",
-      },
-  ])
+  st.session_state.queue_g5 = list(
+      [
+          {
+              "word": "active",
+              "phonetic": "/ˈæktɪv/",
+              "meaning": "adj. 积极的，活跃的",
+              "example_en": "Be active in class.",
+              "example_cn": "在课堂上要积极。",
+          },
+          {
+              "word": "activity",
+              "phonetic": "/ækˈtɪvəti/",
+              "meaning": "n. 活动",
+              "example_en": "We have many school activities.",
+              "example_cn": "我们有很多学校活动。",
+          },
+          {
+              "word": "afraid",
+              "phonetic": "/əˈfreɪd/",
+              "meaning": "adj. 害怕的，担心的",
+              "example_en": "Don't be afraid of dogs.",
+              "example_cn": "不要害怕狗。",
+          },
+          {
+              "word": "animal",
+              "phonetic": "/ˈænɪml/",
+              "meaning": "n. 动物",
+              "example_en": "The panda is a cute animal.",
+              "example_cn": "大熊猫是一只可爱的动物。",
+          },
+          {
+              "word": "answer",
+              "phonetic": "/ˈɑːnsə(r)/",
+              "meaning": "v./n. 回答，答案",
+              "example_en": "Please answer my question.",
+              "example_cn": "请回答我的问题。",
+          },
+          {
+              "word": "autumn",
+              "phonetic": "/ˈɔːtəm/",
+              "meaning": "n. 秋天",
+              "example_en": "Autumn is a harvest season.",
+              "example_cn": "秋天是收获的季节。",
+          },
+          {
+              "word": "become",
+              "phonetic": "/bɪˈkʌm/",
+              "meaning": "v. 变成，成为",
+              "example_en": "I want to become a teacher.",
+              "example_cn": "我想成为一名老师。",
+          },
+          {
+              "word": "begin",
+              "phonetic": "/bɪˈɡɪn/",
+              "meaning": "v. 开始",
+              "example_en": "Class begins at 8:00.",
+              "example_cn": "8点钟开始上课。",
+          },
+          {
+              "word": "behind",
+              "phonetic": "/bɪˈhaɪnd/",
+              "meaning": "prep. 在……后面",
+              "example_en": "The cat is behind the door.",
+              "example_cn": "猫在门后面。",
+          },
+          {
+              "word": "better",
+              "phonetic": "/ˈbetə(r)/",
+              "meaning": "adj./adv. 更好的（地）",
+              "example_en": "Practice makes better.",
+              "example_cn": "熟能生巧。",
+          },
+      ]
+  )
   random.shuffle(st.session_state.queue_g5)
 
 if "mastered_g5" not in st.session_state:
   st.session_state.mastered_g5 = []
 if "queue_g6" not in st.session_state:
-  st.session_state.queue_g6 = list(VOCAB_GRADE_6 := [
-      {
-          "word": "achieve",
-          "phonetic": "/əˈtʃiːv/",
-          "meaning": "v. 实现，取得",
-          "example_en": "You can achieve your goal.",
-          "example_cn": "你能实现你的目标。",
-      },
-      {
-          "word": "balance",
-          "phonetic": "/ˈbæləns/",
-          "meaning": "n./v. 平衡，均衡",
-          "example_en": "Keep a balance between study and play.",
-          "example_cn": "保持学习和玩耍的平衡。",
-      },
-      {
-          "word": "communication",
-          "phonetic": "/kəˌmjuːnɪˈkeɪʃn/",
-          "meaning": "n. 交流，沟通",
-          "example_en": "Good communication is important.",
-          "example_cn": "良好的沟通很重要。",
-      },
-      {
-          "word": "confident",
-          "phonetic": "/ˈkɒnfɪdənt/",
-          "meaning": "adj. 自信的",
-          "example_en": "Be confident in yourself.",
-          "example_cn": "对你自己要有信心。",
-      },
-      {
-          "word": "curious",
-          "phonetic": "/ˈkjʊəriəs/",
-          "meaning": "adj. 好奇的",
-          "example_en": "Children are curious about the world.",
-          "example_cn": "孩子们对世界充满好奇。",
-      },
-  ])
+  st.session_state.queue_g6 = list(
+      [
+          {
+              "word": "achieve",
+              "phonetic": "/əˈtʃiːv/",
+              "meaning": "v. 实现，取得",
+              "example_en": "You can achieve your goal.",
+              "example_cn": "你能实现你的目标。",
+          },
+          {
+              "word": "balance",
+              "phonetic": "/ˈbæləns/",
+              "meaning": "n./v. 平衡，均衡",
+              "example_en": "Keep a balance between study and play.",
+              "example_cn": "保持学习和玩耍的平衡。",
+          },
+          {
+              "word": "communication",
+              "phonetic": "/kəˌmjuːnɪˈkeɪʃn/",
+              "meaning": "n. 交流，沟通",
+              "example_en": "Good communication is important.",
+              "example_cn": "良好的沟通很重要。",
+          },
+          {
+              "word": "confident",
+              "phonetic": "/ˈkɒnfɪdənt/",
+              "meaning": "adj. 自信的",
+              "example_en": "Be confident in yourself.",
+              "example_cn": "对你自己要有信心。",
+          },
+          {
+              "word": "curious",
+              "phonetic": "/ˈkjʊəriəs/",
+              "meaning": "adj. 好奇的",
+              "example_en": "Children are curious about the world.",
+              "example_cn": "孩子们对世界充满好奇。",
+          },
+      ]
+  )
   random.shuffle(st.session_state.queue_g6)
 
 if "mastered_g6" not in st.session_state:
@@ -402,7 +406,6 @@ else:
     )
     st.markdown("---")
 
-    # 手机触控优化的精致大卡片按钮
     if st.button("📚 开启单词背诵与 AI 跟读", use_container_width=True):
       st.session_state.page = "study"
       st.rerun()
@@ -443,7 +446,6 @@ else:
       if current_queue:
         current = current_queue[0]
 
-        # 手机端单词卡片容器
         with st.container():
           st.markdown(
               f"""
@@ -474,14 +476,14 @@ else:
           st.write("点击下方按钮并大声读出上方单词：")
 
           target_word_lower = current["word"].lower()
-          speech_component_html = (
-              """
+          # 使用 .format() 替代 % 符号，彻底规避语法冲突
+          speech_component_html = """
                     <div style="font-family: sans-serif; text-align: center; padding: 5px;">
                         <button id="recordBtn" style="background-color: #ff4b4b; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 12px; cursor: pointer; width: 100%;">🎙️ 点击开始说话跟读</button>
                         <p id="statusText" style="margin-top: 8px; color: #555; font-size: 13px;"></p>
                     </div>
                     <script>
-                        const targetWord = "%s";
+                        const targetWord = "{target_word}";
                         const btn = document.getElementById('recordBtn');
                         const statusText = document.getElementById('statusText');
 
@@ -495,38 +497,38 @@ else:
                             recognition.interimResults = false;
                             recognition.maxAlternatives = 1;
 
-                            btn.onclick = function() {
+                            btn.onclick = function() {{
                                 statusText.innerHTML = "👂 正在听你发音，请说话...";
                                 btn.style.backgroundColor = "#ffa500";
                                 recognition.start();
-                            };
+                            }};
 
-                            recognition.onresult = function(event) {
+                            recognition.onresult = function(event) {{
                                 const speechResult = event.results[0][0].transcript.trim().toLowerCase();
-                                const cleanResult = speechResult.replace(/[.,\/#!$%%^&*;:{}=\-_`~()]/g,"");
+                                const cleanResult = speechResult.replace(/[.,\/#!$%%^&*;:{}=\\-_`~()]/g,"");
                                 
-                                if (cleanResult.includes(targetWord)) {
+                                if (cleanResult.includes(targetWord)) {{
                                     statusText.innerHTML = "✅ 识别成功！你读的是: <b>" + speechResult + "</b> 🎉 发音标准！";
                                     btn.style.backgroundColor = "#67C23A";
-                                } else {
+                                }} else {{
                                     statusText.innerHTML = "❌ 识别结果为: <b>" + speechResult + "</b>，再试一次哦！";
                                     btn.style.backgroundColor = "#F56C6C";
-                                }
-                            };
+                                }}
+                            }};
 
-                            recognition.onerror = function(event) {
+                            recognition.onerror = function(event) {{
                                 statusText.innerHTML = "⚠️ 识别出错: " + event.error;
                                 btn.style.backgroundColor = "#ff4b4b";
-                            };
+                            }};
 
-                            recognition.onspeechend = function() {
+                            recognition.onspeechend = function() {{
                                 recognition.stop();
                                 btn.innerHTML = "🎙️ 再次跟读";
-                            };
+                            }};
                         }
                     </script>
-                    """
-              % target_word_lower
+                    """.format(
+              target_word=target_word_lower
           )
           components.html(speech_component_html, height=110)
 
@@ -536,7 +538,9 @@ else:
             current_queue.append(current_queue.pop(0))
             st.rerun()
         with col2:
-          if st.button("✔ 认识 (下一个)", use_container_width=True, type="primary"):
+          if st.button(
+              "✔ 认识 (下一个)", use_container_width=True, type="primary"
+          ):
             done_word = current_queue.pop(0)
             if done_word not in mastered_list:
               mastered_list.append(done_word)
@@ -549,7 +553,9 @@ else:
       else:
         if st.session_state.grade == 5:
           st.success("🎉 太棒了！五年级单词已全部掌握，自动晋升六年级！")
-          if st.button("🚀 开始六年级进阶词汇", use_container_width=True, type="primary"):
+          if st.button(
+              "🚀 开始六年级进阶词汇", use_container_width=True, type="primary"
+          ):
             st.session_state.grade = 6
             sync_progress_to_cloud(
                 st.session_state.user.id,
