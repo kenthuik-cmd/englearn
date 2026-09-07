@@ -476,14 +476,17 @@ else:
           st.write("点击下方按钮并大声读出上方单词：")
 
           target_word_lower = current["word"].lower()
-          # 使用 .format() 替代 % 符号，彻底规避语法冲突
-          speech_component_html = """
+          # 改用纯字符串拼接，彻底解决大括号和百分号冲突问题
+          speech_component_html = (
+              """
                     <div style="font-family: sans-serif; text-align: center; padding: 5px;">
                         <button id="recordBtn" style="background-color: #ff4b4b; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 12px; cursor: pointer; width: 100%;">🎙️ 点击开始说话跟读</button>
                         <p id="statusText" style="margin-top: 8px; color: #555; font-size: 13px;"></p>
                     </div>
                     <script>
-                        const targetWord = "{target_word}";
+                        const targetWord = '"""
+              + target_word_lower
+              + """';
                         const btn = document.getElementById('recordBtn');
                         const statusText = document.getElementById('statusText');
 
@@ -497,38 +500,37 @@ else:
                             recognition.interimResults = false;
                             recognition.maxAlternatives = 1;
 
-                            btn.onclick = function() {{
+                            btn.onclick = function() {
                                 statusText.innerHTML = "👂 正在听你发音，请说话...";
                                 btn.style.backgroundColor = "#ffa500";
                                 recognition.start();
-                            }};
+                            };
 
-                            recognition.onresult = function(event) {{
+                            recognition.onresult = function(event) {
                                 const speechResult = event.results[0][0].transcript.trim().toLowerCase();
                                 const cleanResult = speechResult.replace(/[.,\/#!$%%^&*;:{}=\\-_`~()]/g,"");
                                 
-                                if (cleanResult.includes(targetWord)) {{
+                                if (cleanResult.includes(targetWord)) {
                                     statusText.innerHTML = "✅ 识别成功！你读的是: <b>" + speechResult + "</b> 🎉 发音标准！";
                                     btn.style.backgroundColor = "#67C23A";
-                                }} else {{
+                                } else {
                                     statusText.innerHTML = "❌ 识别结果为: <b>" + speechResult + "</b>，再试一次哦！";
                                     btn.style.backgroundColor = "#F56C6C";
-                                }}
-                            }};
+                                }
+                            };
 
-                            recognition.onerror = function(event) {{
+                            recognition.onerror = function(event) {
                                 statusText.innerHTML = "⚠️ 识别出错: " + event.error;
                                 btn.style.backgroundColor = "#ff4b4b";
-                            }};
+                            };
 
-                            recognition.onspeechend = function() {{
+                            recognition.onspeechend = function() {
                                 recognition.stop();
                                 btn.innerHTML = "🎙️ 再次跟读";
-                            }};
+                            };
                         }
                     </script>
-                    """.format(
-              target_word=target_word_lower
+                    """
           )
           components.html(speech_component_html, height=110)
 
