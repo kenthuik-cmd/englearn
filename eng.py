@@ -299,7 +299,7 @@ else:
                     unsafe_allow_html=True
                 )
                 
-                # “斩词”按钮，增加了向下的间距
+                # “斩词”按钮
                 if st.button("🗑️ 太简单，不再出现", use_container_width=True):
                     done_word = current_queue.pop(0)
                     if done_word not in mastered_list:
@@ -358,50 +358,33 @@ else:
                 qc = st.session_state.quiz_current
                 opts = st.session_state.quiz_options
 
-                if st.button(
-                    f"🔊 朗读测验词：{qc['word']}",
-                    use_container_width=True,
-                    type="primary",
-                ):
-                    st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-
-                st.markdown(
-                    f"""
-                        <div class="quiz-card">
-                            <div style="font-size: 36px; font-weight: bold; color: #303133;">{qc['word']}</div>
-                        </div>
-                        """,
-                    unsafe_allow_html=True,
-                )
-
-                col_a, col_b = st.columns(2)
-                labels = ["A", "B", "C", "D"]
-
-                for idx, opt in enumerate(opts):
-                    current_col = col_a if idx % 2 == 0 else col_b
-                    with current_col:
-                        btn_label = f"{labels[idx]}. {opt}"
-                        if st.button(btn_label, use_container_width=True, key=f"opt_{idx}"):
-                            st.session_state.quiz_answered = True
-                            st.session_state.selected_option = opt
-
+                # 如果已经答题
                 if st.session_state.get("quiz_answered", False):
                     selected = st.session_state.selected_option
                     audio_bytes = get_audio_bytes(qc["word"])
                     st.audio(audio_bytes, format="audio/mp3", autoplay=True)
 
                     if selected == qc["meaning"]:
-                        st.success("✅ 回答正确！")
+                        status_msg = "✅ 回答正确！"
+                        status_color = "#67C23A"
                     else:
-                        st.error(f"❌ 正确答案是：{qc['meaning']}")
+                        status_msg = "❌ 抱歉，答错了"
+                        status_color = "#F56C6C"
 
+                    # 综合大卡片：原地展示对错、音标、释义、例句
                     st.markdown(
                         f"""
-                            <div class="quiz-card" style="text-align: left; padding: 10px 14px; margin-top: 6px;">
-                                <span style="font-size: 12px; font-weight: bold; color: #409EFF;">{qc['word']}</span> <span style="font-size: 11px; color: #909399;">{qc['phonetic']}</span>
-                                <div style="font-size: 14px; font-weight: 600; color: #67C23A; margin: 2px 0;">{qc['meaning']}</div>
+                        <div class="quiz-card">
+                            <div style="font-size: 36px; font-weight: bold; color: {status_color}; margin-bottom: 4px;">{qc['word']}</div>
+                            <div style="font-size: 16px; font-weight: bold; color: {status_color}; margin-bottom: 10px;">{status_msg}</div>
+                            <hr style="border: none; border-top: 1px dashed #ebeef5; margin: 10px 0;">
+                            <div style="font-size: 14px; color: #909399; margin-bottom: 10px;">{qc['phonetic']}</div>
+                            <div style="font-size: 18px; font-weight: 600; color: #409EFF; margin-bottom: 12px;">{qc['meaning']}</div>
+                            <div style="font-size: 13px; color: #606266; font-style: italic; text-align: left; background-color: #f8f9fa; padding: 10px; border-radius: 8px;">
+                                📝 <b>例句：</b>{qc['example_en']}<br><br>🏷️ <b>翻译：</b>{qc['example_cn']}
                             </div>
-                            """,
+                        </div>
+                        """,
                         unsafe_allow_html=True,
                     )
 
@@ -427,6 +410,32 @@ else:
                         st.session_state.quiz_answered = False
                         st.session_state.selected_option = None
                         st.rerun()
+
+                # 如果还未答题
+                else:
+                    if st.button(f"🔊 朗读测验词", use_container_width=True, type="primary"):
+                        st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
+
+                    st.markdown(
+                        f"""
+                        <div class="quiz-card">
+                            <div style="font-size: 36px; font-weight: bold; color: #303133;">{qc['word']}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+                    col_a, col_b = st.columns(2)
+                    labels = ["A", "B", "C", "D"]
+
+                    for idx, opt in enumerate(opts):
+                        current_col = col_a if idx % 2 == 0 else col_b
+                        with current_col:
+                            btn_label = f"{labels[idx]}. {opt}"
+                            if st.button(btn_label, use_container_width=True, key=f"opt_{idx}"):
+                                st.session_state.quiz_answered = True
+                                st.session_state.selected_option = opt
+                                st.rerun()
 
         # 重温模式
         elif st.session_state.page == "review":
