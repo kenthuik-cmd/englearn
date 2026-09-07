@@ -17,7 +17,7 @@ st.set_page_config(
     page_title="AI 英语进阶闯关", page_icon="🔥", layout="centered"
 )
 
-# 注入手机端极简样式
+# 注入手机端极简样式 (新增了动态动画 CSS)
 st.markdown(
     """
     <style>
@@ -83,6 +83,31 @@ st.markdown(
             margin-top: 20px; 
             margin-bottom: 10px; 
             text-align: center;
+        }
+
+        /* === 🔥 火焰摇摆特效 === */
+        @keyframes fireFlicker {
+            0%, 100% { transform: scale(1) rotate(-3deg); }
+            50% { transform: scale(1.15) rotate(3deg); }
+        }
+        .anim-fire {
+            display: inline-block;
+            animation: fireFlicker 1.2s infinite ease-in-out;
+            transform-origin: bottom center;
+        }
+
+        /* === ❤️ 心跳砰砰特效 === */
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.25); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.25); }
+            70%, 100% { transform: scale(1); }
+        }
+        .anim-heart {
+            display: inline-block;
+            animation: heartBeat 1.5s infinite;
+            transform-origin: center;
         }
     </style>
     """,
@@ -183,21 +208,16 @@ def render_highlight_example(example_en, example_cn):
     """
     components.html(html_code, height=205)
 
-# === 核心函数：从云端完美恢复进度 ===
+# === 核心函数：从云端恢复 ===
 def restore_progress_from_db(profile_data):
     if profile_data:
         db_lvl = profile_data[0].get("grade", 1)
         st.session_state.level = db_lvl
         
-        # 读取云端保存的已掌握单词字符串 (例如: "apple,book,cat")
         saved_str = str(profile_data[0].get("mastered_words", ""))
-        
-        # 兼容旧版本的数字长度，只解析真实的字符串
         if saved_str and not saved_str.isdigit():
             saved_words = saved_str.split(",")
             full_level_words = GLOBAL_VOCAB_DB.get(db_lvl, [])
-            
-            # 精准重建掌握列表和未背队列
             st.session_state.mastered[db_lvl] = [w for w in full_level_words if w["word"] in saved_words]
             remaining = [w for w in full_level_words if w["word"] not in saved_words]
             random.shuffle(remaining)
@@ -250,10 +270,8 @@ if not st.session_state.user and "uid" in st.query_params:
     except Exception:
         pass
 
-
 def sync_progress_to_cloud(user_id, level, mastered_dict):
     try:
-        # 修改为：将所有已掌握的单词拼接成字符串保存，真实锁死进度！
         mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
         mastered_str = ",".join(mastered_words_list)
         supabase.table("user_profiles").upsert({
@@ -287,7 +305,6 @@ if not st.session_state.user:
                     st.session_state.user = res.user
                     st.query_params["uid"] = res.user.id
                     profile = supabase.table("user_profiles").select("*").eq("user_id", res.user.id).execute()
-                    # 登录时触发进度完美恢复
                     restore_progress_from_db(profile.data)
                     st.success("登录成功！")
                     st.rerun()
@@ -303,12 +320,12 @@ if not st.session_state.user:
 
 # 已登录界面
 else:
-    # 顶部全局状态栏：火焰连胜 & 红心生命值
+    # 顶部全局状态栏：火焰连胜 & 红心生命值 (应用动态 CSS)
     if st.session_state.page != "home":
         st.markdown(f"""
         <div class='status-bar'>
-            <span style='color: #ff9600;'>🔥 连胜: {st.session_state.streak} 天</span>
-            <span style='color: #ff4b4b; letter-spacing: 2px;'>{'❤️'*st.session_state.hearts}{'🤍'*(5-st.session_state.hearts)}</span>
+            <span style='color: #ff9600;'><span class='anim-fire'>🔥</span> 连胜: {st.session_state.streak} 天</span>
+            <span style='color: #ff4b4b; letter-spacing: 2px;'><span class='anim-heart'>{'❤️'*st.session_state.hearts}</span>{'🤍'*(5-st.session_state.hearts)}</span>
         </div>
         """, unsafe_allow_html=True)
 
@@ -319,8 +336,8 @@ else:
 
         st.markdown(f"""
         <div style='display: flex; justify-content: center; gap: 20px; margin-bottom: 20px;'>
-            <div style='text-align: center;'><div style='font-size: 32px;'>🔥</div><div style='font-weight: bold; color: #ff9600;'>{st.session_state.streak} 天连胜</div></div>
-            <div style='text-align: center;'><div style='font-size: 32px;'>❤️</div><div style='font-weight: bold; color: #ff4b4b;'>{st.session_state.hearts} 颗红心</div></div>
+            <div style='text-align: center;'><div style='font-size: 32px;' class='anim-fire'>🔥</div><div style='font-weight: bold; color: #ff9600;'>{st.session_state.streak} 天连胜</div></div>
+            <div style='text-align: center;'><div style='font-size: 32px;' class='anim-heart'>❤️</div><div style='font-weight: bold; color: #ff4b4b;'>{st.session_state.hearts} 颗红心</div></div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -364,7 +381,7 @@ else:
         if st.button("🚪 退出登录", use_container_width=True):
             st.session_state.user = None
             st.session_state.page = "home"
-            st.query_params.clear() # 退出时清空所有网址参数
+            st.query_params.clear() 
             st.rerun()
 
     # ---------------- 子页面 ----------------
@@ -446,7 +463,7 @@ else:
                     st.error("💔 你的红心耗尽了！测验被迫中断。")
                     if st.button("🔄 满血复活 (恢复 5 颗红心)", use_container_width=True, type="primary"):
                         st.session_state.hearts = 5
-                        st.query_params["hearts"] = 5  # 写入网址
+                        st.query_params["hearts"] = 5  
                         st.rerun()
                 else:
                     q_type = st.session_state.get("quiz_mode", "normal")
@@ -484,7 +501,6 @@ else:
                     opts = st.session_state.get("quiz_options", [])
                     correct_ans = st.session_state.get("correct_ans", "")
 
-                    # --- 答题后展现结果 ---
                     if st.session_state.get("quiz_answered", False):
                         selected = st.session_state.selected_option
                         render_word_audio_button(qc["word"], "🔊 再次朗读单词")
@@ -519,7 +535,6 @@ else:
                             del st.session_state["quiz_current"]
                             st.rerun()
 
-                    # --- 未答题状态 ---
                     else:
                         if q_type == "normal":
                             render_word_audio_button(qc["word"], "🔊 点击听音")
@@ -540,7 +555,6 @@ else:
                             render_word_audio_button(qc["word"], "🔊 听发音拼写")
                             st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:24px; font-weight:bold; color:#ff9600;'>{qc['meaning']}</div></div>", unsafe_allow_html=True)
 
-                        # 渲染操作区
                         if q_type == "spell":
                             with st.form("spell_form"):
                                 user_spell = st.text_input("请在下方串出你听到的英文单词：")
@@ -550,7 +564,7 @@ else:
                                     st.session_state.selected_option = user_spell.strip().lower()
                                     if st.session_state.selected_option != correct_ans:
                                         st.session_state.hearts -= 1
-                                        st.query_params["hearts"] = st.session_state.hearts # 同步扣心到网址
+                                        st.query_params["hearts"] = st.session_state.hearts
                                     st.rerun()
                         else:
                             col_a, col_b = st.columns(2)
@@ -569,7 +583,7 @@ else:
                                         st.session_state.selected_option = opt
                                         if opt != correct_ans:
                                             st.session_state.hearts -= 1
-                                            st.query_params["hearts"] = st.session_state.hearts # 同步扣心到网址
+                                            st.query_params["hearts"] = st.session_state.hearts
                                         st.rerun()
 
         # ==========================================
