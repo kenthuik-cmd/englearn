@@ -15,13 +15,18 @@ st.set_page_config(
     page_title="AI 英语进阶闯关", page_icon="📖", layout="centered"
 )
 
-# 注入手机端极简样式
+# 注入手机端极简样式（新增隐藏原生音频播放器）
 st.markdown(
     """
     <style>
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         header {visibility: hidden;}
+        
+        /* 彻底隐藏所有的原生音频播放器 UI */
+        [data-testid="stAudio"] {
+            display: none !important;
+        }
         
         .block-container {
             padding-top: 0.5rem;
@@ -281,12 +286,10 @@ else:
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("❌ 模糊 (重练)", use_container_width=True):
-                        # 把不会的单词放回队列末尾
                         current_queue.append(current_queue.pop(0))
                         st.rerun()
                 with col2:
                     if st.button("✔ 认识 (下一个)", use_container_width=True, type="primary"):
-                        # 学完一个词，从队列中移除并记录到已掌握
                         done_word = current_queue.pop(0)
                         if done_word not in mastered_list:
                             mastered_list.append(done_word)
@@ -431,7 +434,6 @@ else:
                     for idx, opt in enumerate(opts):
                         current_col = col_a if idx % 2 == 0 else col_b
                         with current_col:
-                            # 拆分词性并挪到末尾加括号，比如把 "n. 商店" 变成 "商店 (n.)"
                             parts = opt.split(" ", 1)
                             if len(parts) == 2:
                                 btn_label = f"{labels[idx]}. {parts[1]} ({parts[0]})"
