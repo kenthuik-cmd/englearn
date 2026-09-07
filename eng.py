@@ -886,7 +886,7 @@ if st.sidebar.button("📚 背单词与AI跟读模式", use_container_width=True
   st.session_state.mode = "study"
   st.rerun()
 
-if st.sidebar.button("🎯 四选一小测验面板", use_container_width=True):
+if st.sidebar.button("🎯 已学单词小测验", use_container_width=True):
   st.session_state.mode = "quiz"
   st.rerun()
 
@@ -909,7 +909,7 @@ else:
   all_learned_pool = mastered_list + current_queue
 
 # ==========================================
-# 1. 小测验面板 (匹配图示卡片化 UI，自动发音)
+# 1. 小测验面板 (先显示英文+选项，答题后展示P2卡片详情并自动发音)
 # ==========================================
 if st.session_state.mode == "quiz":
   st.markdown("### 🎯 已学单词小测验")
@@ -935,27 +935,15 @@ if st.session_state.mode == "quiz":
     qc = st.session_state.quiz_current
     opts = st.session_state.quiz_options
 
-    # 自动读出单词声音
+    # 1. 顶部先展示英文单词与发音音频
     audio_bytes = get_audio_bytes(qc["word"])
-    st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+    st.audio(audio_bytes, format="audio/mp3")
 
-    # 模仿图示卡片样式的 UI 容器
     st.markdown(
         f"""
         <div style="background-color: #f7f9fa; border: 1px solid #dcdfe6; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; margin-bottom: 15px;">
-                <span style="background-color: #52c41a; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 14px; margin-right: 12px;">Lv.{st.session_state.grade} 核心</span>
-                <span style="color: #606266; font-size: 16px; font-weight: 500;">v. {qc['phonetic']}</span>
-            </div>
-            <div style="font-size: 36px; font-weight: bold; color: #303133; margin-bottom: 10px;">
+            <div style="font-size: 38px; font-weight: bold; color: #303133; margin-bottom: 5px;">
                 {qc['word']}
-            </div>
-            <div style="font-size: 22px; color: #606266; margin-bottom: 20px; font-weight: 600;">
-                {qc['meaning']}
-            </div>
-            <hr style="border: none; border-top: 1px solid #e4e7ed; margin: 15px 0;">
-            <div style="font-size: 15px; color: #606266; font-style: italic;">
-                📝 <b>例句：</b>{qc['example_en']} / {qc['example_cn']}
             </div>
         </div>
         """,
@@ -975,12 +963,40 @@ if st.session_state.mode == "quiz":
           st.session_state.quiz_answered = True
           st.session_state.selected_option = opt
 
+    # 2. 只有当用户点击选项回答后，才显示详细的 P2 卡片并自动朗读
     if st.session_state.get("quiz_answered", False):
       selected = st.session_state.selected_option
+
+      # 自动读出单词
+      st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+
       if selected == qc["meaning"]:
         st.success("✅ 回答正确！太棒了！")
       else:
         st.error(f"❌ 回答错误。正确答案是：{qc['meaning']}")
+
+      # 渲染完整的 P2 卡片详情
+      st.markdown(
+          f"""
+            <div style="background-color: #f7f9fa; border: 1px solid #dcdfe6; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-top: 20px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <span style="background-color: #52c41a; color: white; padding: 4px 10px; border-radius: 4px; font-weight: bold; font-size: 14px; margin-right: 12px;">Lv.{st.session_state.grade} 核心</span>
+                    <span style="color: #606266; font-size: 16px; font-weight: 500;">{qc['phonetic']}</span>
+                </div>
+                <div style="font-size: 36px; font-weight: bold; color: #303133; margin-bottom: 10px;">
+                    {qc['word']}
+                </div>
+                <div style="font-size: 22px; color: #606266; margin-bottom: 20px; font-weight: 600;">
+                    {qc['meaning']}
+                </div>
+                <hr style="border: none; border-top: 1px solid #e4e7ed; margin: 15px 0;">
+                <div style="font-size: 15px; color: #606266; font-style: italic;">
+                    📝 <b>例句：</b>{qc['example_en']} / {qc['example_cn']}
+                </div>
+            </div>
+            """,
+          unsafe_allow_html=True,
+      )
 
       if st.button("➡️ 下一题", use_container_width=True):
         q_item = random.choice(all_learned_pool)
