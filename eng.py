@@ -12,7 +12,7 @@ supabase = create_client(url, key)
 
 # 页面设置
 st.set_page_config(
-    page_title="AI 英语20级闯关 App", page_icon="📖", layout="centered"
+    page_title="AI 英语20级闯关", page_icon="📖", layout="centered"
 )
 
 # 注入手机端极简美化样式
@@ -57,9 +57,7 @@ st.markdown(
 # 20个 Level 难度递增的 2000 词完整词库引擎
 # ==========================================
 def generate_graded_vocab_db():
-  # 各个难度梯队的种子词库与场景词根
   tiers = {
-      # 1-3级：基础日常（衣食住行、数字、家庭）
       1: [("apple", "/ˈæpl/", "n. 苹果", "I eat an apple daily.", "我每天吃一个苹果。"),
           ("water", "/ˈwɔːtə(r)/", "n. 水", "Please give me some water.", "请给我一些水。"),
           ("bread", "/bred/", "n. 面包", "She likes butter on bread.", "她喜欢在面包上抹黄油。"),
@@ -93,7 +91,6 @@ def generate_graded_vocab_db():
           ("money", "/ˈmʌni/", "n. 金钱", "Health is better than money.", "健康重于金钱。"),
           ("night", "/naɪt/", "n. 夜晚", "Have a good night.", "祝你有个美好的夜晚。")],
 
-      # 4-8级：中级生活、社交、情绪与环境
       4: [("weather", "/ˈweðə(r)/", "n. 天气", "How is the weather today?", "今天天气怎么样？"),
           ("travel", "/ˈtrævl/", "v./n. 旅行", "I love to travel abroad.", "我喜欢去国外旅行。"),
           ("market", "/ˈmɑːkɪt/", "n. 市场", "Mom buys fruit at the market.", "妈妈在市场买水果。"),
@@ -116,7 +113,6 @@ def generate_graded_vocab_db():
           ("keyboard", "/ˈkiːbɔːd/", "n. 键盘", "He bought a mechanical keyboard.", "他买了一个机械键盘。"),
           ("internet", "/ˈɪntənet/", "n. 网络", "We need fast internet.", "我们需要快速的网络。")],
 
-      # 9-14级：高级生活、职场、抽象心理与社会议题
       9: [("confident", "/ˈkɒnfɪdənt/", "adj. 自信的", "Be confident in yourself.", "对自己要有信心。"),
           ("curious", "/ˈkjʊəriəs/", "adj. 好奇的", "Children are curious about nature.", "孩子们对自然充满好奇。"),
           ("patient", "/ˈpeɪʃnt/", "adj./n. 有耐心的/病人", "Please be patient with me.", "请对我有点耐心。"),
@@ -128,20 +124,18 @@ def generate_graded_vocab_db():
           ("efficient", "/ɪˈfɪʃnt/", "adj. 高效的", "This tool is very efficient.", "这个工具非常高效。"),
           ("reliable", "/rɪˈlaɪəbl/", "adj. 可靠的", "He is a reliable business partner.", "他是个可靠的商业伙伴。")],
 
-      # 15-20级：专业学术、哲学、科学与高级辞汇
       15: [("ubiquitous", "/juːˈbɪkwɪtəs/", "adj. 无处不在的", "Smartphones are ubiquitous today.", "如今智能手机无处不在。"),
            ("meticulous", "/məˈtɪkjələs/", "adj. 一丝不苟的", "She is meticulous in her research.", "她做研究一丝不苟。"),
            ("pragmatic", "/præɡˈmætɪk/", "adj. 务实的", "We need a pragmatic solution.", "我们需要一个务实的解决方案。"),
-           ("innovative", "/ˈɪnəvətɪv/", "adj创新的", "An innovative approach to learning.", "一种创新的学习方法。"),
-           ("resilient", "/rɪˈzɪliənt/", "adj. 有弹性的，复原力强的", "Children are remarkably resilient.", "儿童具有惊人的适应恢复能力。"),
+           ("innovative", "/ˈɪnəvətɪv/", "adj. 创新的", "An innovative approach to learning.", "一种创新的学习方法。"),
+           ("resilient", "/rɪˈzɪliənt/", "adj. 有弹性的", "Children are remarkably resilient.", "儿童具有惊人的适应恢复能力。"),
            ("authentic", "/ɔːˈθentɪk/", "adj. 真实的，地道的", "This is authentic Italian food.", "这是地道的意大利美食。"),
-           ("comprehensive", "/ˌkɒmprɪˈhensɪv/", "adj. 全面的，综合的", "A comprehensive study of the market.", "对该市场的全面研究。"),
-           ("significant", "/sɪɡˈnɪfɪkənt/", "adj. 重要的，显著的", "A significant drop in temperature.", "气温显著下降。"),
-           ("ineevitable", "/ɪˈnevɪtəbl/", "adj. 不可避免的", "Change is inevitable in life.", "生活中的变化是不可避免的。"),
+           ("comprehensive", "/ˌkɒmprɪˈhensɪv/", "adj. 全面的", "A comprehensive study of the market.", "对该市场的全面研究。"),
+           ("significant", "/sɪɡˈnɪfɪkənt/", "adj. 显著的", "A significant drop in temperature.", "气温显著下降。"),
+           ("inevitable", "/ɪˈnevɪtəbl/", "adj. 不可避免的", "Change is inevitable in life.", "生活中的变化是不可避免的。"),
            ("perspective", "/pəˈspektɪv/", "n. 视角，观点", "Try to see things from my perspective.", "试着从我的角度看问题。")]
   }
 
-  # 补充一些高质量的通用高级日常词库池，用于平滑铺满 20 个 Level × 100 词
   pool_bank = [
       ("ability", "/əˈbɪləti/", "n. 能力"), ("achieve", "/əˈtʃiːv/", "v. 实现"), ("advantage", "/ədˈvɑːntɪdʒ/", "n. 优势"),
       ("advertisement", "/ədˈvɜːtɪsmənt/", "n. 广告"), ("agency", "/ˈeɪdʒənsi/", "n. 机构"), ("alternative", "/ɔːlˈtɜːnətɪv/", "n. 替代方案"),
@@ -160,9 +154,9 @@ def generate_graded_vocab_db():
       ("define", "/dɪˈfaɪn/", "v. 定义"), ("delay", "/dɪˈleɪ/", "v./n. 延迟"), ("deliberate", "/dɪˈlɪbərət/", "adj. 深思熟虑的"),
       ("demonstrate", "/ˈdemənstreɪt/", "v. 证明，示范"), ("depress", "/dɪˈpres/", "v. 使沮丧"), ("design", "/dɪˈzaɪn/", "v./n. 设计"),
       ("destination", "/ˌdestɪˈneɪʃn/", "n. 目的地"), ("detect", "/dɪˈtekt/", "v. 探测，发现"), ("determine", "/dɪˈtɜːmɪn/", "v. 决定"),
-      ("develop", "/dɪˈveləp/", "v. 发展"), ("device", "/dɪˈvaɪs/", "n. 设备"), ("digital", "/ˈdɪdʒɪtl/", "adj. 数字的"),
+      ("develop", "/dɪˈveləp/", "v. 发展"), ("device", "/dɪˈvaɪs/", "n. 设备"), ("digital", "/ˈdʒɪdʒɪtl/", "adj. 数字的"),
       ("dilemma", "/daɪˈlemə/", "n. 困境"), ("dimension", "/daɪˈmenʃn/", "n. 维度"), ("disaster", "/dɪˈzɑːstə(r)/", "n. 灾难"),
-      ("discipline", "/ˈdɪsəplɪn/", "n. 纪律，学科"), ("discover", "/dɪˈskʌvə(r)/", "v. 发现"), ("discuss", "/dɪˈskʌs/", "v. 讨论"),
+      ("discipline", "/ˈdɪsəplɪn/", "n. 纪律，学科"), ("discover", "/dɪˈskʌvə(r)/", "v. 发现"), ("discuss", "/dɪˈ斯卡斯/", "v. 讨论"),
       ("display", "/dɪˈspleɪ/", "v./n. 显示"), ("distribute", "/dɪˈstrɪbjuːt/", "v. 分发，分配"), ("diverse", "/daɪˈvɜːs/", "adj. 多样的"),
       ("dramatic", "/drəˈmætɪk/", "adj. 戏剧性的"), ("dynamic", "/daɪˈnæmɪk/", "adj. 动态的"), ("economy", "/ɪˈkɒnəmi/", "n. 经济"),
       ("edit", "/ˈedɪt/", "v. 编辑"), ("educate", "/ˈedʒukeɪt/", "v. 教育"), ("effect", "/ɪˈfekt/", "n. 效果，影响"),
@@ -180,18 +174,18 @@ def generate_graded_vocab_db():
   full_db = {}
   for lvl in range(1, 21):
     level_list = []
-    tier_seed = tiers.get(lvl, tiers[1])
+    tier_seed = tiers.get(lvl, tiers.get(1))
     for i in range(100):
       if i < len(tier_seed):
         item = tier_seed[i]
         w, ph, mean, en, cn = item[0], item[1], item[2], item[3], item[4]
       else:
-        bank_item = pool_bank[(i * 13 + lvl * 7) % len(pool_bank)]
+        bank_item = pool_bank[(i * 17 + lvl * 11) % len(pool_bank)]
         w = bank_item[0]
         ph = bank_item[1]
         mean = bank_item[2]
-        en = f"It is important to understand {w} in daily life."
-        cn = f"在日常生活中理解{w}是很重要的。"
+        en = f"It is essential to master {w}."
+        cn = f"掌握{w}是至关重要的。"
       
       level_list.append({
           "word": w,
@@ -314,27 +308,17 @@ else:
         unsafe_allow_html=True,
     )
     st.markdown(
-        f"<p style='text-align: center; color: #909399; font-size: 13px;'"
-        f" margin-bottom: 12px;'>当前挑战：<b>Level {current_lvl} / 20</b> (难度递增·每级100词)</p>",
+        f"<p style='text-align: center; color: #409EFF; font-size: 14px;'"
+        f" margin-bottom: 15px;'>当前正在挑战：<b>Level {current_lvl} / 20</b> (按关卡逐步解锁)</p>",
         unsafe_allow_html=True,
     )
 
-    selected_lvl = st.selectbox(
-        "选择挑战级别 (Level 1 - 20)",
-        range(1, 21),
-        index=current_lvl - 1,
-    )
-    if selected_lvl != current_lvl:
-      st.session_state.level = selected_lvl
-      st.rerun()
-
-    st.write("")
-    if st.button("📚 开启当前级别背诵与跟读", use_container_width=True, type="primary"):
+    if st.button("📚 开启当前关卡背诵与跟读", use_container_width=True, type="primary"):
       st.session_state.page = "study"
       st.rerun()
 
     st.write("")
-    if st.button("🎯 进入当前级别小测验", use_container_width=True):
+    if st.button("🎯 进入当前关卡小测验", use_container_width=True):
       st.session_state.page = "quiz"
       st.rerun()
 
@@ -473,9 +457,9 @@ else:
             st.rerun()
       else:
         if current_lvl < 20:
-          st.success(f"🎉 Level {current_lvl} 挑战成功！")
+          st.success(f"🎉 Level {current_lvl} 完美通关！")
           if st.button(
-              f"🚀 晋升 Level {current_lvl + 1}",
+              f"🚀 自动解锁并进入 Level {current_lvl + 1}",
               use_container_width=True,
               type="primary",
           ):
@@ -487,7 +471,7 @@ else:
             )
             st.rerun()
         else:
-          st.success("🏆 恭喜你通关全部 20 个 Level！日常生活英语达人！")
+          st.success("🏆 恭喜你通关全部 20 个 Level！日常生活英语终极大达人！")
           if st.button("🔄 重新开始挑战", use_container_width=True):
             st.session_state.level = 1
             st.rerun()
@@ -495,7 +479,7 @@ else:
     # 2. 小测验面板
     elif st.session_state.page == "quiz":
       if not all_learned_pool:
-        st.info("当前级别还没有学过任何单词！")
+        st.info("当前关卡还没有学过任何单词！")
       else:
         if "quiz_current" not in st.session_state:
           q_item = random.choice(all_learned_pool)
@@ -595,7 +579,7 @@ else:
     # 3. 已学单词重温面板
     elif st.session_state.page == "review":
       if not mastered_list:
-        st.info("当前级别还没有掌握任何单词哦！")
+        st.info("当前关卡还没有掌握任何单词哦！")
       else:
         if "review_current" not in st.session_state:
           st.session_state.review_current = random.choice(mastered_list)
