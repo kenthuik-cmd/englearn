@@ -205,7 +205,6 @@ if "mastered" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "home"
 
-# --- 防崩溃兜底初始化区 ---
 if "quiz_mode" not in st.session_state:
     st.session_state.quiz_mode = "normal"
 if "quiz_type" not in st.session_state:
@@ -214,11 +213,9 @@ if "quiz_options" not in st.session_state:
     st.session_state.quiz_options = []
 if "correct_ans" not in st.session_state:
     st.session_state.correct_ans = ""
-# --------------------------
 
 if "hearts" not in st.session_state:
     st.session_state.hearts = 5
-
 if "streak" not in st.session_state:
     st.session_state.streak = 1
 
@@ -309,25 +306,26 @@ else:
             
         # === 专项测验分类区 ===
         st.markdown("<div class='section-title'>— 🎯 专项测验 —</div>", unsafe_allow_html=True)
+        
+        # 封装进入测验的函数，确保清理旧状态
+        def enter_quiz(mode):
+            st.session_state.quiz_mode = mode
+            st.session_state.page = "quiz"
+            st.session_state.pop("quiz_current", None)
+            st.session_state.pop("quiz_answered", None)
+            st.rerun()
+
         col_q1, col_q2 = st.columns(2)
         with col_q1:
             if st.button("👁️ 经典选择", use_container_width=True):
-                st.session_state.quiz_mode = "normal"
-                st.session_state.page = "quiz"
-                st.rerun()
+                enter_quiz("normal")
             if st.button("🔤 语境填空", use_container_width=True):
-                st.session_state.quiz_mode = "fill_blank"
-                st.session_state.page = "quiz"
-                st.rerun()
+                enter_quiz("fill_blank")
         with col_q2:
             if st.button("🎧 盲听辨认", use_container_width=True):
-                st.session_state.quiz_mode = "listen"
-                st.session_state.page = "quiz"
-                st.rerun()
+                enter_quiz("listen")
             if st.button("✍️ 串字挑战", use_container_width=True):
-                st.session_state.quiz_mode = "spell"
-                st.session_state.page = "quiz"
-                st.rerun()
+                enter_quiz("spell")
 
         st.markdown("---")
         if st.button("🚪 退出登录", use_container_width=True):
@@ -341,6 +339,8 @@ else:
     else:
         if st.button("⬅️ 返回主页", type="secondary"):
             st.session_state.page = "home"
+            st.session_state.pop("quiz_current", None)
+            st.session_state.pop("quiz_answered", None)
             st.rerun()
 
         # ==========================================
@@ -404,7 +404,7 @@ else:
                         st.rerun()
 
         # ==========================================
-        # 🎯 综合大测验 (四种题型独立化)
+        # 🎯 专项大测验 
         # ==========================================
         elif st.session_state.page == "quiz":
             if not all_learned_pool:
@@ -465,7 +465,7 @@ else:
                             status_color = "#58cc02" 
                         else:
                             if q_type == "spell":
-                                status_msg = f"❌ 拼错了！你拼的是: {selected}"
+                                status_msg = f"❌ 拼错了！正确拼写是: {qc['word']}"
                             else:
                                 status_msg = "❌ 哎呀，答错了"
                             status_color = "#ff4b4b" 
