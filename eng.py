@@ -631,7 +631,7 @@ VOCAB_GRADE_5 = [
     },
     {
         "word": "opposite",
-        "phonetic": "/ˈpɒpəzɪt/",
+        "phonetic": "/ˈɒpəzɪt/",
         "meaning": "prep./adj. 在……对面",
         "example_en": "He lives opposite my house.",
         "example_cn": "他住在我的房子对面。",
@@ -694,7 +694,7 @@ VOCAB_GRADE_5 = [
     },
     {
         "word": "popular",
-        "phonetic": "/`pɒpjələ(r)/",
+        "phonetic": "/ˈpɒpjələ(r)/",
         "meaning": "adj. 受欢迎的，流行的",
         "example_en": "Football is a popular sport.",
         "example_cn": "足球是一项受欢迎的运动。",
@@ -900,9 +900,7 @@ if st.session_state.grade == 5:
   rem_c = len(st.session_state.queue_g5)
   current_queue = st.session_state.queue_g5
   mastered_list = st.session_state.mastered_g5
-  all_learned_pool = (
-      mastered_list + current_queue
-  )  # 所有可用或已接触的词作为小测范围
+  all_learned_pool = mastered_list + current_queue
 else:
   total_c = len(VOCAB_GRADE_6)
   rem_c = len(st.session_state.queue_g6)
@@ -914,17 +912,14 @@ else:
 # 1. 小测验面板 (匹配图示卡片化 UI，自动发音)
 # ==========================================
 if st.session_state.mode == "quiz":
-  st.markdown("### 🎯 错题与已学单词小测验")
+  st.markdown("### 🎯 已学单词小测验")
 
-  # 检查是否有足够的词进行测试
   if not all_learned_pool:
     st.info("当前还没有学过任何单词，请先去背诵页面学习！")
   else:
-    # 如果还没有当前题目，或者切换了题目
     if "quiz_current" not in st.session_state:
       q_item = random.choice(all_learned_pool)
       st.session_state.quiz_current = q_item
-      # 自动生成 4 个选项（1个正确，3个错误）
       wrong_meanings = [
           v["meaning"]
           for v in VOCAB_GRADE_5 + VOCAB_GRADE_6
@@ -969,7 +964,6 @@ if st.session_state.mode == "quiz":
 
     st.write("请选择正确的中文释义：")
 
-    # 使用 2x2 按钮网格模拟 A B C D 选项卡片
     col_a, col_b = st.columns(2)
     labels = ["A", "B", "C", "D"]
 
@@ -977,11 +971,10 @@ if st.session_state.mode == "quiz":
       current_col = col_a if idx % 2 == 0 else col_b
       with current_col:
         btn_label = f"{labels[idx]}. {opt}"
-        if st.button(btn_label, use_container_width=True, key=f"opt_{idx}")):
+        if st.button(btn_label, use_container_width=True, key=f"opt_{idx}"):
           st.session_state.quiz_answered = True
           st.session_state.selected_option = opt
 
-    # 反馈结果
     if st.session_state.get("quiz_answered", False):
       selected = st.session_state.selected_option
       if selected == qc["meaning"]:
@@ -990,7 +983,6 @@ if st.session_state.mode == "quiz":
         st.error(f"❌ 回答错误。正确答案是：{qc['meaning']}")
 
       if st.button("➡️ 下一题", use_container_width=True):
-        # 刷新下一题
         q_item = random.choice(all_learned_pool)
         st.session_state.quiz_current = q_item
         wrong_meanings = [
