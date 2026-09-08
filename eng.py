@@ -1,5 +1,6 @@
 import random
 import re
+import time
 from io import BytesIO
 from datetime import date
 from gtts import gTTS
@@ -25,7 +26,6 @@ st.markdown(
         footer {visibility: hidden;}
         header {visibility: hidden;}
         
-        /* 彻底隐藏 st.audio 播放器，只让它在后台默默发声 */
         [data-testid="stAudio"] {
             display: none !important;
         }
@@ -113,16 +113,22 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-def get_audio_bytes(text):
-    tts = gTTS(text=text, lang="en")
-    fp = BytesIO()
-    tts.write_to_fp(fp)
-    fp.seek(0)
-    return fp.read()
-
-# === 原生前端单词朗读按钮 (纯手动触发，极速响应) ===
-def render_word_audio_button(word, button_text="🔊 点此朗读单词"):
+# === 原生前端单词朗读按钮 ===
+def render_word_audio_button(word, button_text="🔊 点此朗读单词", autoplay=False):
     escaped_word = word.replace("'", "\\'")
+    unique_id = int(time.time() * 1000) + random.randint(0, 1000)
+    autoplay_script = f"""
+    <script>
+        if ({'true' if autoplay else 'false'}) {{
+            setTimeout(() => {{
+                window.speechSynthesis.cancel(); 
+                let u = new SpeechSynthesisUtterance('{escaped_word}'); 
+                u.lang='en-US'; 
+                window.speechSynthesis.speak(u);
+            }}, 300);
+        }}
+    </script>
+    """
     html_code = f"""
     <style>
         body {{ margin: 0; padding: 0; font-family: sans-serif; }}
@@ -134,12 +140,14 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词"):
     <button onclick="window.speechSynthesis.cancel(); let u = new SpeechSynthesisUtterance('{escaped_word}'); u.lang='en-US'; window.speechSynthesis.speak(u);">
         {button_text}
     </button>
+    {autoplay_script}
     """
     components.html(html_code, height=55)
 
 # === AI 语音识别跟读组件 ===
 def render_ai_speech_recognition(target_word):
     target_word_lower = target_word.lower().replace("'", "\\'")
+    unique_id = int(time.time() * 1000)
     html_code = f"""
     <style>
         body {{ margin: 0; padding: 0; font-family: sans-serif; text-align: center; }}
@@ -148,13 +156,13 @@ def render_ai_speech_recognition(target_word):
         }}
         button:active {{ transform: translateY(4px); box-shadow: 0 0px 0px rgba(0,0,0,0.1) !important; }}
     </style>
-    <button id="recordBtn">🎙️ AI 评测发音</button>
-    <p id="statusText" style="margin-top: 8px; color: #555; font-size: 13px; font-weight: bold;"></p>
+    <button id="recordBtn_{unique_id}">🎙️ AI 评测发音</button>
+    <p id="statusText_{unique_id}" style="margin-top: 8px; color: #555; font-size: 13px; font-weight: bold;"></p>
     
     <script>
         const targetWord = '{target_word_lower}';
-        const btn = document.getElementById('recordBtn');
-        const statusText = document.getElementById('statusText');
+        const btn = document.getElementById('recordBtn_{unique_id}');
+        const statusText = document.getElementById('statusText_{unique_id}');
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {{
@@ -196,9 +204,7 @@ def render_ai_speech_recognition(target_word):
 
             recognition.onspeechend = function() {{
                 recognition.stop();
-                setTimeout(() => {{
-                    btn.innerHTML = "🎙️ 再次跟读";
-                }}, 1000);
+                setTimeout(() => {{ btn.innerHTML = "🎙️ 再次跟读"; }}, 1000);
             }};
         }}
     </script>
@@ -206,8 +212,16 @@ def render_ai_speech_recognition(target_word):
     components.html(html_code, height=85)
 
 # === 盲听双重发音按钮 ===
-def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常速+慢速)"):
+def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常速+慢速)", autoplay=False):
     escaped_word = word.replace("'", "\\'")
+    unique_id = int(time.time() * 1000) + random.randint(0, 1000)
+    autoplay_script = f"""
+    <script>
+        if ({'true' if autoplay else 'false'}) {{
+            setTimeout(playTwice, 300);
+        }}
+    </script>
+    """
     html_code = f"""
     <style>
         body {{ margin: 0; padding: 0; font-family: sans-serif; }}
@@ -225,12 +239,14 @@ def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常�
         }}
     </script>
     <button onclick="playTwice()">{button_text}</button>
+    {autoplay_script}
     """
     components.html(html_code, height=55)
 
 # === 动态高亮例句组件 ===
 def render_highlight_example(example_en, example_cn):
     escaped_en = example_en.replace("'", "\\'")
+    unique_id = int(time.time() * 1000) + random.randint(0, 1000)
     html_code = f"""
     <style>
         body {{ margin: 0; padding: 0; font-family: sans-serif; }}
@@ -245,22 +261,22 @@ def render_highlight_example(example_en, example_cn):
     </style>
     <div class="example-card">
         <div style="font-size: 15px; margin-bottom: 12px; line-height: 1.6;">
-            📖 <b>例句：</b><span id="sentence-box"></span>
+            📖 <b>例句：</b><span id="sentence-box_{unique_id}"></span>
         </div>
         <div style="font-size: 14px; color: #777; margin-bottom: 16px; line-height: 1.5;">
             💡 <b>翻译：</b>{example_cn}
         </div>
-        <button id="playBtn" style="width: 100%; background-color: #1cb0f6; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0px rgba(28, 176, 246, 0.3); transition: all 0.1s;">
+        <button id="playBtn_{unique_id}" style="width: 100%; background-color: #1cb0f6; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0px rgba(28, 176, 246, 0.3); transition: all 0.1s;">
             🔊 动态朗读例句
         </button>
     </div>
     <script>
         const sentenceStr = "{escaped_en}";
-        const container = document.getElementById("sentence-box");
+        const container = document.getElementById("sentence-box_{unique_id}");
         container.innerHTML = sentenceStr.replace(/([a-zA-Z0-9']+)/g, '<span class="word">$1</span>');
         
         const wordSpans = container.querySelectorAll('.word');
-        const playBtn = document.getElementById("playBtn");
+        const playBtn = document.getElementById("playBtn_{unique_id}");
         
         playBtn.onclick = () => {{
             window.speechSynthesis.cancel();
@@ -284,13 +300,15 @@ def render_highlight_example(example_en, example_cn):
     """
     components.html(html_code, height=195)
 
-# === 从云端恢复进度 ===
+# === 核心防丢档函数：从云端彻底恢复进度 ===
 def restore_progress_from_db(profile_data):
     if profile_data:
-        db_lvl = profile_data[0].get("grade", 1)
+        # 获取最新的一条记录（防止旧的脏数据覆盖最新进度）
+        latest_profile = profile_data[-1]
+        db_lvl = latest_profile.get("grade", 1)
         st.session_state.level = db_lvl
         
-        saved_str = str(profile_data[0].get("mastered_words", ""))
+        saved_str = str(latest_profile.get("mastered_words", ""))
         if saved_str and not saved_str.isdigit():
             saved_words = saved_str.split(",")
             full_level_words = GLOBAL_VOCAB_DB.get(db_lvl, [])
@@ -298,6 +316,29 @@ def restore_progress_from_db(profile_data):
             remaining = [w for w in full_level_words if w["word"] not in saved_words]
             random.shuffle(remaining)
             st.session_state.queues[db_lvl] = remaining
+
+# === 云端保存逻辑修复：严格使用更新替代错误插入 ===
+def sync_progress_to_cloud(user_id, level, mastered_dict):
+    try:
+        mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
+        mastered_str = ",".join(mastered_words_list)
+        
+        # 强制检查用户是否存在，保证有且只有一条精准记录
+        res = supabase.table("user_profiles").select("id").eq("user_id", user_id).execute()
+        if len(res.data) > 0:
+            supabase.table("user_profiles").update({
+                "grade": level,
+                "mastered_words": mastered_str,
+            }).eq("user_id", user_id).execute()
+        else:
+            supabase.table("user_profiles").insert({
+                "user_id": user_id,
+                "grade": level,
+                "mastered_words": mastered_str,
+            }).execute()
+    except Exception as e:
+        pass
+
 
 # === 初始化 Session State ===
 if "level" not in st.session_state:
@@ -343,22 +384,12 @@ if not st.session_state.user and "uid" in st.query_params:
     except Exception:
         pass
 
-def sync_progress_to_cloud(user_id, level, mastered_dict):
-    try:
-        mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
-        mastered_str = ",".join(mastered_words_list)
-        supabase.table("user_profiles").upsert({
-            "user_id": user_id,
-            "grade": level,
-            "mastered_words": mastered_str,
-        }).execute()
-    except Exception as e:
-        pass
 
 current_lvl = st.session_state.level
 current_queue = st.session_state.queues[current_lvl]
 mastered_list = st.session_state.mastered[current_lvl]
-all_learned_pool = mastered_list + current_queue
+# 修改点：测验仅针对已掌握的词库，避免随机抽出没学过的词
+all_learned_pool = mastered_list 
 
 # 未登录拦截
 if not st.session_state.user:
@@ -473,11 +504,8 @@ else:
             if current_queue:
                 current = current_queue[0]
                 
-                # 隐藏式 MP3 自动播放 (突破手机静音限制)
                 st.audio(get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True)
-                
-                # 手动前端播放按钮
-                render_word_audio_button(current["word"], "🔊 点此朗读单词")
+                render_word_audio_button(current["word"], "🔊 点此朗读单词", autoplay=True)
 
                 st.markdown(
                     f"""
@@ -533,7 +561,7 @@ else:
         # ==========================================
         elif st.session_state.page == "quiz":
             if not all_learned_pool:
-                st.info("当前关卡还没有学过任何单词，快去学习吧！")
+                st.info("💡 当前关卡还没有掌握任何单词，请先去【继续学习新词汇】模块打牢基础！")
             else:
                 if st.session_state.hearts <= 0:
                     st.error("💔 你的红心耗尽了！测验被迫中断。")
@@ -581,9 +609,8 @@ else:
                     if st.session_state.get("quiz_answered", False):
                         selected = st.session_state.selected_option
                         
-                        # 答完题自动朗读复习
                         st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                        render_word_audio_button(qc["word"], "🔊 再次朗读单词")
+                        render_word_audio_button(qc["word"], "🔊 再次朗读单词", autoplay=True)
 
                         is_correct = (selected == correct_ans)
 
@@ -618,16 +645,14 @@ else:
                     # --- 未答题状态 ---
                     else:
                         if q_type == "normal":
-                            # 经典选择自动听音
                             st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                            render_word_audio_button(qc["word"], "🔊 点击听音")
+                            render_word_audio_button(qc["word"], "🔊 点击听音", autoplay=True)
                             st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:38px; font-weight:bold; color:#303133;'>{qc['word']}</div></div>", unsafe_allow_html=True)
                             
                         elif q_type == "listen":
                             st.markdown("<h4 style='text-align:center; color:#9c27b0;'>🎧 盲听辨义</h4>", unsafe_allow_html=True)
-                            # 盲听模式只自动播放一次，双语靠手动点击
                             st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                            render_blind_listen_button(qc["word"], "🔊 播放神秘音频 (常速+慢速)")
+                            render_blind_listen_button(qc["word"], "🔊 播放神秘音频 (常速+慢速)", autoplay=True)
                             st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:20px; font-weight:bold; color:#afafaf;'>❓❓❓</div></div>", unsafe_allow_html=True)
 
                         elif q_type == "fill_blank":
@@ -638,10 +663,9 @@ else:
                         elif q_type == "spell":
                             st.markdown("<h4 style='text-align:center; color:#1cb0f6;'>✍️ 串字挑战</h4>", unsafe_allow_html=True)
                             st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                            render_word_audio_button(qc["word"], "🔊 听发音拼写")
+                            render_word_audio_button(qc["word"], "🔊 听发音拼写", autoplay=True)
                             st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:24px; font-weight:bold; color:#ff9600;'>{qc['meaning']}</div></div>", unsafe_allow_html=True)
 
-                        # 渲染操作区
                         if q_type == "spell":
                             with st.form("spell_form"):
                                 user_spell = st.text_input("请在下方串出你听到的英文单词：")
@@ -685,9 +709,8 @@ else:
 
                 rc = st.session_state.review_current
                 
-                # 自动播放
                 st.audio(get_audio_bytes(rc["word"]), format="audio/mp3", autoplay=True)
-                render_word_audio_button(rc["word"], "🔊 点此朗读单词")
+                render_word_audio_button(rc["word"], "🔊 点此朗读单词", autoplay=True)
 
                 st.markdown(
                     f"""
