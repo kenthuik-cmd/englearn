@@ -113,6 +113,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# === 核心函数：生成音频流 (之前不小心误删的就是它！) ===
+def get_audio_bytes(text):
+    tts = gTTS(text=text, lang="en")
+    fp = BytesIO()
+    tts.write_to_fp(fp)
+    fp.seek(0)
+    return fp.read()
+
 # === 原生前端单词朗读按钮 ===
 def render_word_audio_button(word, button_text="🔊 点此朗读单词", autoplay=False):
     escaped_word = word.replace("'", "\\'")
@@ -303,7 +311,6 @@ def render_highlight_example(example_en, example_cn):
 # === 核心防丢档函数：从云端彻底恢复进度 ===
 def restore_progress_from_db(profile_data):
     if profile_data:
-        # 获取最新的一条记录（防止旧的脏数据覆盖最新进度）
         latest_profile = profile_data[-1]
         db_lvl = latest_profile.get("grade", 1)
         st.session_state.level = db_lvl
@@ -317,13 +324,12 @@ def restore_progress_from_db(profile_data):
             random.shuffle(remaining)
             st.session_state.queues[db_lvl] = remaining
 
-# === 云端保存逻辑修复：严格使用更新替代错误插入 ===
+# === 云端保存逻辑修复 ===
 def sync_progress_to_cloud(user_id, level, mastered_dict):
     try:
         mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
         mastered_str = ",".join(mastered_words_list)
         
-        # 强制检查用户是否存在，保证有且只有一条精准记录
         res = supabase.table("user_profiles").select("id").eq("user_id", user_id).execute()
         if len(res.data) > 0:
             supabase.table("user_profiles").update({
@@ -388,7 +394,6 @@ if not st.session_state.user and "uid" in st.query_params:
 current_lvl = st.session_state.level
 current_queue = st.session_state.queues[current_lvl]
 mastered_list = st.session_state.mastered[current_lvl]
-# 修改点：测验仅针对已掌握的词库，避免随机抽出没学过的词
 all_learned_pool = mastered_list 
 
 # 未登录拦截
@@ -605,7 +610,6 @@ else:
                     opts = st.session_state.get("quiz_options", [])
                     correct_ans = st.session_state.get("correct_ans", "")
 
-                    # --- 答题后展现结果 ---
                     if st.session_state.get("quiz_answered", False):
                         selected = st.session_state.selected_option
                         
@@ -642,7 +646,6 @@ else:
                             del st.session_state["quiz_current"]
                             st.rerun()
 
-                    # --- 未答题状态 ---
                     else:
                         if q_type == "normal":
                             st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
