@@ -317,11 +317,17 @@ def restore_progress_from_db(profile_data):
             random.shuffle(remaining)
             st.session_state.queues[db_lvl] = remaining
 
+# === 升级版：加入 URL 网址固化 + 数据库显性报错 ===
 def sync_progress_to_cloud(user_id, level, mastered_dict):
     try:
         mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
         mastered_str = ",".join(mastered_words_list)
         
+        # 1. 【霸道固化】不管数据库死活，先把进度写进浏览器网址里，防止刷新掉档！
+        st.query_params[f"lvl_{level}"] = mastered_str
+        st.query_params["lvl"] = str(level)
+        
+        # 2. 尝试存入 Supabase 云端
         res = supabase.table("user_profiles").select("id").eq("user_id", user_id).execute()
         if len(res.data) > 0:
             supabase.table("user_profiles").update({
@@ -335,7 +341,8 @@ def sync_progress_to_cloud(user_id, level, mastered_dict):
                 "mastered_words": mastered_str,
             }).execute()
     except Exception as e:
-        pass
+        # 如果 Supabase 配置有错，立刻在右下角弹窗通知你！
+        st.toast(f"⚠️ 云端数据库写入被拒 (进度已写入网址进行本地保护): {str(e)[:50]}")
 
 
 class AutoLoginUser:
@@ -376,6 +383,9 @@ if "study_history" not in st.session_state:
 VIP_EMAIL = "vip@englearn.com"
 VIP_PASSWORD = "VipPassword123!"
 
+# ==========================================
+# 🛑 初始化：结合数据库与 URL 双线还原机制
+# ==========================================
 if "user" not in st.session_state:
     try:
         res = supabase.auth.sign_in_with_password({"email": VIP_EMAIL, "password": VIP_PASSWORD})
@@ -388,6 +398,7 @@ if "user" not in st.session_state:
             st.error(f"后台初始化数据库通讯失败，请检查网络或 Supabase 配置！错误详情: {e}")
             st.stop()
             
+    # 【读取步骤 1】：先尝试从 Supabase 恢复
     if st.session_state.user:
         try:
             profile = supabase.table("user_profiles").select("*").eq("user_id", st.session_state.user.id).execute()
@@ -399,6 +410,24 @@ if "user" not in st.session_state:
                     "grade": 1,
                     "mastered_words": ""
                 }).execute()
+        except Exception as e:
+            pass # 读库失败不管，交给下面的 URL 恢复
+            
+    # 【读取步骤 2】：URL 网址强行覆盖还原 (这就是防 F5 刷新清零的救星！)
+    if "lvl" in st.query_params:
+        try:
+            url_lvl = int(st.query_params["lvl"])
+            st.session_state.level = url_lvl
+            param_key = f"lvl_{url_lvl}"
+            if param_key in st.query_params:
+                saved_str = st.query_params[param_key]
+                if saved_str:
+                    saved_words = saved_str.split(",")
+                    full_level_words = GLOBAL_VOCAB_DB.get(url_lvl, [])
+                    st.session_state.mastered[url_lvl] = [w for w in full_level_words if w["word"] in saved_words]
+                    remaining = [w for w in full_level_words if w["word"] not in saved_words]
+                    random.shuffle(remaining)
+                    st.session_state.queues[url_lvl] = remaining
         except Exception:
             pass
 
@@ -462,6 +491,7 @@ if st.session_state.page == "home":
         if st.button("✍️ 串字挑战", use_container_width=True):
             enter_quiz("spell")
 
+
 else:
     if st.button("⬅️ 返回主页", type="secondary"):
         st.session_state.page = "home"
@@ -471,7 +501,7 @@ else:
         st.rerun()
 
     # ==========================================
-    # 📚 核心背单词模式 (加入防缓存机制)
+    # 📚 核心背单词模式 
     # ==========================================
     if st.session_state.page == "study":
         
@@ -546,13 +576,11 @@ else:
                 sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                 st.rerun()
 
-            # --- 核心注入：幽灵点击机制 (加入动态时间戳打破浏览器缓存) ---
             if auto_study:
                 unique_script_id = int(time.time() * 1000)
                 components.html(
                     f"""
                     <script>
-                        // 强制更新标识符: {unique_script_id}
                         setTimeout(function() {{
                             try {{
                                 const buttons = window.parent.document.querySelectorAll('button');
@@ -739,7 +767,7 @@ else:
                                     st.rerun()
 
     # ==========================================
-    # 🔁 单词重温模式 (加入防缓存机制)
+    # 🔁 单词重温模式
     # ==========================================
     elif st.session_state.page == "review":
         if not mastered_list:
@@ -780,7 +808,6 @@ else:
                 components.html(
                     f"""
                     <script>
-                        // 强制更新标识符: {unique_script_id}
                         setTimeout(function() {{
                             try {{
                                 const buttons = window.parent.document.querySelectorAll('button');
