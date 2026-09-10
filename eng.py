@@ -9,6 +9,12 @@ import streamlit.components.v1 as components
 from supabase import create_client
 from vocab_data import GLOBAL_VOCAB_DB
 
+# ==========================================
+# 🛑 你的专属静默登录账号 (请修改为真实注册的账号)
+# ==========================================
+MY_EMAIL = "你的邮箱"       # 例如: "kenthuik@gmail.com"
+MY_PASSWORD = "你的密码"    # 例如: "8793huiK"
+
 # 读取 Supabase 配置
 url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_ANON_KEY"]
@@ -120,7 +126,6 @@ def get_audio_bytes(text):
     fp.seek(0)
     return fp.read()
 
-# === 原生前端单词朗读按钮 ===
 def render_word_audio_button(word, button_text="🔊 点此朗读单词", autoplay=False):
     escaped_word = word.replace("'", "\\'")
     autoplay_script = f"""
@@ -150,7 +155,6 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词", autopl
     """
     components.html(html_code, height=55)
 
-# === AI 语音识别跟读组件 ===
 def render_ai_speech_recognition(target_word):
     target_word_lower = target_word.lower().replace("'", "\\'")
     unique_id = int(time.time() * 1000)
@@ -217,7 +221,6 @@ def render_ai_speech_recognition(target_word):
     """
     components.html(html_code, height=85)
 
-# === 盲听双重发音按钮 ===
 def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常速+慢速)", autoplay=False):
     escaped_word = word.replace("'", "\\'")
     autoplay_script = f"""
@@ -248,7 +251,6 @@ def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常�
     """
     components.html(html_code, height=55)
 
-# === 动态高亮例句组件 ===
 def render_highlight_example(example_en, example_cn):
     escaped_en = example_en.replace("'", "\\'")
     unique_id = int(time.time() * 1000) + random.randint(0, 1000)
@@ -306,12 +308,6 @@ def render_highlight_example(example_en, example_cn):
     components.html(html_code, height=195)
 
 
-# === 基础用户类 ===
-class AutoLoginUser:
-    def __init__(self, uid):
-        self.id = uid
-
-# === 从云端彻底恢复进度 ===
 def restore_progress_from_db(profile_data):
     if profile_data:
         latest_profile = profile_data[-1]
@@ -327,7 +323,7 @@ def restore_progress_from_db(profile_data):
             random.shuffle(remaining)
             st.session_state.queues[db_lvl] = remaining
 
-# === 云端无缝保存逻辑 ===
+# === 真实验证云端保存逻辑 ===
 def sync_progress_to_cloud(user_id, level, mastered_dict):
     try:
         mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
@@ -349,7 +345,6 @@ def sync_progress_to_cloud(user_id, level, mastered_dict):
         pass
 
 
-# === 初始化 Session State ===
 if "level" not in st.session_state:
     st.session_state.level = 1
 if "queues" not in st.session_state:
@@ -382,24 +377,28 @@ if "study_history" not in st.session_state:
     st.session_state.study_history = []
 
 # ==========================================
-# 🛑 单机专属直连模式 (自动登录)
+# 🛑 超级静默自动登录 (永远不看登录页)
 # ==========================================
-SINGLE_VIP_USER_ID = "my_personal_vocab_vip"
-
 if "user" not in st.session_state:
-    st.session_state.user = AutoLoginUser(SINGLE_VIP_USER_ID)
     try:
-        profile = supabase.table("user_profiles").select("*").eq("user_id", SINGLE_VIP_USER_ID).execute()
+        # 使用你顶部的真实邮箱密码进行静默登录
+        res = supabase.auth.sign_in_with_password({"email": MY_EMAIL, "password": MY_PASSWORD})
+        st.session_state.user = res.user
+        
+        # 登录成功后立刻拉取真实进度
+        profile = supabase.table("user_profiles").select("*").eq("user_id", res.user.id).execute()
         if len(profile.data) > 0:
             restore_progress_from_db(profile.data)
         else:
             supabase.table("user_profiles").insert({
-                "user_id": SINGLE_VIP_USER_ID,
+                "user_id": res.user.id,
                 "grade": 1,
                 "mastered_words": ""
             }).execute()
-    except Exception:
-        pass
+    except Exception as e:
+        # 如果密码填错了，才会显示错误提示
+        st.error("无法自动登录！请检查代码顶部 MY_EMAIL 和 MY_PASSWORD 是否为你真实的注册账号！")
+        st.stop()
 
 
 current_lvl = st.session_state.level
@@ -408,7 +407,7 @@ mastered_list = st.session_state.mastered[current_lvl]
 all_learned_pool = mastered_list 
 
 # ==========================================
-# 🟢 全局界面 UI
+# 🟢 全局界面 UI (纯净版主页)
 # ==========================================
 if st.session_state.page != "home":
     st.markdown(f"""
@@ -418,7 +417,6 @@ if st.session_state.page != "home":
     </div>
     """, unsafe_allow_html=True)
 
-# ---------------- HOME 主页 ----------------
 if st.session_state.page == "home":
     st.markdown("<h3 style='text-align: center; color: #303133; margin-bottom: 5px;'>🦉 每日英语打卡</h3>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; color: #afafaf; font-size: 14px; margin-bottom: 15px;'>当前通关：<b>Level {current_lvl} / 20</b></p>", unsafe_allow_html=True)
@@ -467,7 +465,6 @@ if st.session_state.page == "home":
             enter_quiz("spell")
 
 
-# ---------------- 子页面 ----------------
 else:
     if st.button("⬅️ 返回主页", type="secondary"):
         st.session_state.page = "home"
@@ -477,7 +474,7 @@ else:
         st.rerun()
 
     # ==========================================
-    # 📚 核心背单词模式 (挂机 1.5 秒极速版)
+    # 📚 核心背单词模式 
     # ==========================================
     if st.session_state.page == "study":
         
@@ -552,7 +549,7 @@ else:
                 sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                 st.rerun()
 
-            # --- 核心注入：幽灵点击机制 (延时2.5秒后模拟点击下一个) ---
+            # --- 挂机 1.5 秒极速版 ---
             if auto_study:
                 components.html(
                     """
@@ -567,7 +564,7 @@ else:
                                     }
                                 }
                             } catch (e) { console.error(e); }
-                        }, 2500); // 1秒播音 + 1.5秒间隔 = 2.5秒后自动点击
+                        }, 2500); 
                     </script>
                     """,
                     height=0
@@ -743,7 +740,7 @@ else:
                                     st.rerun()
 
     # ==========================================
-    # 🔁 单词重温模式 (挂机 1.5 秒极速版)
+    # 🔁 单词重温模式
     # ==========================================
     elif st.session_state.page == "review":
         if not mastered_list:
@@ -779,7 +776,6 @@ else:
                 st.session_state.review_current = random.choice(mastered_list)
                 st.rerun()
                 
-            # --- 核心注入：幽灵点击机制 ---
             if auto_review:
                 components.html(
                     """
@@ -794,7 +790,7 @@ else:
                                     }
                                 }
                             } catch (e) { console.error(e); }
-                        }, 2500); // 1秒播音 + 1.5秒间隔
+                        }, 2500); 
                     </script>
                     """,
                     height=0
