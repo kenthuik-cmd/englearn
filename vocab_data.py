@@ -319,7 +319,119 @@ GLOBAL_VOCAB_DB = {
         {"word": "after", "phonetic": "/ˈɑːftə(r)/", "meaning": "prep. 在...之后", "example_en": "Let's go for a walk after lunch.", "example_cn": "午饭后我们去散步吧。"},
         {"word": "time", "phonetic": "/taɪm/", "meaning": "n. 时间", "example_en": "What time does the movie start?", "example_cn": "电影几点开始？"}
     ]
-}
+    # ==========================================
+    # ✈️ Level 4: 海外生存 - 餐饮、出行与方向 (50词)
+    # ==========================================
+    GLOBAL_VOCAB_DB[4] = [
+        {"word": "receipt", "phonetic": "/rɪˈsiːt/", "meaning": "n. 收据，小票", "example_en": "Do you need a receipt?", "example_cn": "你需要收据吗？"},
+        {"word": "order", "phonetic": "/ˈɔːrdər/", "meaning": "v. 点餐", "example_en": "Are you ready to order?", "example_cn": "您准备好点餐了吗？"},
+        {"word": "takeout", "phonetic": "/ˈteɪkaʊt/", "meaning": "n. 外卖，打包", "example_en": "I'd like to get this for takeout.", "example_cn": "我想把这个打包带走。"},
+        {"word": "cashier", "phonetic": "/kæˈʃɪr/", "meaning": "n. 收银员", "example_en": "Please pay the cashier.", "example_cn": "请去收银员那里付款。"},
+        {"word": "discount", "phonetic": "/ˈdɪskaʊnt/", "meaning": "n. 折扣", "example_en": "Is there a discount for students?", "example_cn": "学生有打折吗？"},
+        {"word": "menu", "phonetic": "/ˈmenjuː/", "meaning": "n. 菜单", "example_en": "Can I see the menu, please?", "example_cn": "能给我看看菜单吗？"},
+        {"word": "bill", "phonetic": "/bɪl/", "meaning": "n. 账单", "example_en": "Could we have the bill, please?", "example_cn": "请买单。"},
+        {"word": "tip", "phonetic": "/tɪp/", "meaning": "n. 小费", "example_en": "Don't forget to leave a tip.", "example_cn": "别忘了留小费。"},
+        {"word": "napkin", "phonetic": "/ˈnæpkɪn/", "meaning": "n. 餐巾纸", "example_en": "Could I get some extra napkins?", "example_cn": "能多给我几张餐巾纸吗？"},
+        {"word": "fork", "phonetic": "/fɔːrk/", "meaning": "n. 叉子", "example_en": "I dropped my fork.", "example_cn": "我的叉子掉了。"},
+        {"word": "knife", "phonetic": "/naɪf/", "meaning": "n. 刀", "example_en": "I need a knife to cut the steak.", "example_cn": "我需要一把刀切牛排。"},
+        {"word": "spoon", "phonetic": "/spuːn/", "meaning": "n. 勺子", "example_en": "Can I have a spoon for my soup?", "example_cn": "能给我把喝汤的勺子吗？"},
+        {"word": "plate", "phonetic": "/pleɪt/", "meaning": "n. 盘子", "example_en": "Could we get an extra plate?", "example_cn": "能再给我们一个盘子吗？"},
+        {"word": "delicious", "phonetic": "/dɪˈlɪʃəs/", "meaning": "adj. 美味的", "example_en": "The food here is delicious.", "example_cn": "这里的食物很美味。"},
+        {"word": "spicy", "phonetic": "/ˈspaɪsi/", "meaning": "adj. 辣的", "example_en": "I love eating spicy food.", "example_cn": "我喜欢吃辣的食物。"},
+        {"word": "sweet", "phonetic": "/swiːt/", "meaning": "adj. 甜的", "example_en": "This cake is too sweet.", "example_cn": "这块蛋糕太甜了。"},
+        {"word": "sour", "phonetic": "/ˈsaʊər/", "meaning": "adj. 酸的", "example_en": "Lemons are very sour.", "example_cn": "柠檬非常酸。"},
+        {"word": "bitter", "phonetic": "/ˈbɪtər/", "meaning": "adj. 苦的", "example_en": "Black coffee is bitter.", "example_cn": "黑咖啡很苦。"},
+        {"word": "salty", "phonetic": "/ˈsɔːlti/", "meaning": "adj. 咸的", "example_en": "The soup is a bit salty.", "example_cn": "这汤有点咸。"},
+        {"word": "vegetarian", "phonetic": "/ˌvedʒəˈteriən/", "meaning": "adj. 素食的", "example_en": "Do you have vegetarian options?", "example_cn": "你们有素食的选择吗？"},
+        {"word": "allergy", "phonetic": "/ˈælərdʒi/", "meaning": "n. 过敏", "example_en": "I have an allergy to peanuts.", "example_cn": "我对花生过敏。"},
+        {"word": "water", "phonetic": "/ˈwɔːtər/", "meaning": "n. 水", "example_en": "Can I get a glass of water?", "example_cn": "能给我一杯水吗？"},
+        {"word": "ice", "phonetic": "/aɪs/", "meaning": "n. 冰", "example_en": "No ice, please.", "example_cn": "请去冰。"},
+        {"word": "refill", "phonetic": "/ˈriːfɪl/", "meaning": "n./v. 续杯", "example_en": "Are refills free?", "example_cn": "续杯是免费的吗？"},
+        {"word": "total", "phonetic": "/ˈtoʊtl/", "meaning": "n. 总计", "example_en": "What is the total cost?", "example_cn": "总费用是多少？"},
+        {"word": "cash", "phonetic": "/kæʃ/", "meaning": "n. 现金", "example_en": "I will pay in cash.", "example_cn": "我会付现金。"},
+        {"word": "credit", "phonetic": "/ˈkredɪt/", "meaning": "n. 信用卡", "example_en": "Do you take credit cards?", "example_cn": "你们收信用卡吗？"},
+        {"word": "change", "phonetic": "/tʃeɪndʒ/", "meaning": "n. 零钱", "example_en": "Keep the change.", "example_cn": "不用找零了。"},
+        {"word": "airport", "phonetic": "/ˈerpɔːrt/", "meaning": "n. 机场", "example_en": "How far is the airport?", "example_cn": "机场有多远？"},
+        {"word": "flight", "phonetic": "/flaɪt/", "meaning": "n. 航班", "example_en": "My flight is delayed.", "example_cn": "我的航班延误了。"},
+        {"word": "luggage", "phonetic": "/ˈlʌɡɪdʒ/", "meaning": "n. 行李", "example_en": "Where can I pick up my luggage?", "example_cn": "我在哪里拿行李？"},
+        {"word": "passport", "phonetic": "/ˈpæspɔːrt/", "meaning": "n. 护照", "example_en": "Here is my passport.", "example_cn": "这是我的护照。"},
+        {"word": "visa", "phonetic": "/ˈviːzə/", "meaning": "n. 签证", "example_en": "I need a student visa.", "example_cn": "我需要学生签证。"},
+        {"word": "gate", "phonetic": "/ɡeɪt/", "meaning": "n. 登机口", "example_en": "Which gate is for flight 802?", "example_cn": "802航班在哪个登机口？"},
+        {"word": "board", "phonetic": "/bɔːrd/", "meaning": "v. 登机", "example_en": "It is time to board the plane.", "example_cn": "该登机了。"},
+        {"word": "delay", "phonetic": "/dɪˈleɪ/", "meaning": "v./n. 延误", "example_en": "The train has a short delay.", "example_cn": "火车有短暂的延误。"},
+        {"word": "cancel", "phonetic": "/ˈkænsəl/", "meaning": "v. 取消", "example_en": "The meeting was canceled.", "example_cn": "会议被取消了。"},
+        {"word": "arrive", "phonetic": "/əˈraɪv/", "meaning": "v. 到达", "example_en": "What time will we arrive?", "example_cn": "我们几点到达？"},
+        {"word": "depart", "phonetic": "/dɪˈpɑːrt/", "meaning": "v. 离开，出发", "example_en": "The bus departs at 9 AM.", "example_cn": "巴士早上9点出发。"},
+        {"word": "taxi", "phonetic": "/ˈtæksi/", "meaning": "n. 出租车", "example_en": "Let's call a taxi.", "example_cn": "我们叫辆出租车吧。"},
+        {"word": "subway", "phonetic": "/ˈsʌbweɪ/", "meaning": "n. 地铁", "example_en": "I take the subway to work.", "example_cn": "我坐地铁去上班。"},
+        {"word": "station", "phonetic": "/ˈsteɪʃn/", "meaning": "n. 车站", "example_en": "Turn left at the train station.", "example_cn": "在火车站左转。"},
+        {"word": "ticket", "phonetic": "/ˈtɪkɪt/", "meaning": "n. 票", "example_en": "Where can I buy a ticket?", "example_cn": "我在哪里可以买票？"},
+        {"word": "map", "phonetic": "/mæp/", "meaning": "n. 地图", "example_en": "Can you show me on the map?", "example_cn": "你能在地图上指给我看吗？"},
+        {"word": "street", "phonetic": "/striːt/", "meaning": "n. 街道", "example_en": "Go down this street.", "example_cn": "沿着这条街走。"},
+        {"word": "corner", "phonetic": "/ˈkɔːrnər/", "meaning": "n. 角落，路口", "example_en": "The shop is on the corner.", "example_cn": "商店在街角。"},
+        {"word": "straight", "phonetic": "/streɪt/", "meaning": "adv. 直走", "example_en": "Go straight ahead.", "example_cn": "一直往前走。"},
+        {"word": "left", "phonetic": "/left/", "meaning": "n./adv. 左边", "example_en": "Turn left at the next light.", "example_cn": "在下一个红绿灯左转。"},
+        {"word": "right", "phonetic": "/raɪt/", "meaning": "n./adv. 右边", "example_en": "It is on your right.", "example_cn": "它在你的右边。"},
+        {"word": "crosswalk", "phonetic": "/ˈkrɔːswɔːk/", "meaning": "n. 人行横道", "example_en": "Always use the crosswalk.", "example_cn": "请务必走人行横道。"}
+    ]
 
-for lvl in range(4, 21):
-    GLOBAL_VOCAB_DB[lvl] = list(GLOBAL_VOCAB_DB[1])
+    # ==========================================
+    # 🏥 Level 5: 海外生存 - 购物、居住与求助 (50词)
+    # ==========================================
+    GLOBAL_VOCAB_DB[5] = [
+        {"word": "restroom", "phonetic": "/ˈrestrʊm/", "meaning": "n. 洗手间", "example_en": "Where is the restroom?", "example_cn": "请问洗手间在哪里？"},
+        {"word": "pharmacy", "phonetic": "/ˈfɑːrməsi/", "meaning": "n. 药店", "example_en": "Is there a pharmacy nearby?", "example_cn": "附近有药店吗？"},
+        {"word": "rent", "phonetic": "/rent/", "meaning": "n. 租金", "example_en": "How much is the rent?", "example_cn": "租金是多少？"},
+        {"word": "appointment", "phonetic": "/əˈpɔɪntmənt/", "meaning": "n. 预约", "example_en": "I have a doctor's appointment.", "example_cn": "我有个看医生的预约。"},
+        {"word": "emergency", "phonetic": "/ɪˈmɜːrdʒənsi/", "meaning": "n. 紧急情况", "example_en": "This is an emergency!", "example_cn": "这是紧急情况！"},
+        {"word": "hospital", "phonetic": "/ˈhɑːspɪtl/", "meaning": "n. 医院", "example_en": "Take him to the hospital.", "example_cn": "送他去医院。"},
+        {"word": "doctor", "phonetic": "/ˈdɑːktər/", "meaning": "n. 医生", "example_en": "I need to see a doctor.", "example_cn": "我需要看医生。"},
+        {"word": "pain", "phonetic": "/peɪn/", "meaning": "n. 疼痛", "example_en": "I have pain in my chest.", "example_cn": "我胸口疼。"},
+        {"word": "fever", "phonetic": "/ˈfiːvər/", "meaning": "n. 发烧", "example_en": "He has a high fever.", "example_cn": "他发高烧了。"},
+        {"word": "cough", "phonetic": "/kɔːf/", "meaning": "n./v. 咳嗽", "example_en": "I have a bad cough.", "example_cn": "我咳得很厉害。"},
+        {"word": "medicine", "phonetic": "/ˈmedɪsn/", "meaning": "n. 药", "example_en": "Take this medicine twice a day.", "example_cn": "这个药一天吃两次。"},
+        {"word": "pill", "phonetic": "/pɪl/", "meaning": "n. 药丸", "example_en": "Swallow the pill with water.", "example_cn": "用水把药片吞下。"},
+        {"word": "police", "phonetic": "/pəˈliːs/", "meaning": "n. 警察", "example_en": "Call the police!", "example_cn": "快报警！"},
+        {"word": "help", "phonetic": "/help/", "meaning": "v./n. 帮助", "example_en": "Can you help me?", "example_cn": "你能帮帮我吗？"},
+        {"word": "safe", "phonetic": "/seɪf/", "meaning": "adj. 安全的", "example_en": "Is it safe to walk here at night?", "example_cn": "晚上在这里走安全吗？"},
+        {"word": "dangerous", "phonetic": "/ˈdeɪndʒərəs/", "meaning": "adj. 危险的", "example_en": "The road is very dangerous.", "example_cn": "这条路非常危险。"},
+        {"word": "lost", "phonetic": "/lɔːst/", "meaning": "adj. 迷路的，丢失的", "example_en": "I am lost. Can you help me?", "example_cn": "我迷路了。你能帮我吗？"},
+        {"word": "found", "phonetic": "/faʊnd/", "meaning": "adj. 找到的", "example_en": "I found my keys.", "example_cn": "我找到我的钥匙了。"},
+        {"word": "wallet", "phonetic": "/ˈwɑːlɪt/", "meaning": "n. 钱包", "example_en": "Someone stole my wallet.", "example_cn": "有人偷了我的钱包。"},
+        {"word": "phone", "phonetic": "/foʊn/", "meaning": "n. 电话，手机", "example_en": "My phone is out of service.", "example_cn": "我的手机没信号。"},
+        {"word": "battery", "phonetic": "/ˈbætəri/", "meaning": "n. 电池", "example_en": "My phone battery is low.", "example_cn": "我手机快没电了。"},
+        {"word": "charger", "phonetic": "/ˈtʃɑːrdʒər/", "meaning": "n. 充电器", "example_en": "Do you have a phone charger?", "example_cn": "你有手机充电器吗？"},
+        {"word": "plug", "phonetic": "/plʌɡ/", "meaning": "n. 插头", "example_en": "Where is the plug?", "example_cn": "插头在哪里？"},
+        {"word": "outlet", "phonetic": "/ˈaʊtlet/", "meaning": "n. 插座", "example_en": "Is there an outlet here?", "example_cn": "这里有电源插座吗？"},
+        {"word": "store", "phonetic": "/stɔːr/", "meaning": "n. 商店", "example_en": "The store is closed today.", "example_cn": "商店今天关门。"},
+        {"word": "open", "phonetic": "/ˈoʊpən/", "meaning": "adj. 营业的", "example_en": "Are you open on Sundays?", "example_cn": "你们星期天营业吗？"},
+        {"word": "closed", "phonetic": "/kloʊzd/", "meaning": "adj. 关闭的", "example_en": "Sorry, we are closed.", "example_cn": "抱歉，我们关门了。"},
+        {"word": "sale", "phonetic": "/seɪl/", "meaning": "n. 特卖", "example_en": "These shoes are on sale.", "example_cn": "这双鞋在打折。"},
+        {"word": "price", "phonetic": "/praɪs/", "meaning": "n. 价格", "example_en": "What is the price of this?", "example_cn": "这个多少钱？"},
+        {"word": "cheap", "phonetic": "/tʃiːp/", "meaning": "adj. 便宜的", "example_en": "It is very cheap.", "example_cn": "这个很便宜。"},
+        {"word": "expensive", "phonetic": "/ɪkˈspensɪv/", "meaning": "adj. 贵的", "example_en": "That is too expensive for me.", "example_cn": "那个对我来说太贵了。"},
+        {"word": "size", "phonetic": "/saɪz/", "meaning": "n. 尺寸，尺码", "example_en": "Do you have this in a larger size?", "example_cn": "你们有大一号的吗？"},
+        {"word": "fit", "phonetic": "/fɪt/", "meaning": "v. 合身", "example_en": "This shirt doesn't fit me.", "example_cn": "这件衬衫我穿不合身。"},
+        {"word": "try", "phonetic": "/traɪ/", "meaning": "v. 试穿", "example_en": "Can I try this on?", "example_cn": "我能试穿一下这个吗？"},
+        {"word": "color", "phonetic": "/ˈkʌlər/", "meaning": "n. 颜色", "example_en": "Do you have this in a different color?", "example_cn": "这个有别的颜色吗？"},
+        {"word": "refund", "phonetic": "/ˈriːfʌnd/", "meaning": "n. 退款", "example_en": "Can I get a refund?", "example_cn": "我能退款吗？"},
+        {"word": "return", "phonetic": "/rɪˈtɜːrn/", "meaning": "v. 退货", "example_en": "I want to return this shirt.", "example_cn": "我想退掉这件衬衫。"},
+        {"word": "exchange", "phonetic": "/ɪksˈtʃeɪndʒ/", "meaning": "v. 换货", "example_en": "Can I exchange it for a smaller one?", "example_cn": "我能换个小点的吗？"},
+        {"word": "elevator", "phonetic": "/ˈelɪveɪtər/", "meaning": "n. 电梯", "example_en": "Take the elevator to the 3rd floor.", "example_cn": "坐电梯到三楼。"},
+        {"word": "stairs", "phonetic": "/sterz/", "meaning": "n. 楼梯", "example_en": "The stairs are over there.", "example_cn": "楼梯在那边。"},
+        {"word": "entrance", "phonetic": "/ˈentrəns/", "meaning": "n. 入口", "example_en": "Meet me at the main entrance.", "example_cn": "在正门入口见。"},
+        {"word": "exit", "phonetic": "/ˈeɡzɪt/", "meaning": "n. 出口", "example_en": "Where is the emergency exit?", "example_cn": "紧急出口在哪里？"},
+        {"word": "push", "phonetic": "/pʊʃ/", "meaning": "v. 推", "example_en": "Push the door open.", "example_cn": "把门推开。"},
+        {"word": "pull", "phonetic": "/pʊl/", "meaning": "v. 拉", "example_en": "You need to pull to open it.", "example_cn": "你需要拉开它。"},
+        {"word": "apartment", "phonetic": "/əˈpɑːrtmənt/", "meaning": "n. 公寓", "example_en": "I live in a small apartment.", "example_cn": "我住在一个小公寓里。"},
+        {"word": "key", "phonetic": "/kiː/", "meaning": "n. 钥匙", "example_en": "I lost my room key.", "example_cn": "我把房间钥匙丢了。"},
+        {"word": "lock", "phonetic": "/lɑːk/", "meaning": "v./n. 锁", "example_en": "Please lock the door when you leave.", "example_cn": "离开时请锁门。"},
+        {"word": "neighbor", "phonetic": "/ˈneɪbər/", "meaning": "n. 邻居", "example_en": "My neighbor is very friendly.", "example_cn": "我的邻居很友好。"},
+        {"word": "loud", "phonetic": "/laʊd/", "meaning": "adj. 吵闹的", "example_en": "The music is too loud.", "example_cn": "音乐太吵了。"},
+        {"word": "quiet", "phonetic": "/ˈkwaɪət/", "meaning": "adj. 安静的", "example_en": "Please be quiet in the library.", "example_cn": "在图书馆请保持安静。"}
+    ]
+
+    # 将剩余的关卡（6-20）暂时先用 Level 5 填充，防止数组越界报错
+    for lvl in range(6, 21):
+        GLOBAL_VOCAB_DB[lvl] = list(GLOBAL_VOCAB_DB[5])
+
