@@ -13,7 +13,7 @@ from vocab_data import GLOBAL_VOCAB_DB
 # 🛑 你的专属静默登录账号 (请修改为真实注册的账号)
 # ==========================================
 MY_EMAIL = "kenthuik@gmail.com"       # 例如: "kenthuik@gmail.com"
-MY_PASSWORD = "8793huiK"    # 例如: "8793huiK"
+MY_PASSWORD = "123456789"    # 例如: "8793huiK"
 
 # 读取 Supabase 配置
 url = st.secrets["SUPABASE_URL"]
