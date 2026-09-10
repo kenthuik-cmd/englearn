@@ -306,7 +306,7 @@ def render_highlight_example(example_en, example_cn):
     components.html(html_code, height=195)
 
 
-# === 基础用户类：用于彻底替换系统账户 ===
+# === 基础用户类 ===
 class AutoLoginUser:
     def __init__(self, uid):
         self.id = uid
@@ -378,20 +378,29 @@ if "hearts" not in st.session_state:
 if "streak" not in st.session_state:
     st.session_state.streak = int(st.query_params.get("streak", 1))
 
-# === 历史时光机：防手滑撤销机制 ===
 if "study_history" not in st.session_state:
     st.session_state.study_history = []
 
-# === 免密自动登录触发机制 ===
-if "user" not in st.session_state:
-    st.session_state.user = None
+# ==========================================
+# 🛑 单机专属直连模式 (自动登录)
+# ==========================================
+# 这里写死你个人的云端专属存档 ID，你可以随时更改它
+SINGLE_VIP_USER_ID = "my_personal_vocab_vip"
 
-if not st.session_state.user and "uid" in st.query_params:
-    saved_uid = st.query_params["uid"]
-    st.session_state.user = AutoLoginUser(saved_uid)
+if "user" not in st.session_state:
+    st.session_state.user = AutoLoginUser(SINGLE_VIP_USER_ID)
     try:
-        profile = supabase.table("user_profiles").select("*").eq("user_id", saved_uid).execute()
-        restore_progress_from_db(profile.data)
+        # 每次打开网页，自动从云端拉取这个固定账号的进度
+        profile = supabase.table("user_profiles").select("*").eq("user_id", SINGLE_VIP_USER_ID).execute()
+        if len(profile.data) > 0:
+            restore_progress_from_db(profile.data)
+        else:
+            # 如果是第一次运行，自动在云端建档
+            supabase.table("user_profiles").insert({
+                "user_id": SINGLE_VIP_USER_ID,
+                "grade": 1,
+                "mastered_words": ""
+            }).execute()
     except Exception:
         pass
 
@@ -402,202 +411,129 @@ mastered_list = st.session_state.mastered[current_lvl]
 all_learned_pool = mastered_list 
 
 # ==========================================
-# 🛑 未登录拦截 (修改为纯净无密代号模式)
+# 🟢 全局界面 UI
 # ==========================================
-if not st.session_state.user:
-    st.markdown(
-        "<h3 style='text-align: center; color: #58cc02; margin-top: 10px;'>🦉 英语闯关打卡 App</h3>",
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        "<p style='text-align: center; color: #909399; font-size: 14px;'>抛弃繁琐密码，输入代号一键读取存档！</p>",
-        unsafe_allow_html=True,
-    )
-    
-    with st.container():
-        st.write("")
-        username = st.text_input("🔑 你的专属存档代号 (如: Alex888)", placeholder="输入代号即可自动创建或读取进度")
+if st.session_state.page != "home":
+    st.markdown(f"""
+    <div class='status-bar'>
+        <span style='color: #ff9600;'><span class='anim-fire'>🔥</span> 连胜: {st.session_state.streak} 天</span>
+        <span style='color: #ff4b4b; letter-spacing: 2px;'><span class='anim-heart'>{'❤️'*st.session_state.hearts}</span>{'🤍'*(5-st.session_state.hearts)}</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ---------------- HOME 主页 ----------------
+if st.session_state.page == "home":
+    st.markdown("<h3 style='text-align: center; color: #303133; margin-bottom: 5px;'>🦉 每日英语打卡</h3>", unsafe_allow_html=True)
+    st.markdown(f"<p style='text-align: center; color: #afafaf; font-size: 14px; margin-bottom: 15px;'>当前通关：<b>Level {current_lvl} / 20</b></p>", unsafe_allow_html=True)
+
+    st.markdown(f"""
+    <div style='display: flex; justify-content: center; gap: 20px; margin-bottom: 20px;'>
+        <div style='text-align: center;'><div style='font-size: 32px;' class='anim-fire'>🔥</div><div style='font-weight: bold; color: #ff9600;'>{st.session_state.streak} 天连胜</div></div>
+        <div style='text-align: center;'><div style='font-size: 32px;' class='anim-heart'>❤️</div><div style='font-weight: bold; color: #ff4b4b;'>{st.session_state.hearts} 颗红心</div></div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    progress_pct = min(len(mastered_list) / 100.0, 1.0)
+    st.progress(progress_pct)
+    st.markdown(f"<p style='text-align: right; font-size: 12px; color: #58cc02; font-weight: bold;'>进度 {len(mastered_list)}/100 词</p>", unsafe_allow_html=True)
+
+    st.write("")
+    if st.button("🚀 继续学习新词汇", use_container_width=True, type="primary"):
+        st.session_state.study_history.clear() # 进入时清空历史防错乱
+        st.session_state.page = "study"
+        st.rerun()
         
-        st.write("")
-        if st.button("🚀 一键开启学习", use_container_width=True, type="primary"):
-            user_id = username.strip()
-            if user_id == "":
-                st.warning("请先输入一个代号哦！")
-            else:
-                st.session_state.user = AutoLoginUser(user_id)
-                st.query_params["uid"] = user_id
-                
-                try:
-                    # 尝试从云端拉取这个代号的进度
-                    profile = supabase.table("user_profiles").select("*").eq("user_id", user_id).execute()
-                    if len(profile.data) > 0:
-                        restore_progress_from_db(profile.data)
-                        st.success(f"🎉 欢迎回来，{user_id}！已为你恢复学习进度。")
-                    else:
-                        # 没找到则自动创建新号
-                        supabase.table("user_profiles").insert({
-                            "user_id": user_id,
-                            "grade": 1,
-                            "mastered_words": ""
-                        }).execute()
-                        st.success(f"✨ 新专属存档 '{user_id}' 创建成功！")
-                except Exception as e:
-                    pass
-                
-                time.sleep(0.8)
-                st.rerun()
+    st.write("")
+    if st.button("🔁 查看已学单词重温", use_container_width=True):
+        st.session_state.page = "review"
+        st.rerun()
+        
+    st.markdown("<div class='section-title'>— 🎯 专项测验 —</div>", unsafe_allow_html=True)
+    
+    def enter_quiz(mode):
+        st.session_state.quiz_mode = mode
+        st.session_state.page = "quiz"
+        st.session_state.pop("quiz_current", None)
+        st.session_state.pop("quiz_answered", None)
+        st.rerun()
 
-# ==========================================
-# 🟢 已登录界面
-# ==========================================
+    col_q1, col_q2 = st.columns(2)
+    with col_q1:
+        if st.button("👁️ 经典选择", use_container_width=True):
+            enter_quiz("normal")
+        if st.button("🔤 语境填空", use_container_width=True):
+            enter_quiz("fill_blank")
+    with col_q2:
+        if st.button("🎧 盲听辨认", use_container_width=True):
+            enter_quiz("listen")
+        if st.button("✍️ 串字挑战", use_container_width=True):
+            enter_quiz("spell")
+
+
+# ---------------- 子页面 ----------------
 else:
-    if st.session_state.page != "home":
-        st.markdown(f"""
-        <div class='status-bar'>
-            <span style='color: #ff9600;'><span class='anim-fire'>🔥</span> 连胜: {st.session_state.streak} 天</span>
-            <span style='color: #ff4b4b; letter-spacing: 2px;'><span class='anim-heart'>{'❤️'*st.session_state.hearts}</span>{'🤍'*(5-st.session_state.hearts)}</span>
-        </div>
-        """, unsafe_allow_html=True)
+    if st.button("⬅️ 返回主页", type="secondary"):
+        st.session_state.page = "home"
+        st.session_state.pop("quiz_current", None)
+        st.session_state.pop("quiz_answered", None)
+        st.session_state.study_history.clear()
+        st.rerun()
 
-    # ---------------- HOME 主页 ----------------
-    if st.session_state.page == "home":
-        st.markdown("<h3 style='text-align: center; color: #303133; margin-bottom: 5px;'>🦉 每日英语打卡</h3>", unsafe_allow_html=True)
-        st.markdown(f"<p style='text-align: center; color: #afafaf; font-size: 14px; margin-bottom: 15px;'>当前通关：<b>Level {current_lvl} / 20</b></p>", unsafe_allow_html=True)
-
-        st.markdown(f"""
-        <div style='display: flex; justify-content: center; gap: 20px; margin-bottom: 20px;'>
-            <div style='text-align: center;'><div style='font-size: 32px;' class='anim-fire'>🔥</div><div style='font-weight: bold; color: #ff9600;'>{st.session_state.streak} 天连胜</div></div>
-            <div style='text-align: center;'><div style='font-size: 32px;' class='anim-heart'>❤️</div><div style='font-weight: bold; color: #ff4b4b;'>{st.session_state.hearts} 颗红心</div></div>
-        </div>
-        """, unsafe_allow_html=True)
-
+    # ==========================================
+    # 📚 核心背单词模式
+    # ==========================================
+    if st.session_state.page == "study":
         progress_pct = min(len(mastered_list) / 100.0, 1.0)
         st.progress(progress_pct)
-        st.markdown(f"<p style='text-align: right; font-size: 12px; color: #58cc02; font-weight: bold;'>进度 {len(mastered_list)}/100 词</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='text-align: right; font-size: 12px; color: #58cc02; font-weight: bold;'>Level {current_lvl} 进度: {len(mastered_list)}/100</p>", unsafe_allow_html=True)
 
-        st.write("")
-        if st.button("🚀 继续学习新词汇", use_container_width=True, type="primary"):
-            st.session_state.study_history.clear() # 进入时清空历史防错乱
-            st.session_state.page = "study"
-            st.rerun()
+        if current_queue:
+            current = current_queue[0]
             
-        st.write("")
-        if st.button("🔁 查看已学单词重温", use_container_width=True):
-            st.session_state.page = "review"
-            st.rerun()
+            st.audio(get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True)
+            render_word_audio_button(current["word"], "🔊 点此朗读单词", autoplay=False)
+
+            st.markdown(
+                f"""
+                    <div class="quiz-card" style="margin-bottom: 12px;">
+                        <div style="font-size: 38px; font-weight: bold; color: #303133; margin-bottom: 4px;">{current['word']}</div>
+                        <div style="font-size: 15px; color: #afafaf; margin-bottom: 10px;">{current['phonetic']}</div>
+                        <div style="font-size: 18px; font-weight: bold; color: #1cb0f6;">{current['meaning']}</div>
+                    </div>
+                    """,
+                unsafe_allow_html=True,
+            )
             
-        st.markdown("<div class='section-title'>— 🎯 专项测验 —</div>", unsafe_allow_html=True)
-        
-        def enter_quiz(mode):
-            st.session_state.quiz_mode = mode
-            st.session_state.page = "quiz"
-            st.session_state.pop("quiz_current", None)
-            st.session_state.pop("quiz_answered", None)
-            st.rerun()
+            render_highlight_example(current["example_en"], current["example_cn"])
+            render_ai_speech_recognition(current["word"])
 
-        col_q1, col_q2 = st.columns(2)
-        with col_q1:
-            if st.button("👁️ 经典选择", use_container_width=True):
-                enter_quiz("normal")
-            if st.button("🔤 语境填空", use_container_width=True):
-                enter_quiz("fill_blank")
-        with col_q2:
-            if st.button("🎧 盲听辨认", use_container_width=True):
-                enter_quiz("listen")
-            if st.button("✍️ 串字挑战", use_container_width=True):
-                enter_quiz("spell")
-
-        st.markdown("---")
-        if st.button("🚪 退出登录 (切换账号)", use_container_width=True):
-            st.session_state.user = None
-            st.session_state.page = "home"
-            st.query_params.clear() 
-            st.rerun()
-
-    # ---------------- 子页面 ----------------
-    else:
-        if st.button("⬅️ 返回主页", type="secondary"):
-            st.session_state.page = "home"
-            st.session_state.pop("quiz_current", None)
-            st.session_state.pop("quiz_answered", None)
-            st.session_state.study_history.clear()
-            st.rerun()
-
-        # ==========================================
-        # 📚 核心背单词模式 (带撤销返回机制)
-        # ==========================================
-        if st.session_state.page == "study":
-            progress_pct = min(len(mastered_list) / 100.0, 1.0)
-            st.progress(progress_pct)
-            st.markdown(f"<p style='text-align: right; font-size: 12px; color: #58cc02; font-weight: bold;'>Level {current_lvl} 进度: {len(mastered_list)}/100</p>", unsafe_allow_html=True)
-
-            if current_queue:
-                current = current_queue[0]
-                
-                st.audio(get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True)
-                render_word_audio_button(current["word"], "🔊 点此朗读单词", autoplay=False)
-
-                st.markdown(
-                    f"""
-                        <div class="quiz-card" style="margin-bottom: 12px;">
-                            <div style="font-size: 38px; font-weight: bold; color: #303133; margin-bottom: 4px;">{current['word']}</div>
-                            <div style="font-size: 15px; color: #afafaf; margin-bottom: 10px;">{current['phonetic']}</div>
-                            <div style="font-size: 18px; font-weight: bold; color: #1cb0f6;">{current['meaning']}</div>
-                        </div>
-                        """,
-                    unsafe_allow_html=True,
-                )
-                
-                render_highlight_example(current["example_en"], current["example_cn"])
-                render_ai_speech_recognition(current["word"])
-
-                st.write("")
-                
-                # --- 新增：防手滑撤销按钮 ---
-                if st.session_state.study_history:
-                    if st.button("⏪ 哎呀点错了！返回上一个单词", use_container_width=True):
-                        # 读取最后一次操作的记录
-                        action, word_data, added_to_mastered = st.session_state.study_history.pop()
-                        
-                        if action == "blur":
-                            # 如果是“模糊”，把它从队列末尾抽出来，塞回第一位
-                            if current_queue and current_queue[-1] == word_data:
-                                current_queue.pop()
-                            current_queue.insert(0, word_data)
-                            
-                        elif action == "master":
-                            # 如果是“认识/太简单”，把它从已掌握列表里删掉（如果刚才加进去了），并塞回队列第一位
-                            if added_to_mastered and word_data in mastered_list:
-                                mastered_list.remove(word_data)
-                            current_queue.insert(0, word_data)
-                            # 回退云端进度
-                            sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
-                        
-                        st.rerun()
-
-                # --- 核心操作区 ---
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("❌ 模糊 (重练)", use_container_width=True):
-                        done_word = current_queue.pop(0)
-                        current_queue.append(done_word)
-                        # 记录到历史
-                        st.session_state.study_history.append(("blur", done_word, False))
-                        st.rerun()
-                with col2:
-                    if st.button("✔ 认识 (下一个)", use_container_width=True, type="primary"):
-                        done_word = current_queue.pop(0)
-                        added = False
-                        if done_word not in mastered_list:
-                            mastered_list.append(done_word)
-                            added = True
-                        # 记录到历史
-                        st.session_state.study_history.append(("master", done_word, added))
+            st.write("")
+            
+            # --- 历史撤销按钮 (点过认识/模糊后才会出现) ---
+            if st.session_state.study_history:
+                if st.button("⏪ 哎呀点错了！返回上一个单词", use_container_width=True):
+                    action, word_data, added_to_mastered = st.session_state.study_history.pop()
+                    if action == "blur":
+                        if current_queue and current_queue[-1] == word_data:
+                            current_queue.pop()
+                        current_queue.insert(0, word_data)
+                    elif action == "master":
+                        if added_to_mastered and word_data in mastered_list:
+                            mastered_list.remove(word_data)
+                        current_queue.insert(0, word_data)
                         sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
-                        st.rerun()
-                
-                st.markdown("<hr style='margin: 15px 0 10px 0; border: none; border-top: 2px dashed #f2f2f2;'>", unsafe_allow_html=True)
-                if st.button("🗑️ 太简单，斩掉它！", use_container_width=True):
+                    st.rerun()
+
+            # --- 核心操作区 ---
+            col1, col2 = st.columns(2)
+            with col1:
+                if st.button("❌ 模糊 (重练)", use_container_width=True):
+                    done_word = current_queue.pop(0)
+                    current_queue.append(done_word)
+                    st.session_state.study_history.append(("blur", done_word, False))
+                    st.rerun()
+            with col2:
+                if st.button("✔ 认识 (下一个)", use_container_width=True, type="primary"):
                     done_word = current_queue.pop(0)
                     added = False
                     if done_word not in mastered_list:
@@ -606,207 +542,217 @@ else:
                     st.session_state.study_history.append(("master", done_word, added))
                     sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                     st.rerun()
+            
+            st.markdown("<hr style='margin: 15px 0 10px 0; border: none; border-top: 2px dashed #f2f2f2;'>", unsafe_allow_html=True)
+            if st.button("🗑️ 太简单，斩掉它！", use_container_width=True):
+                done_word = current_queue.pop(0)
+                added = False
+                if done_word not in mastered_list:
+                    mastered_list.append(done_word)
+                    added = True
+                st.session_state.study_history.append(("master", done_word, added))
+                sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
+                st.rerun()
 
-            else:
-                # 即使通关了，也允许“撤销”刚刚点掉的最后一个词
-                if st.session_state.study_history:
-                    if st.button("⏪ 哎呀点快了！返回上一个单词", use_container_width=True):
-                        action, word_data, added_to_mastered = st.session_state.study_history.pop()
-                        if action == "blur":
-                            if current_queue and current_queue[-1] == word_data:
-                                current_queue.pop()
-                            current_queue.insert(0, word_data)
-                        elif action == "master":
-                            if added_to_mastered and word_data in mastered_list:
-                                mastered_list.remove(word_data)
-                            current_queue.insert(0, word_data)
-                            sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
-                        st.rerun()
-                
-                if current_lvl < 20:
-                    st.balloons()
-                    st.success(f"🎉 太棒了！Level {current_lvl} 完美通关！")
-                    if st.button(f"🚀 冲刺进入 Level {current_lvl + 1}", use_container_width=True, type="primary"):
-                        st.session_state.study_history.clear() # 升满级清空历史
-                        st.session_state.level += 1
+        else:
+            if st.session_state.study_history:
+                if st.button("⏪ 哎呀点快了！返回上一个单词", use_container_width=True):
+                    action, word_data, added_to_mastered = st.session_state.study_history.pop()
+                    if action == "blur":
+                        if current_queue and current_queue[-1] == word_data:
+                            current_queue.pop()
+                        current_queue.insert(0, word_data)
+                    elif action == "master":
+                        if added_to_mastered and word_data in mastered_list:
+                            mastered_list.remove(word_data)
+                        current_queue.insert(0, word_data)
                         sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
-                        st.rerun()
-                else:
-                    st.success("🏆 恭喜你通关全部 20 个 Level！英语词汇终极大师！")
-                    if st.button("🔄 重新开始挑战", use_container_width=True):
-                        st.session_state.study_history.clear()
-                        st.session_state.level = 1
-                        st.rerun()
-
-        # ==========================================
-        # 🎯 专项大测验
-        # ==========================================
-        elif st.session_state.page == "quiz":
-            if not all_learned_pool:
-                st.info("💡 当前关卡还没有掌握任何单词，请先去【继续学习新词汇】模块打牢基础！")
+                    st.rerun()
+            
+            if current_lvl < 20:
+                st.balloons()
+                st.success(f"🎉 太棒了！Level {current_lvl} 完美通关！")
+                if st.button(f"🚀 冲刺进入 Level {current_lvl + 1}", use_container_width=True, type="primary"):
+                    st.session_state.study_history.clear() 
+                    st.session_state.level += 1
+                    sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
+                    st.rerun()
             else:
-                if st.session_state.hearts <= 0:
-                    st.error("💔 你的红心耗尽了！测验被迫中断。")
-                    if st.button("🔄 满血复活 (恢复 5 颗红心)", use_container_width=True, type="primary"):
-                        st.session_state.hearts = 5
-                        st.query_params["hearts"] = 5  
-                        st.rerun()
-                else:
-                    q_type = st.session_state.get("quiz_mode", "normal")
+                st.success("🏆 恭喜你通关全部 20 个 Level！英语词汇终极大师！")
+                if st.button("🔄 重新开始挑战", use_container_width=True):
+                    st.session_state.study_history.clear()
+                    st.session_state.level = 1
+                    st.rerun()
+
+    # ==========================================
+    # 🎯 专项大测验
+    # ==========================================
+    elif st.session_state.page == "quiz":
+        if not all_learned_pool:
+            st.info("💡 当前关卡还没有掌握任何单词，请先去【继续学习新词汇】模块打牢基础！")
+        else:
+            if st.session_state.hearts <= 0:
+                st.error("💔 你的红心耗尽了！测验被迫中断。")
+                if st.button("🔄 满血复活 (恢复 5 颗红心)", use_container_width=True, type="primary"):
+                    st.session_state.hearts = 5
+                    st.query_params["hearts"] = 5  
+                    st.rerun()
+            else:
+                q_type = st.session_state.get("quiz_mode", "normal")
+                
+                if "quiz_current" not in st.session_state:
+                    q_item = random.choice(all_learned_pool)
+                    st.session_state.quiz_current = q_item
+                    st.session_state.quiz_type = q_type
                     
-                    if "quiz_current" not in st.session_state:
-                        q_item = random.choice(all_learned_pool)
-                        st.session_state.quiz_current = q_item
-                        st.session_state.quiz_type = q_type
+                    all_flat_words = [item for lvl_items in GLOBAL_VOCAB_DB.values() for item in lvl_items]
+                    
+                    if q_type in ["normal", "listen"]:
+                        st.session_state.correct_ans = q_item["meaning"]
+                        wrong_pool = [v["meaning"] for v in all_flat_words if v["meaning"] != q_item["meaning"]]
+                        distractors = random.sample(wrong_pool, min(3, len(wrong_pool)))
+                        options = distractors + [q_item["meaning"]]
+                        random.shuffle(options)
+                        st.session_state.quiz_options = options
+                    elif q_type == "fill_blank":
+                        st.session_state.correct_ans = q_item["word"]
+                        wrong_pool = [v["word"] for v in all_flat_words if v["word"] != q_item["word"]]
+                        distractors = random.sample(wrong_pool, min(3, len(wrong_pool)))
+                        options = distractors + [q_item["word"]]
+                        random.shuffle(options)
+                        st.session_state.quiz_options = options
+                    else: 
+                        st.session_state.correct_ans = q_item["word"].lower()
+                        st.session_state.quiz_options = []
                         
-                        all_flat_words = [item for lvl_items in GLOBAL_VOCAB_DB.values() for item in lvl_items]
-                        
-                        if q_type in ["normal", "listen"]:
-                            st.session_state.correct_ans = q_item["meaning"]
-                            wrong_pool = [v["meaning"] for v in all_flat_words if v["meaning"] != q_item["meaning"]]
-                            distractors = random.sample(wrong_pool, min(3, len(wrong_pool)))
-                            options = distractors + [q_item["meaning"]]
-                            random.shuffle(options)
-                            st.session_state.quiz_options = options
-                        elif q_type == "fill_blank":
-                            st.session_state.correct_ans = q_item["word"]
-                            wrong_pool = [v["word"] for v in all_flat_words if v["word"] != q_item["word"]]
-                            distractors = random.sample(wrong_pool, min(3, len(wrong_pool)))
-                            options = distractors + [q_item["word"]]
-                            random.shuffle(options)
-                            st.session_state.quiz_options = options
-                        else: 
-                            st.session_state.correct_ans = q_item["word"].lower()
-                            st.session_state.quiz_options = []
-                            
-                        st.session_state.quiz_answered = False
-                        st.session_state.selected_option = None
+                    st.session_state.quiz_answered = False
+                    st.session_state.selected_option = None
 
-                    qc = st.session_state.quiz_current
-                    q_type = st.session_state.get("quiz_type", "normal")
-                    opts = st.session_state.get("quiz_options", [])
-                    correct_ans = st.session_state.get("correct_ans", "")
+                qc = st.session_state.quiz_current
+                q_type = st.session_state.get("quiz_type", "normal")
+                opts = st.session_state.get("quiz_options", [])
+                correct_ans = st.session_state.get("correct_ans", "")
 
-                    if st.session_state.get("quiz_answered", False):
-                        selected = st.session_state.selected_option
-                        
-                        st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                        render_word_audio_button(qc["word"], "🔊 再次朗读单词", autoplay=False)
+                if st.session_state.get("quiz_answered", False):
+                    selected = st.session_state.selected_option
+                    
+                    st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
+                    render_word_audio_button(qc["word"], "🔊 再次朗读单词", autoplay=False)
 
-                        is_correct = (selected == correct_ans)
+                    is_correct = (selected == correct_ans)
 
-                        if is_correct:
-                            status_msg = "✅ 完美！回答正确"
-                            status_color = "#58cc02" 
-                        else:
-                            if q_type == "spell":
-                                status_msg = f"❌ 拼错了！正确拼写是: {qc['word']}"
-                            else:
-                                status_msg = "❌ 哎呀，答错了"
-                            status_color = "#ff4b4b" 
-
-                        st.markdown(
-                            f"""
-                            <div class="quiz-card" style="border-color: {status_color}; margin-bottom: 12px; margin-top: 10px;">
-                                <div style="font-size: 36px; font-weight: bold; color: {status_color}; margin-bottom: 4px;">{qc['word']}</div>
-                                <div style="font-size: 16px; font-weight: bold; color: {status_color}; margin-bottom: 10px;">{status_msg}</div>
-                                <hr style="border: none; border-top: 2px dashed #f2f2f2; margin: 10px 0;">
-                                <div style="font-size: 14px; color: #afafaf; margin-bottom: 10px;">{qc['phonetic']}</div>
-                                <div style="font-size: 18px; font-weight: 600; color: #1cb0f6;">{qc['meaning']}</div>
-                            </div>
-                            """,
-                            unsafe_allow_html=True,
-                        )
-                        render_highlight_example(qc["example_en"], qc["example_cn"])
-
-                        if st.button("➡️ 继续下一题", use_container_width=True, type="primary"):
-                            del st.session_state["quiz_current"]
-                            st.rerun()
-
+                    if is_correct:
+                        status_msg = "✅ 完美！回答正确"
+                        status_color = "#58cc02" 
                     else:
-                        if q_type == "normal":
-                            st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                            render_word_audio_button(qc["word"], "🔊 点击听音", autoplay=False)
-                            st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:38px; font-weight:bold; color:#303133;'>{qc['word']}</div></div>", unsafe_allow_html=True)
-                            
-                        elif q_type == "listen":
-                            st.markdown("<h4 style='text-align:center; color:#9c27b0;'>🎧 盲听辨义</h4>", unsafe_allow_html=True)
-                            st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                            render_blind_listen_button(qc["word"], "🔊 播放神秘音频 (常速+慢速)", autoplay=False)
-                            st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:20px; font-weight:bold; color:#afafaf;'>❓❓❓</div></div>", unsafe_allow_html=True)
-
-                        elif q_type == "fill_blank":
-                            st.markdown("<h4 style='text-align:center; color:#1cb0f6;'>🔤 语境填空</h4>", unsafe_allow_html=True)
-                            masked_en = re.sub(r'(?i)\b' + re.escape(qc['word']) + r'\b', '____', qc['example_en'])
-                            st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:22px; font-weight:bold; color:#303133; line-height: 1.5;'>{masked_en}</div><div style='font-size:14px; color:#afafaf; margin-top:8px;'>{qc['example_cn']}</div></div>", unsafe_allow_html=True)
-
-                        elif q_type == "spell":
-                            st.markdown("<h4 style='text-align:center; color:#1cb0f6;'>✍️ 串字挑战</h4>", unsafe_allow_html=True)
-                            st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                            render_word_audio_button(qc["word"], "🔊 听发音拼写", autoplay=False)
-                            st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:24px; font-weight:bold; color:#ff9600;'>{qc['meaning']}</div></div>", unsafe_allow_html=True)
-
                         if q_type == "spell":
-                            with st.form("spell_form"):
-                                user_spell = st.text_input("请在下方串出你听到的英文单词：")
-                                submitted = st.form_submit_button("✅ 提交答案", use_container_width=True)
-                                if submitted:
+                            status_msg = f"❌ 拼错了！正确拼写是: {qc['word']}"
+                        else:
+                            status_msg = "❌ 哎呀，答错了"
+                        status_color = "#ff4b4b" 
+
+                    st.markdown(
+                        f"""
+                        <div class="quiz-card" style="border-color: {status_color}; margin-bottom: 12px; margin-top: 10px;">
+                            <div style="font-size: 36px; font-weight: bold; color: {status_color}; margin-bottom: 4px;">{qc['word']}</div>
+                            <div style="font-size: 16px; font-weight: bold; color: {status_color}; margin-bottom: 10px;">{status_msg}</div>
+                            <hr style="border: none; border-top: 2px dashed #f2f2f2; margin: 10px 0;">
+                            <div style="font-size: 14px; color: #afafaf; margin-bottom: 10px;">{qc['phonetic']}</div>
+                            <div style="font-size: 18px; font-weight: 600; color: #1cb0f6;">{qc['meaning']}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+                    render_highlight_example(qc["example_en"], qc["example_cn"])
+
+                    if st.button("➡️ 继续下一题", use_container_width=True, type="primary"):
+                        del st.session_state["quiz_current"]
+                        st.rerun()
+
+                else:
+                    if q_type == "normal":
+                        st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
+                        render_word_audio_button(qc["word"], "🔊 点击听音", autoplay=False)
+                        st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:38px; font-weight:bold; color:#303133;'>{qc['word']}</div></div>", unsafe_allow_html=True)
+                        
+                    elif q_type == "listen":
+                        st.markdown("<h4 style='text-align:center; color:#9c27b0;'>🎧 盲听辨义</h4>", unsafe_allow_html=True)
+                        st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
+                        render_blind_listen_button(qc["word"], "🔊 播放神秘音频 (常速+慢速)", autoplay=False)
+                        st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:20px; font-weight:bold; color:#afafaf;'>❓❓❓</div></div>", unsafe_allow_html=True)
+
+                    elif q_type == "fill_blank":
+                        st.markdown("<h4 style='text-align:center; color:#1cb0f6;'>🔤 语境填空</h4>", unsafe_allow_html=True)
+                        masked_en = re.sub(r'(?i)\b' + re.escape(qc['word']) + r'\b', '____', qc['example_en'])
+                        st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:22px; font-weight:bold; color:#303133; line-height: 1.5;'>{masked_en}</div><div style='font-size:14px; color:#afafaf; margin-top:8px;'>{qc['example_cn']}</div></div>", unsafe_allow_html=True)
+
+                    elif q_type == "spell":
+                        st.markdown("<h4 style='text-align:center; color:#1cb0f6;'>✍️ 串字挑战</h4>", unsafe_allow_html=True)
+                        st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
+                        render_word_audio_button(qc["word"], "🔊 听发音拼写", autoplay=False)
+                        st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:24px; font-weight:bold; color:#ff9600;'>{qc['meaning']}</div></div>", unsafe_allow_html=True)
+
+                    if q_type == "spell":
+                        with st.form("spell_form"):
+                            user_spell = st.text_input("请在下方串出你听到的英文单词：")
+                            submitted = st.form_submit_button("✅ 提交答案", use_container_width=True)
+                            if submitted:
+                                st.session_state.quiz_answered = True
+                                st.session_state.selected_option = user_spell.strip().lower()
+                                if st.session_state.selected_option != correct_ans:
+                                    st.session_state.hearts -= 1
+                                    st.query_params["hearts"] = st.session_state.hearts
+                                st.rerun()
+                    else:
+                        col_a, col_b = st.columns(2)
+                        labels = ["A", "B", "C", "D"]
+                        for idx, opt in enumerate(opts):
+                            current_col = col_a if idx % 2 == 0 else col_b
+                            with current_col:
+                                if q_type in ["normal", "listen"]:
+                                    parts = opt.split(" ", 1)
+                                    btn_label = f"{labels[idx]}. {parts[1]} ({parts[0]})" if len(parts) == 2 else f"{labels[idx]}. {opt}"
+                                else:
+                                    btn_label = f"{labels[idx]}. {opt}" 
+                                    
+                                if st.button(btn_label, use_container_width=True, key=f"opt_{idx}"):
                                     st.session_state.quiz_answered = True
-                                    st.session_state.selected_option = user_spell.strip().lower()
-                                    if st.session_state.selected_option != correct_ans:
+                                    st.session_state.selected_option = opt
+                                    if opt != correct_ans:
                                         st.session_state.hearts -= 1
                                         st.query_params["hearts"] = st.session_state.hearts
                                     st.rerun()
-                        else:
-                            col_a, col_b = st.columns(2)
-                            labels = ["A", "B", "C", "D"]
-                            for idx, opt in enumerate(opts):
-                                current_col = col_a if idx % 2 == 0 else col_b
-                                with current_col:
-                                    if q_type in ["normal", "listen"]:
-                                        parts = opt.split(" ", 1)
-                                        btn_label = f"{labels[idx]}. {parts[1]} ({parts[0]})" if len(parts) == 2 else f"{labels[idx]}. {opt}"
-                                    else:
-                                        btn_label = f"{labels[idx]}. {opt}" 
-                                        
-                                    if st.button(btn_label, use_container_width=True, key=f"opt_{idx}"):
-                                        st.session_state.quiz_answered = True
-                                        st.session_state.selected_option = opt
-                                        if opt != correct_ans:
-                                            st.session_state.hearts -= 1
-                                            st.query_params["hearts"] = st.session_state.hearts
-                                        st.rerun()
 
-        # ==========================================
-        # 🔁 单词重温模式
-        # ==========================================
-        elif st.session_state.page == "review":
-            if not mastered_list:
-                st.info("当前关卡还没有掌握任何单词哦！")
-            else:
-                if "review_current" not in st.session_state:
-                    st.session_state.review_current = random.choice(mastered_list)
+    # ==========================================
+    # 🔁 单词重温模式
+    # ==========================================
+    elif st.session_state.page == "review":
+        if not mastered_list:
+            st.info("当前关卡还没有掌握任何单词哦！")
+        else:
+            if "review_current" not in st.session_state:
+                st.session_state.review_current = random.choice(mastered_list)
 
-                rc = st.session_state.review_current
-                
-                st.audio(get_audio_bytes(rc["word"]), format="audio/mp3", autoplay=True)
-                render_word_audio_button(rc["word"], "🔊 点此朗读单词", autoplay=False)
+            rc = st.session_state.review_current
+            
+            st.audio(get_audio_bytes(rc["word"]), format="audio/mp3", autoplay=True)
+            render_word_audio_button(rc["word"], "🔊 点此朗读单词", autoplay=False)
 
-                st.markdown(
-                    f"""
-                        <div class="quiz-card" style="margin-bottom: 12px; margin-top: 10px;">
-                            <div style="font-size: 38px; font-weight: bold; color: #303133; margin-bottom: 4px;">{rc['word']}</div>
-                            <div style="font-size: 14px; color: #afafaf; margin-bottom: 10px;">{rc['phonetic']}</div>
-                            <div style="font-size: 18px; font-weight: 600; color: #1cb0f6;">{rc['meaning']}</div>
-                        </div>
-                        """,
-                    unsafe_allow_html=True,
-                )
-                
-                render_highlight_example(rc["example_en"], rc["example_cn"])
-                render_ai_speech_recognition(rc["word"])
+            st.markdown(
+                f"""
+                    <div class="quiz-card" style="margin-bottom: 12px; margin-top: 10px;">
+                        <div style="font-size: 38px; font-weight: bold; color: #303133; margin-bottom: 4px;">{rc['word']}</div>
+                        <div style="font-size: 14px; color: #afafaf; margin-bottom: 10px;">{rc['phonetic']}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #1cb0f6;">{rc['meaning']}</div>
+                    </div>
+                    """,
+                unsafe_allow_html=True,
+            )
+            
+            render_highlight_example(rc["example_en"], rc["example_cn"])
+            render_ai_speech_recognition(rc["word"])
 
-                st.write("")
-                if st.button("➡️ 换一个复习", use_container_width=True, type="primary"):
-                    st.session_state.review_current = random.choice(mastered_list)
-                    st.rerun()
+            st.write("")
+            if st.button("➡️ 换一个复习", use_container_width=True, type="primary"):
+                st.session_state.review_current = random.choice(mastered_list)
+                st.rerun()
