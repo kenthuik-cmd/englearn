@@ -384,18 +384,15 @@ if "study_history" not in st.session_state:
 # ==========================================
 # 🛑 单机专属直连模式 (自动登录)
 # ==========================================
-# 这里写死你个人的云端专属存档 ID，你可以随时更改它
 SINGLE_VIP_USER_ID = "my_personal_vocab_vip"
 
 if "user" not in st.session_state:
     st.session_state.user = AutoLoginUser(SINGLE_VIP_USER_ID)
     try:
-        # 每次打开网页，自动从云端拉取这个固定账号的进度
         profile = supabase.table("user_profiles").select("*").eq("user_id", SINGLE_VIP_USER_ID).execute()
         if len(profile.data) > 0:
             restore_progress_from_db(profile.data)
         else:
-            # 如果是第一次运行，自动在云端建档
             supabase.table("user_profiles").insert({
                 "user_id": SINGLE_VIP_USER_ID,
                 "grade": 1,
@@ -439,7 +436,7 @@ if st.session_state.page == "home":
 
     st.write("")
     if st.button("🚀 继续学习新词汇", use_container_width=True, type="primary"):
-        st.session_state.study_history.clear() # 进入时清空历史防错乱
+        st.session_state.study_history.clear() 
         st.session_state.page = "study"
         st.rerun()
         
@@ -480,9 +477,13 @@ else:
         st.rerun()
 
     # ==========================================
-    # 📚 核心背单词模式
+    # 📚 核心背单词模式 (加入挂机机制)
     # ==========================================
     if st.session_state.page == "study":
+        
+        # 挂机开关
+        auto_study = st.toggle("🤖 开启挂机自动播放 (解放双手)", key="auto_study_toggle")
+        
         progress_pct = min(len(mastered_list) / 100.0, 1.0)
         st.progress(progress_pct)
         st.markdown(f"<p style='text-align: right; font-size: 12px; color: #58cc02; font-weight: bold;'>Level {current_lvl} 进度: {len(mastered_list)}/100</p>", unsafe_allow_html=True)
@@ -509,7 +510,6 @@ else:
 
             st.write("")
             
-            # --- 历史撤销按钮 (点过认识/模糊后才会出现) ---
             if st.session_state.study_history:
                 if st.button("⏪ 哎呀点错了！返回上一个单词", use_container_width=True):
                     action, word_data, added_to_mastered = st.session_state.study_history.pop()
@@ -524,7 +524,6 @@ else:
                         sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                     st.rerun()
 
-            # --- 核心操作区 ---
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("❌ 模糊 (重练)", use_container_width=True):
@@ -533,7 +532,7 @@ else:
                     st.session_state.study_history.append(("blur", done_word, False))
                     st.rerun()
             with col2:
-                if st.button("✔ 认识 (下一个)", use_container_width=True, type="primary"):
+                if st.button("✔ 认识 (下一个)", use_container_width=True, type="primary", key="btn_study_next"):
                     done_word = current_queue.pop(0)
                     added = False
                     if done_word not in mastered_list:
@@ -553,6 +552,27 @@ else:
                 st.session_state.study_history.append(("master", done_word, added))
                 sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                 st.rerun()
+
+            # --- 核心注入：幽灵点击机制 (延时4秒后模拟点击下一个) ---
+            if auto_study:
+                components.html(
+                    """
+                    <script>
+                        setTimeout(function() {
+                            try {
+                                const buttons = window.parent.document.querySelectorAll('button');
+                                for (let i = 0; i < buttons.length; i++) {
+                                    if (buttons[i].innerText.includes('认识 (下一个)')) {
+                                        buttons[i].click();
+                                        break;
+                                    }
+                                }
+                            } catch (e) { console.error(e); }
+                        }, 4000); // 1秒播音 + 3秒间隔 = 4秒后自动点击
+                    </script>
+                    """,
+                    height=0
+                )
 
         else:
             if st.session_state.study_history:
@@ -724,12 +744,16 @@ else:
                                     st.rerun()
 
     # ==========================================
-    # 🔁 单词重温模式
+    # 🔁 单词重温模式 (也加入了挂机机制)
     # ==========================================
     elif st.session_state.page == "review":
         if not mastered_list:
             st.info("当前关卡还没有掌握任何单词哦！")
         else:
+            
+            # 挂机开关
+            auto_review = st.toggle("🤖 开启挂机自动重温 (解放双手)", key="auto_review_toggle")
+            
             if "review_current" not in st.session_state:
                 st.session_state.review_current = random.choice(mastered_list)
 
@@ -756,3 +780,24 @@ else:
             if st.button("➡️ 换一个复习", use_container_width=True, type="primary"):
                 st.session_state.review_current = random.choice(mastered_list)
                 st.rerun()
+                
+            # --- 核心注入：幽灵点击机制 ---
+            if auto_review:
+                components.html(
+                    """
+                    <script>
+                        setTimeout(function() {
+                            try {
+                                const buttons = window.parent.document.querySelectorAll('button');
+                                for (let i = 0; i < buttons.length; i++) {
+                                    if (buttons[i].innerText.includes('换一个复习')) {
+                                        buttons[i].click();
+                                        break;
+                                    }
+                                }
+                            } catch (e) { console.error(e); }
+                        }, 4000); 
+                    </script>
+                    """,
+                    height=0
+                )
