@@ -311,7 +311,7 @@ def render_highlight_example(example_en, example_cn):
 
 
 # ==========================================
-# 🚀 降速 1 秒版纯净挂机引擎
+# 🚀 降速 1 秒版纯净挂机引擎 (加入智能中文释义播报)
 # ==========================================
 def render_autoplay_study_component(queue, mastered_words, current_lvl):
     queue_json = json.dumps(queue)
@@ -337,6 +337,12 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
 
     <div id="start-screen">
         <button class="start-btn" onclick="startPlay()">▶️ 触摸这里<br>启动 1秒沉浸连读</button>
+        <div style="margin-top: 25px; text-align: center;">
+            <label style="font-size: 18px; color: #333; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="readZhToggleStart" style="width: 24px; height: 24px;" onchange="syncToggle('start')" checked>
+                🔊 连读时朗读中文释义
+            </label>
+        </div>
         <p style="text-align:center; color:#888; font-size:15px; margin-top:25px; line-height:1.5;">⚠️ 必须由您的手指亲自点击一次<br>才能彻底解开手机浏览器的静音限制！</p>
     </div>
 
@@ -357,6 +363,13 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
             </div>
         </div>
 
+        <div style="margin-bottom: 20px; text-align: center;">
+            <label style="font-size: 16px; color: #555; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="readZhTogglePlay" style="width: 20px; height: 20px;" onchange="syncToggle('play')" checked>
+                🔊 连读时朗读中文释义
+            </label>
+        </div>
+
         <button class="stop-btn" onclick="saveAndExit()">⏹️ 停止挂机并保存进度</button>
     </div>
 
@@ -366,6 +379,13 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
         let currentLvl = {current_lvl};
         let currentIndex = 0;
         let isPlaying = false;
+
+        // 同步两个界面的勾选框状态
+        function syncToggle(source) {{
+            let checked = source === 'start' ? document.getElementById('readZhToggleStart').checked : document.getElementById('readZhTogglePlay').checked;
+            document.getElementById('readZhToggleStart').checked = checked;
+            document.getElementById('readZhTogglePlay').checked = checked;
+        }}
 
         function startPlay() {{
             document.getElementById('start-screen').style.display = 'none';
@@ -394,12 +414,13 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
             document.getElementById('example_cn').innerText = item.example_cn;
 
             window.speechSynthesis.cancel();
-            let u = new SpeechSynthesisUtterance(item.word);
-            u.lang = 'en-US';
-            u.rate = 0.8; // 降速以提升清晰度
+            
+            let uEn = new SpeechSynthesisUtterance(item.word);
+            uEn.lang = 'en-US';
+            uEn.rate = 0.8; 
 
-            // 改为 1000 毫秒（1秒）等待
-            u.onend = function() {{
+            // 下一步逻辑：等待 1000 毫秒（1秒）后切题
+            let nextStep = function() {{
                 if(isPlaying) {{
                     setTimeout(() => {{
                         if(isPlaying) {{
@@ -410,14 +431,27 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
                     }}, 1000); 
                 }}
             }};
-            
-            u.onerror = function(e) {{
-                if(isPlaying) {{
-                    setTimeout(() => {{ mastered.push(item.word); currentIndex++; playNext(); }}, 1000);
-                }}
-            }};
 
-            window.speechSynthesis.speak(u);
+            let readZh = document.getElementById('readZhTogglePlay').checked;
+            
+            if (readZh) {{
+                // 智能过滤：去掉 "n. ", "v. ", "adj./adv. " 等词性前缀，只纯净朗读中文
+                let cleanMeaning = item.meaning.replace(/^[a-zA-Z.\\/]+ /g, '');
+                let uZh = new SpeechSynthesisUtterance(cleanMeaning);
+                uZh.lang = 'zh-CN';
+                uZh.rate = 1.0;
+                
+                uEn.onend = function() {{ if(isPlaying) window.speechSynthesis.speak(uZh); }};
+                uEn.onerror = function() {{ if(isPlaying) window.speechSynthesis.speak(uZh); }};
+                
+                uZh.onend = nextStep;
+                uZh.onerror = nextStep;
+            }} else {{
+                uEn.onend = nextStep;
+                uEn.onerror = nextStep;
+            }}
+
+            window.speechSynthesis.speak(uEn);
         }}
 
         function saveAndExit() {{
@@ -433,7 +467,7 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
     </body>
     </html>
     """
-    components.html(html, height=650)
+    components.html(html, height=720)
 
 def render_autoplay_review_component(mastered_words):
     pool_json = json.dumps(mastered_words)
@@ -457,6 +491,12 @@ def render_autoplay_review_component(mastered_words):
 
     <div id="start-screen">
         <button class="start-btn" onclick="startPlay()">▶️ 触摸这里<br>启动 1秒循环听音</button>
+        <div style="margin-top: 25px; text-align: center;">
+            <label style="font-size: 18px; color: #333; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="readZhToggleStart" style="width: 24px; height: 24px;" onchange="syncToggle('start')" checked>
+                🔊 连读时朗读中文释义
+            </label>
+        </div>
         <p style="text-align:center; color:#888; font-size:15px; margin-top:25px; line-height:1.5;">⚠️ 必须由您的手指亲自点击一次<br>才能彻底解开手机浏览器的静音限制！</p>
     </div>
 
@@ -477,12 +517,25 @@ def render_autoplay_review_component(mastered_words):
             </div>
         </div>
 
+        <div style="margin-bottom: 20px; text-align: center;">
+            <label style="font-size: 16px; color: #555; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="readZhTogglePlay" style="width: 20px; height: 20px;" onchange="syncToggle('play')" checked>
+                🔊 连读时朗读中文释义
+            </label>
+        </div>
+
         <button class="stop-btn" onclick="stopPlay()">⏹️ 退出挂机</button>
     </div>
 
     <script>
         let pool = {pool_json};
         let isPlaying = false;
+
+        function syncToggle(source) {{
+            let checked = source === 'start' ? document.getElementById('readZhToggleStart').checked : document.getElementById('readZhTogglePlay').checked;
+            document.getElementById('readZhToggleStart').checked = checked;
+            document.getElementById('readZhTogglePlay').checked = checked;
+        }}
 
         function startPlay() {{
             document.getElementById('start-screen').style.display = 'none';
@@ -507,24 +560,36 @@ def render_autoplay_review_component(mastered_words):
             document.getElementById('example_cn').innerText = item.example_cn;
 
             window.speechSynthesis.cancel();
-            let u = new SpeechSynthesisUtterance(item.word);
-            u.lang = 'en-US';
-            u.rate = 0.8; // 降速以提升清晰度
+            
+            let uEn = new SpeechSynthesisUtterance(item.word);
+            uEn.lang = 'en-US';
+            uEn.rate = 0.8; 
 
-            // 改为 1000 毫秒（1秒）等待
-            u.onend = function() {{
+            let nextStep = function() {{
                 if(isPlaying) {{
                     setTimeout(playNext, 1000); 
                 }}
             }};
-            
-            u.onerror = function(e) {{
-                if(isPlaying) {{
-                    setTimeout(playNext, 1000);
-                }}
-            }};
 
-            window.speechSynthesis.speak(u);
+            let readZh = document.getElementById('readZhTogglePlay').checked;
+            
+            if (readZh) {{
+                let cleanMeaning = item.meaning.replace(/^[a-zA-Z.\\/]+ /g, '');
+                let uZh = new SpeechSynthesisUtterance(cleanMeaning);
+                uZh.lang = 'zh-CN';
+                uZh.rate = 1.0;
+                
+                uEn.onend = function() {{ if(isPlaying) window.speechSynthesis.speak(uZh); }};
+                uEn.onerror = function() {{ if(isPlaying) window.speechSynthesis.speak(uZh); }};
+                
+                uZh.onend = nextStep;
+                uZh.onerror = nextStep;
+            }} else {{
+                uEn.onend = nextStep;
+                uEn.onerror = nextStep;
+            }}
+
+            window.speechSynthesis.speak(uEn);
         }}
 
         function stopPlay() {{
@@ -537,7 +602,7 @@ def render_autoplay_review_component(mastered_words):
     </body>
     </html>
     """
-    components.html(html, height=650)
+    components.html(html, height=720)
 
 def restore_progress_from_db(profile_data):
     if profile_data:
@@ -980,7 +1045,6 @@ else:
         if not mastered_list:
             st.info("当前关卡还没有掌握任何单词哦！")
         else:
-            
             if st.session_state.auto_play:
                 render_autoplay_review_component(mastered_list)
             else:
