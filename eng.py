@@ -50,8 +50,8 @@ st.markdown(
         .stButton > button {
             border-radius: 20px !important;
             font-weight: 900 !important;
-            padding: 24px 15px !important; /* 巨幅增加点击高度 */
-            font-size: 18px !important;    /* 放大字号 */
+            padding: 24px 15px !important; 
+            font-size: 18px !important;    
             box-shadow: 0 6px 0px rgba(0, 0, 0, 0.1) !important; 
             transition: all 0.1s;
             line-height: 1.4 !important;
@@ -120,7 +120,8 @@ st.markdown(
 )
 
 def get_audio_bytes(text):
-    tts = gTTS(text=text, lang="en")
+    # 强制使用美式口音 (tld="us")，发音更标准
+    tts = gTTS(text=text, lang="en", tld="us")
     fp = BytesIO()
     tts.write_to_fp(fp)
     fp.seek(0)
@@ -135,6 +136,7 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词", autopl
                 window.speechSynthesis.cancel(); 
                 let u = new SpeechSynthesisUtterance('{escaped_word}'); 
                 u.lang='en-US'; 
+                u.rate=0.8;
                 window.speechSynthesis.speak(u);
             }}, 300);
         }}
@@ -148,7 +150,7 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词", autopl
         }}
         button:active {{ transform: translateY(5px); box-shadow: 0 0px 0px rgba(0,0,0,0.1); }}
     </style>
-    <button onclick="window.speechSynthesis.cancel(); let u = new SpeechSynthesisUtterance('{escaped_word}'); u.lang='en-US'; window.speechSynthesis.speak(u);">
+    <button onclick="window.speechSynthesis.cancel(); let u = new SpeechSynthesisUtterance('{escaped_word}'); u.lang='en-US'; u.rate=0.8; window.speechSynthesis.speak(u);">
         {button_text}
     </button>
     {autoplay_script}
@@ -241,7 +243,7 @@ def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常�
     <script>
         function playTwice() {{
             window.speechSynthesis.cancel();
-            let u1 = new SpeechSynthesisUtterance('{escaped_word}'); u1.lang = 'en-US'; u1.rate = 1.0;
+            let u1 = new SpeechSynthesisUtterance('{escaped_word}'); u1.lang = 'en-US'; u1.rate = 0.8;
             let u2 = new SpeechSynthesisUtterance('{escaped_word}'); u2.lang = 'en-US'; u2.rate = 0.6; 
             window.speechSynthesis.speak(u1); window.speechSynthesis.speak(u2);
         }}
@@ -289,7 +291,7 @@ def render_highlight_example(example_en, example_cn):
             window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(sentenceStr);
             utterance.lang = 'en-US';
-            utterance.rate = 0.85;
+            utterance.rate = 0.8;
             let currentWordIndex = 0;
             utterance.onboundary = (event) => {{
                 if (event.name === 'word') {{
@@ -309,7 +311,7 @@ def render_highlight_example(example_en, example_cn):
 
 
 # ==========================================
-# 🚀 全新黑科技：前端纯净挂机引擎 (100% 免疫苹果静音)
+# 🚀 降速 1 秒版纯净挂机引擎
 # ==========================================
 def render_autoplay_study_component(queue, mastered_words, current_lvl):
     queue_json = json.dumps(queue)
@@ -334,7 +336,7 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
     <body>
 
     <div id="start-screen">
-        <button class="start-btn" onclick="startPlay()">▶️ 触摸这里<br>启动 0.5秒极速连读</button>
+        <button class="start-btn" onclick="startPlay()">▶️ 触摸这里<br>启动 1秒沉浸连读</button>
         <p style="text-align:center; color:#888; font-size:15px; margin-top:25px; line-height:1.5;">⚠️ 必须由您的手指亲自点击一次<br>才能彻底解开手机浏览器的静音限制！</p>
     </div>
 
@@ -394,9 +396,9 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
             window.speechSynthesis.cancel();
             let u = new SpeechSynthesisUtterance(item.word);
             u.lang = 'en-US';
-            u.rate = 0.85;
+            u.rate = 0.8; // 降速以提升清晰度
 
-            // 核心 0.5 秒极速引擎：读完才开始算时间，节奏完美！
+            // 改为 1000 毫秒（1秒）等待
             u.onend = function() {{
                 if(isPlaying) {{
                     setTimeout(() => {{
@@ -405,13 +407,13 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
                             currentIndex++;
                             playNext();
                         }}
-                    }}, 500); 
+                    }}, 1000); 
                 }}
             }};
             
             u.onerror = function(e) {{
                 if(isPlaying) {{
-                    setTimeout(() => {{ mastered.push(item.word); currentIndex++; playNext(); }}, 500);
+                    setTimeout(() => {{ mastered.push(item.word); currentIndex++; playNext(); }}, 1000);
                 }}
             }};
 
@@ -454,7 +456,7 @@ def render_autoplay_review_component(mastered_words):
     <body>
 
     <div id="start-screen">
-        <button class="start-btn" onclick="startPlay()">▶️ 触摸这里<br>启动 0.5秒 循环听音</button>
+        <button class="start-btn" onclick="startPlay()">▶️ 触摸这里<br>启动 1秒循环听音</button>
         <p style="text-align:center; color:#888; font-size:15px; margin-top:25px; line-height:1.5;">⚠️ 必须由您的手指亲自点击一次<br>才能彻底解开手机浏览器的静音限制！</p>
     </div>
 
@@ -507,17 +509,18 @@ def render_autoplay_review_component(mastered_words):
             window.speechSynthesis.cancel();
             let u = new SpeechSynthesisUtterance(item.word);
             u.lang = 'en-US';
-            u.rate = 0.85;
+            u.rate = 0.8; // 降速以提升清晰度
 
+            // 改为 1000 毫秒（1秒）等待
             u.onend = function() {{
                 if(isPlaying) {{
-                    setTimeout(playNext, 500); 
+                    setTimeout(playNext, 1000); 
                 }}
             }};
             
             u.onerror = function(e) {{
                 if(isPlaying) {{
-                    setTimeout(playNext, 500);
+                    setTimeout(playNext, 1000);
                 }}
             }};
 
@@ -536,9 +539,6 @@ def render_autoplay_review_component(mastered_words):
     """
     components.html(html, height=650)
 
-# ==========================================
-# 云端与本地双引擎固化
-# ==========================================
 def restore_progress_from_db(profile_data):
     if profile_data:
         latest_profile = profile_data[-1]
@@ -559,11 +559,9 @@ def sync_progress_to_cloud(user_id, level, mastered_dict):
         mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
         mastered_str = ",".join(mastered_words_list)
         
-        # 1. 本地 URL 强固化
         st.query_params[f"lvl_{level}"] = mastered_str
         st.query_params["lvl"] = str(level)
         
-        # 2. 尝试云端同步
         res = supabase.table("user_profiles").select("user_id").eq("user_id", user_id).execute()
         if len(res.data) > 0:
             supabase.table("user_profiles").update({
@@ -578,7 +576,6 @@ def sync_progress_to_cloud(user_id, level, mastered_dict):
             }).execute()
     except Exception as e:
         pass
-
 
 class AutoLoginUser:
     def __init__(self, uid):
@@ -621,7 +618,7 @@ if "exit_autoplay" in st.query_params:
     del st.query_params["exit_autoplay"]
 
 # ==========================================
-# 🛑 彻底隐身单机直连！
+# 🛑 彻底干掉验证，隐身自动读档！
 # ==========================================
 if "user" not in st.session_state:
     st.session_state.user = AutoLoginUser("solo_admin_888")
@@ -633,7 +630,6 @@ if "user" not in st.session_state:
     except Exception:
         pass
         
-    # URL 进度强行载入并回写云端
     if "lvl" in st.query_params:
         try:
             url_lvl = int(st.query_params["lvl"])
@@ -648,15 +644,12 @@ if "user" not in st.session_state:
                     remaining = [w for w in full_level_words if w["word"] not in saved_words]
                     random.shuffle(remaining)
                     st.session_state.queues[url_lvl] = remaining
-                    # 读取 URL 后顺手存入云端
                     sync_progress_to_cloud(st.session_state.user.id, url_lvl, st.session_state.mastered)
         except Exception:
             pass
         
-        # 提取完数据后，清洗网址，防止卡顿
         if "lvl" in st.query_params: del st.query_params["lvl"]
         if param_key in st.query_params: del st.query_params[param_key]
-
 
 current_lvl = st.session_state.level
 current_queue = st.session_state.queues[current_lvl]
@@ -718,7 +711,6 @@ if st.session_state.page == "home":
         if st.button("✍️ 串字挑战", use_container_width=True):
             enter_quiz("spell")
 
-
 else:
     if st.button("⬅️ 返回主页", type="secondary"):
         st.session_state.page = "home"
@@ -729,7 +721,7 @@ else:
         st.rerun()
 
     # ==========================================
-    # 📚 核心背单词模式 (前段纯净版挂机接入)
+    # 📚 核心背单词模式 
     # ==========================================
     if st.session_state.page == "study":
         
@@ -740,7 +732,7 @@ else:
                 st.success("🎉 当前关卡已经没有新词啦！")
                 st.session_state.auto_play = False
         else:
-            if st.button("🤖 开启 0.5 秒极速连读", use_container_width=True, type="primary"):
+            if st.button("🤖 开启 1 秒沉浸连读", use_container_width=True, type="primary"):
                 st.session_state.auto_play = True
                 st.rerun()
             
@@ -989,10 +981,11 @@ else:
         if not mastered_list:
             st.info("当前关卡还没有掌握任何单词哦！")
         else:
+            
             if st.session_state.auto_play:
                 render_autoplay_review_component(mastered_list)
             else:
-                if st.button("🤖 开启 0.5 秒极速连读", use_container_width=True, type="primary"):
+                if st.button("🤖 开启 1 秒循环听音", use_container_width=True, type="primary"):
                     st.session_state.auto_play = True
                     st.rerun()
                 
