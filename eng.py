@@ -301,7 +301,6 @@ def render_highlight_example(example_en, example_cn):
     """
     components.html(html_code, height=195)
 
-
 def restore_progress_from_db(profile_data):
     if profile_data:
         latest_profile = profile_data[-1]
@@ -317,18 +316,17 @@ def restore_progress_from_db(profile_data):
             random.shuffle(remaining)
             st.session_state.queues[db_lvl] = remaining
 
-# === 升级版：加入 URL 网址固化 + 数据库显性报错 ===
+# === 升级版：修复云端同步报错 ===
 def sync_progress_to_cloud(user_id, level, mastered_dict):
     try:
         mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
         mastered_str = ",".join(mastered_words_list)
         
-        # 1. 【霸道固化】不管数据库死活，先把进度写进浏览器网址里，防止刷新掉档！
         st.query_params[f"lvl_{level}"] = mastered_str
         st.query_params["lvl"] = str(level)
         
-        # 2. 尝试存入 Supabase 云端
-        res = supabase.table("user_profiles").select("id").eq("user_id", user_id).execute()
+        # 修复点：将 select("id") 更改为 select("user_id")
+        res = supabase.table("user_profiles").select("user_id").eq("user_id", user_id).execute()
         if len(res.data) > 0:
             supabase.table("user_profiles").update({
                 "grade": level,
@@ -341,7 +339,6 @@ def sync_progress_to_cloud(user_id, level, mastered_dict):
                 "mastered_words": mastered_str,
             }).execute()
     except Exception as e:
-        # 如果 Supabase 配置有错，立刻在右下角弹窗通知你！
         st.toast(f"⚠️ 云端数据库写入被拒 (进度已写入网址进行本地保护): {str(e)[:50]}")
 
 
@@ -383,9 +380,6 @@ if "study_history" not in st.session_state:
 VIP_EMAIL = "vip@englearn.com"
 VIP_PASSWORD = "VipPassword123!"
 
-# ==========================================
-# 🛑 初始化：结合数据库与 URL 双线还原机制
-# ==========================================
 if "user" not in st.session_state:
     try:
         res = supabase.auth.sign_in_with_password({"email": VIP_EMAIL, "password": VIP_PASSWORD})
@@ -398,7 +392,6 @@ if "user" not in st.session_state:
             st.error(f"后台初始化数据库通讯失败，请检查网络或 Supabase 配置！错误详情: {e}")
             st.stop()
             
-    # 【读取步骤 1】：先尝试从 Supabase 恢复
     if st.session_state.user:
         try:
             profile = supabase.table("user_profiles").select("*").eq("user_id", st.session_state.user.id).execute()
@@ -411,9 +404,8 @@ if "user" not in st.session_state:
                     "mastered_words": ""
                 }).execute()
         except Exception as e:
-            pass # 读库失败不管，交给下面的 URL 恢复
+            pass 
             
-    # 【读取步骤 2】：URL 网址强行覆盖还原 (这就是防 F5 刷新清零的救星！)
     if "lvl" in st.query_params:
         try:
             url_lvl = int(st.query_params["lvl"])
