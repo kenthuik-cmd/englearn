@@ -9,6 +9,12 @@ import streamlit.components.v1 as components
 from supabase import create_client
 from vocab_data import GLOBAL_VOCAB_DB
 
+# ==========================================
+# 🛑 你的专属静默登录账号
+# ==========================================
+MY_EMAIL = "kenthuik@gmail.com"       # 例如: "alex@test.com"
+MY_PASSWORD = "123456789"    # 例如: "123456"
+
 # 读取 Supabase 配置
 url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_ANON_KEY"]
@@ -18,7 +24,7 @@ st.set_page_config(
     page_title="AI 英语进阶闯关", page_icon="🔥", layout="centered"
 )
 
-# 注入手机端极简样式
+# 注入手机端极简样式 (全面放大按钮适配手指点击)
 st.markdown(
     """
     <style>
@@ -42,18 +48,20 @@ st.markdown(
             max-width: 500px;
         }
 
+        /* 专门为手机优化的超大按钮 */
         .stButton > button {
-            border-radius: 12px;
-            font-weight: 600;
-            padding: 0.5rem 0.8rem;
-            font-size: 14px;
-            box-shadow: 0 4px 0px rgba(0, 0, 0, 0.1); 
+            border-radius: 16px !important;
+            font-weight: 900 !important;
+            padding: 16px 12px !important; /* 增大触控区 */
+            font-size: 16px !important;
+            box-shadow: 0 4px 0px rgba(0, 0, 0, 0.1) !important; 
             transition: all 0.1s;
+            line-height: 1.4 !important;
         }
         
         .stButton > button:active {
-            box-shadow: 0 0px 0px rgba(0, 0, 0, 0.1);
-            transform: translateY(4px);
+            box-shadow: 0 0px 0px rgba(0, 0, 0, 0.1) !important;
+            transform: translateY(4px) !important;
         }
         
         .quiz-card {
@@ -138,7 +146,7 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词", autopl
     <style>
         body {{ margin: 0; padding: 0; font-family: sans-serif; }}
         button {{
-            width: 100%; background-color: #ff4b4b; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0px rgba(255, 75, 75, 0.3); transition: transform 0.1s, box-shadow 0.1s;
+            width: 100%; background-color: #ff4b4b; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 16px; cursor: pointer; box-shadow: 0 4px 0px rgba(255, 75, 75, 0.3); transition: transform 0.1s, box-shadow 0.1s;
         }}
         button:active {{ transform: translateY(4px); box-shadow: 0 0px 0px rgba(0,0,0,0.1); }}
     </style>
@@ -147,7 +155,7 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词", autopl
     </button>
     {autoplay_script}
     """
-    components.html(html_code, height=55)
+    components.html(html_code, height=65)
 
 def render_ai_speech_recognition(target_word):
     target_word_lower = target_word.lower().replace("'", "\\'")
@@ -156,7 +164,7 @@ def render_ai_speech_recognition(target_word):
     <style>
         body {{ margin: 0; padding: 0; font-family: sans-serif; text-align: center; }}
         button {{
-            width: 100%; background-color: #ff9600; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0px rgba(255, 150, 0, 0.3); transition: transform 0.1s, box-shadow 0.1s, background-color 0.3s;
+            width: 100%; background-color: #ff9600; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 16px; cursor: pointer; box-shadow: 0 4px 0px rgba(255, 150, 0, 0.3); transition: transform 0.1s, box-shadow 0.1s, background-color 0.3s;
         }}
         button:active {{ transform: translateY(4px); box-shadow: 0 0px 0px rgba(0,0,0,0.1) !important; }}
     </style>
@@ -213,7 +221,7 @@ def render_ai_speech_recognition(target_word):
         }}
     </script>
     """
-    components.html(html_code, height=85)
+    components.html(html_code, height=95)
 
 def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常速+慢速)", autoplay=False):
     escaped_word = word.replace("'", "\\'")
@@ -228,7 +236,7 @@ def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常�
     <style>
         body {{ margin: 0; padding: 0; font-family: sans-serif; }}
         button {{
-            width: 100%; background-color: #9c27b0; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0px rgba(156, 39, 176, 0.3); transition: transform 0.1s, box-shadow 0.1s;
+            width: 100%; background-color: #9c27b0; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 16px; cursor: pointer; box-shadow: 0 4px 0px rgba(156, 39, 176, 0.3); transition: transform 0.1s, box-shadow 0.1s;
         }}
         button:active {{ transform: translateY(4px); box-shadow: 0 0px 0px rgba(0,0,0,0.1); }}
     </style>
@@ -243,7 +251,7 @@ def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常�
     <button onclick="playTwice()">{button_text}</button>
     {autoplay_script}
     """
-    components.html(html_code, height=55)
+    components.html(html_code, height=65)
 
 def render_highlight_example(example_en, example_cn):
     escaped_en = example_en.replace("'", "\\'")
@@ -261,13 +269,13 @@ def render_highlight_example(example_en, example_cn):
         button:active {{ transform: translateY(4px); box-shadow: 0 0px 0px rgba(0,0,0,0.1) !important; }}
     </style>
     <div class="example-card">
-        <div style="font-size: 15px; margin-bottom: 12px; line-height: 1.6;">
+        <div style="font-size: 16px; margin-bottom: 12px; line-height: 1.6;">
             📖 <b>例句：</b><span id="sentence-box_{unique_id}"></span>
         </div>
-        <div style="font-size: 14px; color: #777; margin-bottom: 16px; line-height: 1.5;">
+        <div style="font-size: 15px; color: #777; margin-bottom: 16px; line-height: 1.5;">
             💡 <b>翻译：</b>{example_cn}
         </div>
-        <button id="playBtn_{unique_id}" style="width: 100%; background-color: #1cb0f6; color: white; border: none; padding: 12px; font-size: 15px; font-weight: bold; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 0px rgba(28, 176, 246, 0.3); transition: all 0.1s;">
+        <button id="playBtn_{unique_id}" style="width: 100%; background-color: #1cb0f6; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 16px; cursor: pointer; box-shadow: 0 4px 0px rgba(28, 176, 246, 0.3); transition: all 0.1s;">
             🔊 动态朗读例句
         </button>
     </div>
@@ -299,7 +307,7 @@ def render_highlight_example(example_en, example_cn):
         }};
     </script>
     """
-    components.html(html_code, height=195)
+    components.html(html_code, height=205)
 
 def restore_progress_from_db(profile_data):
     if profile_data:
@@ -316,7 +324,6 @@ def restore_progress_from_db(profile_data):
             random.shuffle(remaining)
             st.session_state.queues[db_lvl] = remaining
 
-# === 升级版：修复云端同步报错 ===
 def sync_progress_to_cloud(user_id, level, mastered_dict):
     try:
         mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
@@ -325,7 +332,6 @@ def sync_progress_to_cloud(user_id, level, mastered_dict):
         st.query_params[f"lvl_{level}"] = mastered_str
         st.query_params["lvl"] = str(level)
         
-        # 修复点：将 select("id") 更改为 select("user_id")
         res = supabase.table("user_profiles").select("user_id").eq("user_id", user_id).execute()
         if len(res.data) > 0:
             supabase.table("user_profiles").update({
@@ -339,13 +345,14 @@ def sync_progress_to_cloud(user_id, level, mastered_dict):
                 "mastered_words": mastered_str,
             }).execute()
     except Exception as e:
-        st.toast(f"⚠️ 云端数据库写入被拒 (进度已写入网址进行本地保护): {str(e)[:50]}")
+        pass
 
 
 class AutoLoginUser:
     def __init__(self, uid):
         self.id = uid
 
+# === 初始化 Session State ===
 if "level" not in st.session_state:
     st.session_state.level = 1
 if "queues" not in st.session_state:
@@ -359,7 +366,6 @@ if "mastered" not in st.session_state:
 
 if "page" not in st.session_state:
     st.session_state.page = "home"
-
 if "quiz_mode" not in st.session_state:
     st.session_state.quiz_mode = "normal"
 if "quiz_type" not in st.session_state:
@@ -368,43 +374,37 @@ if "quiz_options" not in st.session_state:
     st.session_state.quiz_options = []
 if "correct_ans" not in st.session_state:
     st.session_state.correct_ans = ""
-
 if "hearts" not in st.session_state:
     st.session_state.hearts = int(st.query_params.get("hearts", 5))
 if "streak" not in st.session_state:
     st.session_state.streak = int(st.query_params.get("streak", 1))
-
 if "study_history" not in st.session_state:
     st.session_state.study_history = []
 
-VIP_EMAIL = "vip@englearn.com"
-VIP_PASSWORD = "VipPassword123!"
+# --- 极速挂机开关状态记录 ---
+if "auto_play" not in st.session_state:
+    st.session_state.auto_play = False
 
+# ==========================================
+# 🛑 超级静默自动登录
+# ==========================================
 if "user" not in st.session_state:
     try:
-        res = supabase.auth.sign_in_with_password({"email": VIP_EMAIL, "password": VIP_PASSWORD})
+        res = supabase.auth.sign_in_with_password({"email": MY_EMAIL, "password": MY_PASSWORD})
         st.session_state.user = res.user
-    except Exception:
-        try:
-            res = supabase.auth.sign_up({"email": VIP_EMAIL, "password": VIP_PASSWORD})
-            st.session_state.user = res.user
-        except Exception as e:
-            st.error(f"后台初始化数据库通讯失败，请检查网络或 Supabase 配置！错误详情: {e}")
-            st.stop()
-            
-    if st.session_state.user:
-        try:
-            profile = supabase.table("user_profiles").select("*").eq("user_id", st.session_state.user.id).execute()
-            if len(profile.data) > 0:
-                restore_progress_from_db(profile.data)
-            else:
-                supabase.table("user_profiles").insert({
-                    "user_id": st.session_state.user.id,
-                    "grade": 1,
-                    "mastered_words": ""
-                }).execute()
-        except Exception as e:
-            pass 
+        
+        profile = supabase.table("user_profiles").select("*").eq("user_id", res.user.id).execute()
+        if len(profile.data) > 0:
+            restore_progress_from_db(profile.data)
+        else:
+            supabase.table("user_profiles").insert({
+                "user_id": res.user.id,
+                "grade": 1,
+                "mastered_words": ""
+            }).execute()
+    except Exception as e:
+        st.error("无法自动登录！请检查代码顶部 MY_EMAIL 和 MY_PASSWORD 是否为你真实的注册账号！")
+        st.stop()
             
     if "lvl" in st.query_params:
         try:
@@ -497,7 +497,15 @@ else:
     # ==========================================
     if st.session_state.page == "study":
         
-        auto_study = st.toggle("🤖 开启挂机自动播放 (解放双手)", key="auto_study_toggle")
+        # --- 巨大化手机专属挂机按钮 ---
+        if st.session_state.auto_play:
+            if st.button("🛑 停止极速连读", use_container_width=True):
+                st.session_state.auto_play = False
+                st.rerun()
+        else:
+            if st.button("🤖 开启 0.5 秒极速连读", use_container_width=True, type="primary"):
+                st.session_state.auto_play = True
+                st.rerun()
         
         progress_pct = min(len(mastered_list) / 100.0, 1.0)
         st.progress(progress_pct)
@@ -512,9 +520,9 @@ else:
             st.markdown(
                 f"""
                     <div class="quiz-card" style="margin-bottom: 12px;">
-                        <div style="font-size: 38px; font-weight: bold; color: #303133; margin-bottom: 4px;">{current['word']}</div>
-                        <div style="font-size: 15px; color: #afafaf; margin-bottom: 10px;">{current['phonetic']}</div>
-                        <div style="font-size: 18px; font-weight: bold; color: #1cb0f6;">{current['meaning']}</div>
+                        <div style="font-size: 42px; font-weight: bold; color: #303133; margin-bottom: 4px;">{current['word']}</div>
+                        <div style="font-size: 16px; color: #afafaf; margin-bottom: 10px;">{current['phonetic']}</div>
+                        <div style="font-size: 20px; font-weight: bold; color: #1cb0f6;">{current['meaning']}</div>
                     </div>
                     """,
                 unsafe_allow_html=True,
@@ -526,7 +534,7 @@ else:
             st.write("")
             
             if st.session_state.study_history:
-                if st.button("⏪ 哎呀点错了！返回上一个单词", use_container_width=True):
+                if st.button("⏪ 哎呀点错了！返回上一个", use_container_width=True):
                     action, word_data, added_to_mastered = st.session_state.study_history.pop()
                     if action == "blur":
                         if current_queue and current_queue[-1] == word_data:
@@ -568,22 +576,35 @@ else:
                 sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                 st.rerun()
 
-            if auto_study:
+            # --- 核心注入：防断联无限重试极速点击 ---
+            if st.session_state.auto_play:
                 unique_script_id = int(time.time() * 1000)
                 components.html(
                     f"""
                     <script>
+                        // 强制更新标识符: {unique_script_id}
                         setTimeout(function() {{
-                            try {{
-                                const buttons = window.parent.document.querySelectorAll('button');
-                                for (let i = 0; i < buttons.length; i++) {{
-                                    if (buttons[i].innerText.includes('认识 (下一个)')) {{
-                                        buttons[i].click();
-                                        break;
+                            let attempts = 0;
+                            // 每隔 0.2 秒持续扫描按钮，直到成功点击，彻底解决网络卡顿断联问题！
+                            let clicker = setInterval(function() {{
+                                try {{
+                                    const buttons = window.parent.document.querySelectorAll('button');
+                                    let clicked = false;
+                                    for (let i = 0; i < buttons.length; i++) {{
+                                        if (buttons[i].innerText.includes('认识 (下一个)')) {{
+                                            buttons[i].click();
+                                            clicked = true;
+                                            break;
+                                        }}
                                     }}
-                                }}
-                            }} catch (e) {{ console.error(e); }}
-                        }}, 2500); 
+                                    // 找到并点击成功，或者尝试了50次(10秒)后放弃
+                                    if (clicked || attempts > 50) {{
+                                        clearInterval(clicker);
+                                    }}
+                                }} catch (e) {{ console.error(e); }}
+                                attempts++;
+                            }}, 200); 
+                        }}, 1300); // 预留 0.8秒读单词 + 0.5秒等待 = 1.3秒
                     </script>
                     """,
                     height=0
@@ -766,7 +787,14 @@ else:
             st.info("当前关卡还没有掌握任何单词哦！")
         else:
             
-            auto_review = st.toggle("🤖 开启挂机自动重温 (解放双手)", key="auto_review_toggle")
+            if st.session_state.auto_play:
+                if st.button("🛑 停止极速连读", use_container_width=True):
+                    st.session_state.auto_play = False
+                    st.rerun()
+            else:
+                if st.button("🤖 开启 0.5 秒极速连读", use_container_width=True, type="primary"):
+                    st.session_state.auto_play = True
+                    st.rerun()
             
             if "review_current" not in st.session_state:
                 st.session_state.review_current = random.choice(mastered_list)
@@ -779,9 +807,9 @@ else:
             st.markdown(
                 f"""
                     <div class="quiz-card" style="margin-bottom: 12px; margin-top: 10px;">
-                        <div style="font-size: 38px; font-weight: bold; color: #303133; margin-bottom: 4px;">{rc['word']}</div>
-                        <div style="font-size: 14px; color: #afafaf; margin-bottom: 10px;">{rc['phonetic']}</div>
-                        <div style="font-size: 18px; font-weight: 600; color: #1cb0f6;">{rc['meaning']}</div>
+                        <div style="font-size: 42px; font-weight: bold; color: #303133; margin-bottom: 4px;">{rc['word']}</div>
+                        <div style="font-size: 16px; color: #afafaf; margin-bottom: 10px;">{rc['phonetic']}</div>
+                        <div style="font-size: 20px; font-weight: bold; color: #1cb0f6;">{rc['meaning']}</div>
                     </div>
                     """,
                 unsafe_allow_html=True,
@@ -795,22 +823,31 @@ else:
                 st.session_state.review_current = random.choice(mastered_list)
                 st.rerun()
                 
-            if auto_review:
+            if st.session_state.auto_play:
                 unique_script_id = int(time.time() * 1000)
                 components.html(
                     f"""
                     <script>
                         setTimeout(function() {{
-                            try {{
-                                const buttons = window.parent.document.querySelectorAll('button');
-                                for (let i = 0; i < buttons.length; i++) {{
-                                    if (buttons[i].innerText.includes('换一个复习')) {{
-                                        buttons[i].click();
-                                        break;
+                            let attempts = 0;
+                            let clicker = setInterval(function() {{
+                                try {{
+                                    const buttons = window.parent.document.querySelectorAll('button');
+                                    let clicked = false;
+                                    for (let i = 0; i < buttons.length; i++) {{
+                                        if (buttons[i].innerText.includes('换一个复习')) {{
+                                            buttons[i].click();
+                                            clicked = true;
+                                            break;
+                                        }}
                                     }}
-                                }}
-                            }} catch (e) {{ console.error(e); }}
-                        }}, 2500); 
+                                    if (clicked || attempts > 50) {{
+                                        clearInterval(clicker);
+                                    }}
+                                }} catch (e) {{ console.error(e); }}
+                                attempts++;
+                            }}, 200); 
+                        }}, 1300); 
                     </script>
                     """,
                     height=0
