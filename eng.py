@@ -477,11 +477,10 @@ else:
         st.rerun()
 
     # ==========================================
-    # 📚 核心背单词模式 (加入挂机机制)
+    # 📚 核心背单词模式 (挂机 1.5 秒极速版)
     # ==========================================
     if st.session_state.page == "study":
         
-        # 挂机开关
         auto_study = st.toggle("🤖 开启挂机自动播放 (解放双手)", key="auto_study_toggle")
         
         progress_pct = min(len(mastered_list) / 100.0, 1.0)
@@ -553,7 +552,7 @@ else:
                 sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                 st.rerun()
 
-            # --- 核心注入：幽灵点击机制 (延时4秒后模拟点击下一个) ---
+            # --- 核心注入：幽灵点击机制 (延时2.5秒后模拟点击下一个) ---
             if auto_study:
                 components.html(
                     """
@@ -568,7 +567,7 @@ else:
                                     }
                                 }
                             } catch (e) { console.error(e); }
-                        }, 4000); // 1秒播音 + 3秒间隔 = 4秒后自动点击
+                        }, 2500); // 1秒播音 + 1.5秒间隔 = 2.5秒后自动点击
                     </script>
                     """,
                     height=0
@@ -744,14 +743,13 @@ else:
                                     st.rerun()
 
     # ==========================================
-    # 🔁 单词重温模式 (也加入了挂机机制)
+    # 🔁 单词重温模式 (挂机 1.5 秒极速版)
     # ==========================================
     elif st.session_state.page == "review":
         if not mastered_list:
             st.info("当前关卡还没有掌握任何单词哦！")
         else:
             
-            # 挂机开关
             auto_review = st.toggle("🤖 开启挂机自动重温 (解放双手)", key="auto_review_toggle")
             
             if "review_current" not in st.session_state:
@@ -796,7 +794,7 @@ else:
                                     }
                                 }
                             } catch (e) { console.error(e); }
-                        }, 4000); 
+                        }, 2500); // 1秒播音 + 1.5秒间隔
                     </script>
                     """,
                     height=0
