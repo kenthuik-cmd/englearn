@@ -9,12 +9,6 @@ import streamlit.components.v1 as components
 from supabase import create_client
 from vocab_data import GLOBAL_VOCAB_DB
 
-# ==========================================
-# 🛑 你的专属静默登录账号 (请修改为真实注册的账号)
-# ==========================================
-MY_EMAIL = "kenthuik@gmail.com"       # 例如: "kenthuik@gmail.com"
-MY_PASSWORD = "123456789"    # 例如: "8793huiK"
-
 # 读取 Supabase 配置
 url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_ANON_KEY"]
@@ -323,7 +317,6 @@ def restore_progress_from_db(profile_data):
             random.shuffle(remaining)
             st.session_state.queues[db_lvl] = remaining
 
-# === 真实验证云端保存逻辑 ===
 def sync_progress_to_cloud(user_id, level, mastered_dict):
     try:
         mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
@@ -377,28 +370,40 @@ if "study_history" not in st.session_state:
     st.session_state.study_history = []
 
 # ==========================================
-# 🛑 超级静默自动登录 (永远不看登录页)
+# 🛑 超级静默自动注册与登录 (底层黑科技)
 # ==========================================
+# 固定使用这个极品 VIP 账号在底层进行通讯，你永远不需要手动输入它
+VIP_EMAIL = "vip@englearn.com"
+VIP_PASSWORD = "VipPassword123!"
+
 if "user" not in st.session_state:
     try:
-        # 使用你顶部的真实邮箱密码进行静默登录
-        res = supabase.auth.sign_in_with_password({"email": MY_EMAIL, "password": MY_PASSWORD})
+        # 第一步：尝试直接登录这个 VIP 账号
+        res = supabase.auth.sign_in_with_password({"email": VIP_EMAIL, "password": VIP_PASSWORD})
         st.session_state.user = res.user
-        
-        # 登录成功后立刻拉取真实进度
-        profile = supabase.table("user_profiles").select("*").eq("user_id", res.user.id).execute()
-        if len(profile.data) > 0:
-            restore_progress_from_db(profile.data)
-        else:
-            supabase.table("user_profiles").insert({
-                "user_id": res.user.id,
-                "grade": 1,
-                "mastered_words": ""
-            }).execute()
-    except Exception as e:
-        # 如果密码填错了，才会显示错误提示
-        st.error("无法自动登录！请检查代码顶部 MY_EMAIL 和 MY_PASSWORD 是否为你真实的注册账号！")
-        st.stop()
+    except Exception:
+        try:
+            # 第二步：如果登录失败（说明是第一次运行），就在后台自动为你注册它！
+            res = supabase.auth.sign_up({"email": VIP_EMAIL, "password": VIP_PASSWORD})
+            st.session_state.user = res.user
+        except Exception as e:
+            st.error(f"后台初始化数据库通讯失败，请检查网络或 Supabase 配置！错误详情: {e}")
+            st.stop()
+            
+    # 第三步：成功登录后，拉取云端进度
+    if st.session_state.user:
+        try:
+            profile = supabase.table("user_profiles").select("*").eq("user_id", st.session_state.user.id).execute()
+            if len(profile.data) > 0:
+                restore_progress_from_db(profile.data)
+            else:
+                supabase.table("user_profiles").insert({
+                    "user_id": st.session_state.user.id,
+                    "grade": 1,
+                    "mastered_words": ""
+                }).execute()
+        except Exception:
+            pass
 
 
 current_lvl = st.session_state.level
