@@ -12,8 +12,8 @@ from vocab_data import GLOBAL_VOCAB_DB
 # ==========================================
 # 🛑 你的专属静默登录账号
 # ==========================================
-MY_EMAIL = "2@gmail.com"       # 例如: "alex@test.com"
-MY_PASSWORD = "1234"    # 例如: "123456"
+MY_EMAIL = "kenthuik@gmail.com"       # 例如: "alex@test.com"
+MY_PASSWORD = "8793huiK"    # 例如: "123456"
 
 # 读取 Supabase 配置
 url = st.secrets["SUPABASE_URL"]
@@ -390,7 +390,7 @@ if "auto_play" not in st.session_state:
 # ==========================================
 if "user" not in st.session_state:
     try:
-        res = supabase.auth.sign_in_with_password({"email": MY_EMAIL, "password": MY_PASSWORD})
+        res = supabase.auth.sign_in_with_password({"kenthuik@gmail.com": MY_EMAIL, "8793huiK": MY_PASSWORD})
         st.session_state.user = res.user
         
         profile = supabase.table("user_profiles").select("*").eq("user_id", res.user.id).execute()
