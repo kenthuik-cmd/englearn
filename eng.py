@@ -648,8 +648,7 @@ if "user" not in st.session_state:
         except Exception:
             pass
         
-        if "lvl" in st.query_params: del st.query_params["lvl"]
-        if param_key in st.query_params: del st.query_params[param_key]
+
 
 current_lvl = st.session_state.level
 current_queue = st.session_state.queues[current_lvl]
