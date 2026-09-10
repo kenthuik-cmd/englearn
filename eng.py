@@ -119,14 +119,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-def get_audio_bytes(text):
-    # 强制使用美式口音 (tld="us")，发音更标准
-    tts = gTTS(text=text, lang="en", tld="us")
-    fp = BytesIO()
-    tts.write_to_fp(fp)
-    fp.seek(0)
-    return fp.read()
-
+# === 全新：调用真人 MP3 词典接口发音 ===
 def render_word_audio_button(word, button_text="🔊 点此朗读单词", autoplay=False):
     escaped_word = word.replace("'", "\\'")
     autoplay_script = f"""
@@ -134,10 +127,8 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词", autopl
         if ({'true' if autoplay else 'false'}) {{
             setTimeout(() => {{
                 window.speechSynthesis.cancel(); 
-                let u = new SpeechSynthesisUtterance('{escaped_word}'); 
-                u.lang='en-US'; 
-                u.rate=0.8;
-                window.speechSynthesis.speak(u);
+                let audio = new Audio('https://dict.youdao.com/dictvoice?audio={escaped_word}&type=2');
+                audio.play();
             }}, 300);
         }}
     </script>
@@ -150,7 +141,7 @@ def render_word_audio_button(word, button_text="🔊 点此朗读单词", autopl
         }}
         button:active {{ transform: translateY(5px); box-shadow: 0 0px 0px rgba(0,0,0,0.1); }}
     </style>
-    <button onclick="window.speechSynthesis.cancel(); let u = new SpeechSynthesisUtterance('{escaped_word}'); u.lang='en-US'; u.rate=0.8; window.speechSynthesis.speak(u);">
+    <button onclick="window.speechSynthesis.cancel(); new Audio('https://dict.youdao.com/dictvoice?audio={escaped_word}&type=2').play();">
         {button_text}
     </button>
     {autoplay_script}
@@ -223,7 +214,7 @@ def render_ai_speech_recognition(target_word):
     """
     components.html(html_code, height=105)
 
-def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常速+慢速)", autoplay=False):
+def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常速)", autoplay=False):
     escaped_word = word.replace("'", "\\'")
     autoplay_script = f"""
     <script>
@@ -243,9 +234,7 @@ def render_blind_listen_button(word, button_text="🔊 播放神秘音频 (常�
     <script>
         function playTwice() {{
             window.speechSynthesis.cancel();
-            let u1 = new SpeechSynthesisUtterance('{escaped_word}'); u1.lang = 'en-US'; u1.rate = 0.8;
-            let u2 = new SpeechSynthesisUtterance('{escaped_word}'); u2.lang = 'en-US'; u2.rate = 0.6; 
-            window.speechSynthesis.speak(u1); window.speechSynthesis.speak(u2);
+            new Audio('https://dict.youdao.com/dictvoice?audio={escaped_word}&type=2').play();
         }}
     </script>
     <button onclick="playTwice()">{button_text}</button>
@@ -311,7 +300,7 @@ def render_highlight_example(example_en, example_cn):
 
 
 # ==========================================
-# 🚀 降速 1 秒版纯净挂机引擎 (加入智能中文释义播报)
+# 🚀 降速 1 秒版纯净挂机引擎 (真人 MP3 语音 + 中文智能播报)
 # ==========================================
 def render_autoplay_study_component(queue, mastered_words, current_lvl):
     queue_json = json.dumps(queue)
@@ -380,7 +369,6 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
         let currentIndex = 0;
         let isPlaying = false;
 
-        // 同步两个界面的勾选框状态
         function syncToggle(source) {{
             let checked = source === 'start' ? document.getElementById('readZhToggleStart').checked : document.getElementById('readZhTogglePlay').checked;
             document.getElementById('readZhToggleStart').checked = checked;
@@ -415,11 +403,10 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
 
             window.speechSynthesis.cancel();
             
-            let uEn = new SpeechSynthesisUtterance(item.word);
-            uEn.lang = 'en-US';
-            uEn.rate = 0.8; 
+            // 核心更新：使用真人 MP3 接口播放单词发音
+            let audioUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(item.word) + '&type=2';
+            let wordAudio = new Audio(audioUrl);
 
-            // 下一步逻辑：等待 1000 毫秒（1秒）后切题
             let nextStep = function() {{
                 if(isPlaying) {{
                     setTimeout(() => {{
@@ -432,26 +419,43 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
                 }}
             }};
 
-            let readZh = document.getElementById('readZhTogglePlay').checked;
-            
-            if (readZh) {{
-                // 智能过滤：去掉 "n. ", "v. ", "adj./adv. " 等词性前缀，只纯净朗读中文
-                let cleanMeaning = item.meaning.replace(/^[a-zA-Z.\\/]+ /g, '');
-                let uZh = new SpeechSynthesisUtterance(cleanMeaning);
-                uZh.lang = 'zh-CN';
-                uZh.rate = 1.0;
-                
-                uEn.onend = function() {{ if(isPlaying) window.speechSynthesis.speak(uZh); }};
-                uEn.onerror = function() {{ if(isPlaying) window.speechSynthesis.speak(uZh); }};
-                
-                uZh.onend = nextStep;
-                uZh.onerror = nextStep;
-            }} else {{
-                uEn.onend = nextStep;
-                uEn.onerror = nextStep;
-            }}
+            let playZhOrNext = function() {{
+                let readZh = document.getElementById('readZhTogglePlay').checked;
+                if (readZh && isPlaying) {{
+                    let cleanMeaning = item.meaning.replace(/^[a-zA-Z.\\/]+\\s+/g, '');
+                    let uZh = new SpeechSynthesisUtterance(cleanMeaning);
+                    uZh.lang = 'zh-CN';
+                    uZh.rate = 1.0;
+                    uZh.onend = nextStep;
+                    uZh.onerror = nextStep;
+                    window.speechSynthesis.speak(uZh);
+                }} else {{
+                    nextStep();
+                }}
+            }};
 
-            window.speechSynthesis.speak(uEn);
+            wordAudio.onended = playZhOrNext;
+            
+            // 如果无网络或接口失败，防崩溃降级机制
+            wordAudio.onerror = function() {{
+                let uEn = new SpeechSynthesisUtterance(item.word);
+                uEn.lang = 'en-US';
+                uEn.rate = 0.8;
+                uEn.onend = playZhOrNext;
+                uEn.onerror = playZhOrNext;
+                if(isPlaying) window.speechSynthesis.speak(uEn);
+            }};
+
+            if(isPlaying) {{
+                wordAudio.play().catch(e => {{
+                    let uEn = new SpeechSynthesisUtterance(item.word);
+                    uEn.lang = 'en-US';
+                    uEn.rate = 0.8;
+                    uEn.onend = playZhOrNext;
+                    uEn.onerror = playZhOrNext;
+                    window.speechSynthesis.speak(uEn);
+                }});
+            }}
         }}
 
         function saveAndExit() {{
@@ -561,9 +565,9 @@ def render_autoplay_review_component(mastered_words):
 
             window.speechSynthesis.cancel();
             
-            let uEn = new SpeechSynthesisUtterance(item.word);
-            uEn.lang = 'en-US';
-            uEn.rate = 0.8; 
+            // 核心更新：使用真人 MP3 接口播放单词发音
+            let audioUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(item.word) + '&type=2';
+            let wordAudio = new Audio(audioUrl);
 
             let nextStep = function() {{
                 if(isPlaying) {{
@@ -571,25 +575,42 @@ def render_autoplay_review_component(mastered_words):
                 }}
             }};
 
-            let readZh = document.getElementById('readZhTogglePlay').checked;
-            
-            if (readZh) {{
-                let cleanMeaning = item.meaning.replace(/^[a-zA-Z.\\/]+ /g, '');
-                let uZh = new SpeechSynthesisUtterance(cleanMeaning);
-                uZh.lang = 'zh-CN';
-                uZh.rate = 1.0;
-                
-                uEn.onend = function() {{ if(isPlaying) window.speechSynthesis.speak(uZh); }};
-                uEn.onerror = function() {{ if(isPlaying) window.speechSynthesis.speak(uZh); }};
-                
-                uZh.onend = nextStep;
-                uZh.onerror = nextStep;
-            }} else {{
-                uEn.onend = nextStep;
-                uEn.onerror = nextStep;
-            }}
+            let playZhOrNext = function() {{
+                let readZh = document.getElementById('readZhTogglePlay').checked;
+                if (readZh && isPlaying) {{
+                    let cleanMeaning = item.meaning.replace(/^[a-zA-Z.\\/]+\\s+/g, '');
+                    let uZh = new SpeechSynthesisUtterance(cleanMeaning);
+                    uZh.lang = 'zh-CN';
+                    uZh.rate = 1.0;
+                    uZh.onend = nextStep;
+                    uZh.onerror = nextStep;
+                    window.speechSynthesis.speak(uZh);
+                }} else {{
+                    nextStep();
+                }}
+            }};
 
-            window.speechSynthesis.speak(uEn);
+            wordAudio.onended = playZhOrNext;
+            
+            wordAudio.onerror = function() {{
+                let uEn = new SpeechSynthesisUtterance(item.word);
+                uEn.lang = 'en-US';
+                uEn.rate = 0.8;
+                uEn.onend = playZhOrNext;
+                uEn.onerror = playZhOrNext;
+                if(isPlaying) window.speechSynthesis.speak(uEn);
+            }};
+
+            if(isPlaying) {{
+                wordAudio.play().catch(e => {{
+                    let uEn = new SpeechSynthesisUtterance(item.word);
+                    uEn.lang = 'en-US';
+                    uEn.rate = 0.8;
+                    uEn.onend = playZhOrNext;
+                    uEn.onerror = playZhOrNext;
+                    window.speechSynthesis.speak(uEn);
+                }});
+            }}
         }}
 
         function stopPlay() {{
@@ -807,8 +828,8 @@ else:
             if current_queue:
                 current = current_queue[0]
                 
-                st.audio(get_audio_bytes(current["word"]), format="audio/mp3", autoplay=True)
-                render_word_audio_button(current["word"], "🔊 点此朗读单词", autoplay=False)
+                # 去掉了刺耳的 st.audio，让按键全权管理发音，避免声音重叠
+                render_word_audio_button(current["word"], "🔊 点此朗读单词", autoplay=True)
 
                 st.markdown(
                     f"""
@@ -951,8 +972,7 @@ else:
                 if st.session_state.get("quiz_answered", False):
                     selected = st.session_state.selected_option
                     
-                    st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                    render_word_audio_button(qc["word"], "🔊 再次朗读单词", autoplay=False)
+                    render_word_audio_button(qc["word"], "🔊 再次朗读单词", autoplay=True)
 
                     is_correct = (selected == correct_ans)
 
@@ -986,14 +1006,12 @@ else:
 
                 else:
                     if q_type == "normal":
-                        st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                        render_word_audio_button(qc["word"], "🔊 点击听音", autoplay=False)
+                        render_word_audio_button(qc["word"], "🔊 点击听音", autoplay=True)
                         st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:38px; font-weight:bold; color:#303133;'>{qc['word']}</div></div>", unsafe_allow_html=True)
                         
                     elif q_type == "listen":
                         st.markdown("<h4 style='text-align:center; color:#9c27b0;'>🎧 盲听辨义</h4>", unsafe_allow_html=True)
-                        st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                        render_blind_listen_button(qc["word"], "🔊 播放神秘音频 (常速+慢速)", autoplay=False)
+                        render_blind_listen_button(qc["word"], "🔊 播放神秘音频 (常速)", autoplay=True)
                         st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:20px; font-weight:bold; color:#afafaf;'>❓❓❓</div></div>", unsafe_allow_html=True)
 
                     elif q_type == "fill_blank":
@@ -1003,8 +1021,7 @@ else:
 
                     elif q_type == "spell":
                         st.markdown("<h4 style='text-align:center; color:#1cb0f6;'>✍️ 串字挑战</h4>", unsafe_allow_html=True)
-                        st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
-                        render_word_audio_button(qc["word"], "🔊 听发音拼写", autoplay=False)
+                        render_word_audio_button(qc["word"], "🔊 听发音拼写", autoplay=True)
                         st.markdown(f"<div class='quiz-card' style='margin-top:10px;'><div style='font-size:24px; font-weight:bold; color:#ff9600;'>{qc['meaning']}</div></div>", unsafe_allow_html=True)
 
                     if q_type == "spell":
@@ -1057,8 +1074,7 @@ else:
 
                 rc = st.session_state.review_current
                 
-                st.audio(get_audio_bytes(rc["word"]), format="audio/mp3", autoplay=True)
-                render_word_audio_button(rc["word"], "🔊 点此朗读单词", autoplay=False)
+                render_word_audio_button(rc["word"], "🔊 点此朗读单词", autoplay=True)
 
                 st.markdown(
                     f"""
