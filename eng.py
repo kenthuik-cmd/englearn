@@ -9,13 +9,7 @@ import streamlit.components.v1 as components
 from supabase import create_client
 from vocab_data import GLOBAL_VOCAB_DB
 
-# ==========================================
-# 🛑 你的专属静默登录账号
-# ==========================================
-MY_EMAIL = "kenthuik@gmail.com"       # 例如: "alex@test.com"
-MY_PASSWORD = "8793huiK"    # 例如: "123456"
-
-# 读取 Supabase 配置
+# 读取 Supabase 配置 (直接读写，不走 Auth)
 url = st.secrets["SUPABASE_URL"]
 key = st.secrets["SUPABASE_ANON_KEY"]
 supabase = create_client(url, key)
@@ -24,7 +18,7 @@ st.set_page_config(
     page_title="AI 英语进阶闯关", page_icon="🔥", layout="centered"
 )
 
-# 注入手机端极简样式 (全面放大按钮适配手指点击)
+# 注入手机端极简样式
 st.markdown(
     """
     <style>
@@ -48,11 +42,10 @@ st.markdown(
             max-width: 500px;
         }
 
-        /* 专门为手机优化的超大按钮 */
         .stButton > button {
             border-radius: 16px !important;
             font-weight: 900 !important;
-            padding: 16px 12px !important; /* 增大触控区 */
+            padding: 16px 12px !important; 
             font-size: 16px !important;
             box-shadow: 0 4px 0px rgba(0, 0, 0, 0.1) !important; 
             transition: all 0.1s;
@@ -324,14 +317,17 @@ def restore_progress_from_db(profile_data):
             random.shuffle(remaining)
             st.session_state.queues[db_lvl] = remaining
 
+# === 零配置双重固化：优先网址，次选数据库 ===
 def sync_progress_to_cloud(user_id, level, mastered_dict):
     try:
         mastered_words_list = [w['word'] for w in mastered_dict.get(level, [])]
         mastered_str = ",".join(mastered_words_list)
         
+        # 1. 强制写入 URL 参数（最高优先级，绝不丢档）
         st.query_params[f"lvl_{level}"] = mastered_str
         st.query_params["lvl"] = str(level)
         
+        # 2. 尝试无缝写入数据库
         res = supabase.table("user_profiles").select("user_id").eq("user_id", user_id).execute()
         if len(res.data) > 0:
             supabase.table("user_profiles").update({
@@ -345,8 +341,8 @@ def sync_progress_to_cloud(user_id, level, mastered_dict):
                 "mastered_words": mastered_str,
             }).execute()
     except Exception as e:
+        # 如果数据库报错，忽略它，因为 URL 已经保存了进度
         pass
-
 
 class AutoLoginUser:
     def __init__(self, uid):
@@ -380,32 +376,25 @@ if "streak" not in st.session_state:
     st.session_state.streak = int(st.query_params.get("streak", 1))
 if "study_history" not in st.session_state:
     st.session_state.study_history = []
-
-# --- 极速挂机开关状态记录 ---
 if "auto_play" not in st.session_state:
     st.session_state.auto_play = False
 
 # ==========================================
-# 🛑 超级静默自动登录
+# 🛑 彻底干掉验证，隐身自动读档！
 # ==========================================
 if "user" not in st.session_state:
+    # 强制赋予一个虚假的 VIP 身份，绕过所有认证系统
+    st.session_state.user = AutoLoginUser("solo_admin_888")
+    
+    # 尝试从数据库静默加载（报错也不会提示，绝不打扰用户）
     try:
-        res = supabase.auth.sign_in_with_password({"kenthuik@gmail.com": MY_EMAIL, "8793huiK": MY_PASSWORD})
-        st.session_state.user = res.user
-        
-        profile = supabase.table("user_profiles").select("*").eq("user_id", res.user.id).execute()
+        profile = supabase.table("user_profiles").select("*").eq("user_id", st.session_state.user.id).execute()
         if len(profile.data) > 0:
             restore_progress_from_db(profile.data)
-        else:
-            supabase.table("user_profiles").insert({
-                "user_id": res.user.id,
-                "grade": 1,
-                "mastered_words": ""
-            }).execute()
-    except Exception as e:
-        st.error("无法自动登录！请检查代码顶部 MY_EMAIL 和 MY_PASSWORD 是否为你真实的注册账号！")
-        st.stop()
-            
+    except Exception:
+        pass
+        
+    # 【最强保险】强制读取网址 URL 中的进度参数，覆盖掉旧记录
     if "lvl" in st.query_params:
         try:
             url_lvl = int(st.query_params["lvl"])
@@ -483,7 +472,6 @@ if st.session_state.page == "home":
         if st.button("✍️ 串字挑战", use_container_width=True):
             enter_quiz("spell")
 
-
 else:
     if st.button("⬅️ 返回主页", type="secondary"):
         st.session_state.page = "home"
@@ -497,7 +485,6 @@ else:
     # ==========================================
     if st.session_state.page == "study":
         
-        # --- 巨大化手机专属挂机按钮 ---
         if st.session_state.auto_play:
             if st.button("🛑 停止极速连读", use_container_width=True):
                 st.session_state.auto_play = False
@@ -576,16 +563,13 @@ else:
                 sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                 st.rerun()
 
-            # --- 核心注入：防断联无限重试极速点击 ---
             if st.session_state.auto_play:
                 unique_script_id = int(time.time() * 1000)
                 components.html(
                     f"""
                     <script>
-                        // 强制更新标识符: {unique_script_id}
                         setTimeout(function() {{
                             let attempts = 0;
-                            // 每隔 0.2 秒持续扫描按钮，直到成功点击，彻底解决网络卡顿断联问题！
                             let clicker = setInterval(function() {{
                                 try {{
                                     const buttons = window.parent.document.querySelectorAll('button');
@@ -597,14 +581,13 @@ else:
                                             break;
                                         }}
                                     }}
-                                    // 找到并点击成功，或者尝试了50次(10秒)后放弃
                                     if (clicked || attempts > 50) {{
                                         clearInterval(clicker);
                                     }}
                                 }} catch (e) {{ console.error(e); }}
                                 attempts++;
                             }}, 200); 
-                        }}, 1300); // 预留 0.8秒读单词 + 0.5秒等待 = 1.3秒
+                        }}, 1300); 
                     </script>
                     """,
                     height=0
@@ -808,8 +791,8 @@ else:
                 f"""
                     <div class="quiz-card" style="margin-bottom: 12px; margin-top: 10px;">
                         <div style="font-size: 42px; font-weight: bold; color: #303133; margin-bottom: 4px;">{rc['word']}</div>
-                        <div style="font-size: 16px; color: #afafaf; margin-bottom: 10px;">{rc['phonetic']}</div>
-                        <div style="font-size: 20px; font-weight: bold; color: #1cb0f6;">{rc['meaning']}</div>
+                        <div style="font-size: 14px; color: #afafaf; margin-bottom: 10px;">{rc['phonetic']}</div>
+                        <div style="font-size: 18px; font-weight: 600; color: #1cb0f6;">{rc['meaning']}</div>
                     </div>
                     """,
                 unsafe_allow_html=True,
