@@ -378,6 +378,10 @@ if "hearts" not in st.session_state:
 if "streak" not in st.session_state:
     st.session_state.streak = int(st.query_params.get("streak", 1))
 
+# === 历史时光机：防手滑撤销机制 ===
+if "study_history" not in st.session_state:
+    st.session_state.study_history = []
+
 # === 免密自动登录触发机制 ===
 if "user" not in st.session_state:
     st.session_state.user = None
@@ -473,6 +477,7 @@ else:
 
         st.write("")
         if st.button("🚀 继续学习新词汇", use_container_width=True, type="primary"):
+            st.session_state.study_history.clear() # 进入时清空历史防错乱
             st.session_state.page = "study"
             st.rerun()
             
@@ -515,10 +520,11 @@ else:
             st.session_state.page = "home"
             st.session_state.pop("quiz_current", None)
             st.session_state.pop("quiz_answered", None)
+            st.session_state.study_history.clear()
             st.rerun()
 
         # ==========================================
-        # 📚 核心背单词模式
+        # 📚 核心背单词模式 (带撤销返回机制)
         # ==========================================
         if st.session_state.page == "study":
             progress_pct = min(len(mastered_list) / 100.0, 1.0)
@@ -545,38 +551,90 @@ else:
                 render_highlight_example(current["example_en"], current["example_cn"])
                 render_ai_speech_recognition(current["word"])
 
+                st.write("")
+                
+                # --- 新增：防手滑撤销按钮 ---
+                if st.session_state.study_history:
+                    if st.button("⏪ 哎呀点错了！返回上一个单词", use_container_width=True):
+                        # 读取最后一次操作的记录
+                        action, word_data, added_to_mastered = st.session_state.study_history.pop()
+                        
+                        if action == "blur":
+                            # 如果是“模糊”，把它从队列末尾抽出来，塞回第一位
+                            if current_queue and current_queue[-1] == word_data:
+                                current_queue.pop()
+                            current_queue.insert(0, word_data)
+                            
+                        elif action == "master":
+                            # 如果是“认识/太简单”，把它从已掌握列表里删掉（如果刚才加进去了），并塞回队列第一位
+                            if added_to_mastered and word_data in mastered_list:
+                                mastered_list.remove(word_data)
+                            current_queue.insert(0, word_data)
+                            # 回退云端进度
+                            sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
+                        
+                        st.rerun()
+
+                # --- 核心操作区 ---
                 col1, col2 = st.columns(2)
                 with col1:
                     if st.button("❌ 模糊 (重练)", use_container_width=True):
-                        current_queue.append(current_queue.pop(0))
+                        done_word = current_queue.pop(0)
+                        current_queue.append(done_word)
+                        # 记录到历史
+                        st.session_state.study_history.append(("blur", done_word, False))
                         st.rerun()
                 with col2:
                     if st.button("✔ 认识 (下一个)", use_container_width=True, type="primary"):
                         done_word = current_queue.pop(0)
+                        added = False
                         if done_word not in mastered_list:
                             mastered_list.append(done_word)
+                            added = True
+                        # 记录到历史
+                        st.session_state.study_history.append(("master", done_word, added))
                         sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                         st.rerun()
                 
                 st.markdown("<hr style='margin: 15px 0 10px 0; border: none; border-top: 2px dashed #f2f2f2;'>", unsafe_allow_html=True)
                 if st.button("🗑️ 太简单，斩掉它！", use_container_width=True):
                     done_word = current_queue.pop(0)
+                    added = False
                     if done_word not in mastered_list:
                         mastered_list.append(done_word)
+                        added = True
+                    st.session_state.study_history.append(("master", done_word, added))
                     sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                     st.rerun()
 
             else:
+                # 即使通关了，也允许“撤销”刚刚点掉的最后一个词
+                if st.session_state.study_history:
+                    if st.button("⏪ 哎呀点快了！返回上一个单词", use_container_width=True):
+                        action, word_data, added_to_mastered = st.session_state.study_history.pop()
+                        if action == "blur":
+                            if current_queue and current_queue[-1] == word_data:
+                                current_queue.pop()
+                            current_queue.insert(0, word_data)
+                        elif action == "master":
+                            if added_to_mastered and word_data in mastered_list:
+                                mastered_list.remove(word_data)
+                            current_queue.insert(0, word_data)
+                            sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
+                        st.rerun()
+                
                 if current_lvl < 20:
                     st.balloons()
                     st.success(f"🎉 太棒了！Level {current_lvl} 完美通关！")
                     if st.button(f"🚀 冲刺进入 Level {current_lvl + 1}", use_container_width=True, type="primary"):
+                        st.session_state.study_history.clear() # 升满级清空历史
                         st.session_state.level += 1
                         sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                         st.rerun()
                 else:
                     st.success("🏆 恭喜你通关全部 20 个 Level！英语词汇终极大师！")
                     if st.button("🔄 重新开始挑战", use_container_width=True):
+                        st.session_state.study_history.clear()
                         st.session_state.level = 1
                         st.rerun()
 
@@ -629,7 +687,6 @@ else:
                     opts = st.session_state.get("quiz_options", [])
                     correct_ans = st.session_state.get("correct_ans", "")
 
-                    # --- 答题后展现结果 ---
                     if st.session_state.get("quiz_answered", False):
                         selected = st.session_state.selected_option
                         
@@ -666,7 +723,6 @@ else:
                             del st.session_state["quiz_current"]
                             st.rerun()
 
-                    # --- 未答题状态 ---
                     else:
                         if q_type == "normal":
                             st.audio(get_audio_bytes(qc["word"]), format="audio/mp3", autoplay=True)
