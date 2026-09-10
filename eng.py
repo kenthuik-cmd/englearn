@@ -338,6 +338,10 @@ def sync_progress_to_cloud(user_id, level, mastered_dict):
         pass
 
 
+class AutoLoginUser:
+    def __init__(self, uid):
+        self.id = uid
+
 if "level" not in st.session_state:
     st.session_state.level = 1
 if "queues" not in st.session_state:
@@ -369,28 +373,21 @@ if "streak" not in st.session_state:
 if "study_history" not in st.session_state:
     st.session_state.study_history = []
 
-# ==========================================
-# 🛑 超级静默自动注册与登录 (底层黑科技)
-# ==========================================
-# 固定使用这个极品 VIP 账号在底层进行通讯，你永远不需要手动输入它
 VIP_EMAIL = "vip@englearn.com"
 VIP_PASSWORD = "VipPassword123!"
 
 if "user" not in st.session_state:
     try:
-        # 第一步：尝试直接登录这个 VIP 账号
         res = supabase.auth.sign_in_with_password({"email": VIP_EMAIL, "password": VIP_PASSWORD})
         st.session_state.user = res.user
     except Exception:
         try:
-            # 第二步：如果登录失败（说明是第一次运行），就在后台自动为你注册它！
             res = supabase.auth.sign_up({"email": VIP_EMAIL, "password": VIP_PASSWORD})
             st.session_state.user = res.user
         except Exception as e:
             st.error(f"后台初始化数据库通讯失败，请检查网络或 Supabase 配置！错误详情: {e}")
             st.stop()
             
-    # 第三步：成功登录后，拉取云端进度
     if st.session_state.user:
         try:
             profile = supabase.table("user_profiles").select("*").eq("user_id", st.session_state.user.id).execute()
@@ -405,15 +402,11 @@ if "user" not in st.session_state:
         except Exception:
             pass
 
-
 current_lvl = st.session_state.level
 current_queue = st.session_state.queues[current_lvl]
 mastered_list = st.session_state.mastered[current_lvl]
 all_learned_pool = mastered_list 
 
-# ==========================================
-# 🟢 全局界面 UI (纯净版主页)
-# ==========================================
 if st.session_state.page != "home":
     st.markdown(f"""
     <div class='status-bar'>
@@ -469,7 +462,6 @@ if st.session_state.page == "home":
         if st.button("✍️ 串字挑战", use_container_width=True):
             enter_quiz("spell")
 
-
 else:
     if st.button("⬅️ 返回主页", type="secondary"):
         st.session_state.page = "home"
@@ -479,7 +471,7 @@ else:
         st.rerun()
 
     # ==========================================
-    # 📚 核心背单词模式 
+    # 📚 核心背单词模式 (加入防缓存机制)
     # ==========================================
     if st.session_state.page == "study":
         
@@ -554,22 +546,24 @@ else:
                 sync_progress_to_cloud(st.session_state.user.id, st.session_state.level, st.session_state.mastered)
                 st.rerun()
 
-            # --- 挂机 1.5 秒极速版 ---
+            # --- 核心注入：幽灵点击机制 (加入动态时间戳打破浏览器缓存) ---
             if auto_study:
+                unique_script_id = int(time.time() * 1000)
                 components.html(
-                    """
+                    f"""
                     <script>
-                        setTimeout(function() {
-                            try {
+                        // 强制更新标识符: {unique_script_id}
+                        setTimeout(function() {{
+                            try {{
                                 const buttons = window.parent.document.querySelectorAll('button');
-                                for (let i = 0; i < buttons.length; i++) {
-                                    if (buttons[i].innerText.includes('认识 (下一个)')) {
+                                for (let i = 0; i < buttons.length; i++) {{
+                                    if (buttons[i].innerText.includes('认识 (下一个)')) {{
                                         buttons[i].click();
                                         break;
-                                    }
-                                }
-                            } catch (e) { console.error(e); }
-                        }, 2500); 
+                                    }}
+                                }}
+                            }} catch (e) {{ console.error(e); }}
+                        }}, 2500); 
                     </script>
                     """,
                     height=0
@@ -745,7 +739,7 @@ else:
                                     st.rerun()
 
     # ==========================================
-    # 🔁 单词重温模式
+    # 🔁 单词重温模式 (加入防缓存机制)
     # ==========================================
     elif st.session_state.page == "review":
         if not mastered_list:
@@ -782,20 +776,22 @@ else:
                 st.rerun()
                 
             if auto_review:
+                unique_script_id = int(time.time() * 1000)
                 components.html(
-                    """
+                    f"""
                     <script>
-                        setTimeout(function() {
-                            try {
+                        // 强制更新标识符: {unique_script_id}
+                        setTimeout(function() {{
+                            try {{
                                 const buttons = window.parent.document.querySelectorAll('button');
-                                for (let i = 0; i < buttons.length; i++) {
-                                    if (buttons[i].innerText.includes('换一个复习')) {
+                                for (let i = 0; i < buttons.length; i++) {{
+                                    if (buttons[i].innerText.includes('换一个复习')) {{
                                         buttons[i].click();
                                         break;
-                                    }
-                                }
-                            } catch (e) { console.error(e); }
-                        }, 2500); 
+                                    }}
+                                }}
+                            }} catch (e) {{ console.error(e); }}
+                        }}, 2500); 
                     </script>
                     """,
                     height=0
