@@ -7,6 +7,75 @@ from io import BytesIO
 from datetime import date
 from gtts import gTTS
 import streamlit as st
+# =========================
+# PWA support
+# =========================
+import streamlit.components.v1 as components
+
+components.html(
+    """
+    <script>
+    const parentDoc = window.parent.document;
+
+    // =========================
+    // PWA Manifest
+    // =========================
+    if (!parentDoc.querySelector('link[rel="manifest"]')) {
+        const manifest = parentDoc.createElement("link");
+        manifest.rel = "manifest";
+        manifest.href = "/app/static/manifest.json";
+        parentDoc.head.appendChild(manifest);
+    }
+
+    // =========================
+    // iPhone / iOS App Icon
+    // =========================
+    if (!parentDoc.querySelector('link[rel="apple-touch-icon"]')) {
+        const appleIcon = parentDoc.createElement("link");
+        appleIcon.rel = "apple-touch-icon";
+        appleIcon.href = "/app/static/icon-192.png";
+        parentDoc.head.appendChild(appleIcon);
+    }
+
+    // =========================
+    // iOS startup / theme
+    // =========================
+    if (!parentDoc.querySelector('meta[name="apple-mobile-web-app-capable"]')) {
+        const capable = parentDoc.createElement("meta");
+        capable.name = "apple-mobile-web-app-capable";
+        capable.content = "yes";
+        parentDoc.head.appendChild(capable);
+    }
+
+    if (!parentDoc.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]')) {
+        const statusBar = parentDoc.createElement("meta");
+        statusBar.name = "apple-mobile-web-app-status-bar-style";
+        statusBar.content = "default";
+        parentDoc.head.appendChild(statusBar);
+    }
+
+    // =========================
+    // Service Worker
+    // =========================
+    if ("serviceWorker" in window.parent.navigator) {
+        window.parent.navigator.serviceWorker.register(
+            "/app/static/service-worker.js"
+        ).then(function(registration) {
+            console.log(
+                "PWA service worker registered:",
+                registration.scope
+            );
+        }).catch(function(error) {
+            console.log(
+                "PWA registration failed:",
+                error
+            );
+        });
+    }
+    </script>
+    """,
+    height=0,
+)
 import streamlit.components.v1 as components
 from supabase import create_client
 from vocab_data import GLOBAL_VOCAB_DB
@@ -304,17 +373,125 @@ def render_highlight_example(example_en, example_cn):
 # ==========================================
 def render_autoplay_study_component(queue, mastered_words, current_lvl):
     """
-    手机端连续学习组件。
-    关键修复：
-    1. 整个学习流程留在同一个 iframe 内，不再因为“认识/模糊”触发 Streamlit rerun。
-       这样下一词仍属于用户已经启动的音频播放链，手机浏览器不会把它当成新的自动播放。
-    2. 全程只复用一个 HTMLAudioElement，而不是每个单词 new Audio()。
-    3. MP3 播放失败时才降级到 speechSynthesis。
-    4. “认识/模糊/太简单”均在前端处理，退出时一次性把 mastered 和剩余队列写回 URL，
-       再由 Python 恢复并同步 Supabase。
+    📱 基础学习里的挂机听模式。
+    挂机时只负责连续听，不显示“认识 / 模糊 / 斩掉”按钮。
+    学习进度不会因为挂机听自动改变。
+    """
+    # 挂机听使用当前待学习队列；退出后原队列保持不变。
+    return render_autoplay_review_component(queue)
+def render_autoplay_review_component(mastered_words):
+    """📱 极简 iPhone 挂机听界面：只听，不做认识/模糊操作。"""
+    pool_json = json.dumps(mastered_words, ensure_ascii=False)
+
+    html = r"""
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <style>
+      *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+      body{margin:0;background:transparent;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;color:#172033}
+      .app{max-width:460px;margin:0 auto;padding:4px 2px 10px}
+      .hero{background:linear-gradient(135deg,#1677ff,#6a5cff);border-radius:24px;padding:18px 18px 16px;color:#fff;box-shadow:0 10px 28px rgba(45,92,220,.18)}
+      .hero-top{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:700;opacity:.9}
+      .brand{font-size:15px;font-weight:800;letter-spacing:.2px}
+      .counter{background:rgba(255,255,255,.18);padding:6px 10px;border-radius:999px}
+      .headline{font-size:13px;margin-top:15px;opacity:.85}
+      .start-word{font-size:31px;font-weight:900;margin-top:3px;letter-spacing:-.7px}
+      .start-sub{font-size:14px;margin-top:5px;opacity:.86}
+      .start-btn,.stop-btn{width:100%;border:0;border-radius:16px;font-size:17px;font-weight:850;padding:15px;margin-top:15px;cursor:pointer}
+      .start-btn{background:#fff;color:#1769e8;box-shadow:0 5px 0 rgba(0,0,0,.10)}
+      .start-btn:active,.stop-btn:active{transform:translateY(3px);box-shadow:none}
+      .settings{margin-top:10px;background:#fff;border:1px solid #e8ebf2;border-radius:18px;padding:12px 14px;box-shadow:0 6px 20px rgba(20,35,65,.05)}
+      .switch-row{display:flex;align-items:center;justify-content:space-between;font-size:14px;font-weight:750;color:#39445a}
+      .switch{position:relative;width:47px;height:27px;display:inline-block}.switch input{display:none}
+      .slider{position:absolute;inset:0;background:#dfe4ec;border-radius:99px;transition:.2s}.slider:before{content:"";position:absolute;width:21px;height:21px;left:3px;top:3px;background:#fff;border-radius:50%;box-shadow:0 2px 5px rgba(0,0,0,.18);transition:.2s}
+      input:checked+.slider{background:#176ff0}.switch input:checked+.slider:before{transform:translateX(20px)}
+      .listen{display:none}
+      .mini{display:flex;align-items:center;gap:7px;font-size:12px;color:#8a94a6;margin-top:10px}
+      .dot{width:7px;height:7px;border-radius:50%;background:#21c77a;box-shadow:0 0 0 5px rgba(33,199,122,.12)}
+      .card{margin-top:10px;background:#fff;border:1px solid #e8ebf2;border-radius:22px;padding:17px 16px 14px;box-shadow:0 8px 25px rgba(20,35,65,.06)}
+      .progress-line{height:5px;background:#edf0f5;border-radius:99px;overflow:hidden;margin-bottom:15px}.progress-fill{height:100%;background:linear-gradient(90deg,#176ff0,#735cff);border-radius:99px;width:0%}
+      .word{font-size:44px;line-height:1.05;font-weight:900;letter-spacing:-1px;text-align:center;color:#172033;word-break:break-word}
+      .phonetic{text-align:center;color:#8c96a8;font-size:14px;margin-top:7px}
+      .meaning{text-align:center;color:#176ff0;font-size:18px;font-weight:800;margin-top:6px;line-height:1.3}
+      .example{margin-top:13px;padding:11px 12px;background:#f7f9fc;border-radius:14px;color:#4d586c;font-size:13px;line-height:1.45}
+      .example-en{font-weight:650}.example-cn{margin-top:4px;color:#8a94a6}
+      .controls{margin-top:10px;background:#fff;border:1px solid #e8ebf2;border-radius:18px;padding:12px 14px;box-shadow:0 6px 20px rgba(20,35,65,.05)}
+      .status{text-align:center;font-size:13px;font-weight:750;color:#6d7789;min-height:19px}
+      .stop-btn{margin-top:9px;background:#f3f5f8;color:#4b5567;padding:12px;font-size:15px;box-shadow:none}
+      .hint{text-align:center;color:#a0a8b6;font-size:11px;margin-top:8px}
+      @media(max-height:750px){.app{padding-top:0}.hero{padding:13px 15px}.headline{margin-top:9px}.start-word{font-size:27px}.start-btn{margin-top:10px;padding:12px}.settings{padding:9px 12px}.card{padding:13px 13px 11px}.word{font-size:38px}.example{margin-top:9px;padding:8px 10px}.controls{padding:9px 12px}.stop-btn{margin-top:6px;padding:9px}}
+    </style>
+
+    <div class="app">
+      <div id="startScreen">
+        <div class="hero">
+          <div class="hero-top"><span class="brand">🎧 AI 英语挂机听</span><span class="counter" id="startCount"></span></div>
+          <div class="headline">让耳朵自己练习</div>
+          <div class="start-word">自动连续朗读</div>
+          <div class="start-sub">英文 → 中文（可选） → 下一个单词</div>
+          <button class="start-btn" id="startBtn">▶ 开始挂机听</button>
+        </div>
+        <div class="settings">
+          <div class="switch-row"><span>🔊 同时朗读中文解释</span><label class="switch"><input id="zhStart" type="checkbox" checked><span class="slider"></span></label></div>
+        </div>
+        <div class="mini"><span class="dot"></span><span>点一次开始，之后无需操作 · 自动循环</span></div>
+      </div>
+
+      <div id="playScreen" class="listen">
+        <div class="hero">
+          <div class="hero-top"><span class="brand">🎧 正在挂机听</span><span class="counter" id="counter"></span></div>
+          <div class="headline">当前播放</div>
+          <div class="start-word" id="heroWord">—</div>
+          <div class="start-sub" id="heroStatus">准备中…</div>
+        </div>
+        <div class="card">
+          <div class="progress-line"><div class="progress-fill" id="progressFill"></div></div>
+          <div class="word" id="word"></div>
+          <div class="phonetic" id="phonetic"></div>
+          <div class="meaning" id="meaning"></div>
+          <div class="example"><div class="example-en" id="exampleEn"></div><div class="example-cn" id="exampleCn"></div></div>
+        </div>
+        <div class="controls">
+          <div class="switch-row"><span>🔊 朗读中文解释</span><label class="switch"><input id="zhPlay" type="checkbox" checked><span class="slider"></span></label></div>
+          <div class="status" id="status">正在准备…</div>
+          <button class="stop-btn" id="stopBtn">⏹ 停止挂机听</button>
+        </div>
+        <div class="hint">关闭中文也会立即应用到下一词</div>
+      </div>
+    </div>
+
+    <script>
+      const pool=__POOL_JSON__;
+      const seen=new Set();
+      const words=pool.filter(x=>{const w=String(x.word||'').trim().toLowerCase();if(!w||seen.has(w))return false;seen.add(w);return true;});
+      let index=-1,running=false,token=0,timer=null,current=null;
+      const $=id=>document.getElementById(id);
+      $('startCount').textContent=words.length+' 词';
+      function cleanMeaning(x){return String(x||'').replace(/^[a-zA-Z.\/]+\s+/,'').trim()}
+      function esc(s){return String(s||'').replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+      function show(x){current=x;$('counter').textContent=(index+1)+' / '+words.length;$('heroWord').textContent=x.word||'';$('word').textContent=x.word||'';$('phonetic').textContent=x.phonetic||'';$('meaning').textContent=x.meaning||'';$('heroStatus').textContent='正在朗读 · 自动进入下一词';$('status').textContent='🔊 英语：'+(x.word||'');$('exampleEn').textContent=x.example_en||'';$('exampleCn').textContent=x.example_cn||'';$('progressFill').style.width=((index+1)/words.length*100)+'%'}
+      function later(t,ms){clearTimeout(timer);timer=setTimeout(()=>{if(running&&t===token)next()},ms)}
+      function speak(text,lang,rate,t,done){if(!running||t!==token)return;const u=new SpeechSynthesisUtterance(String(text||''));u.lang=lang;u.rate=rate;u.pitch=1;let once=false;const finish=()=>{if(once)return;once=true;if(running&&t===token)done()};u.onend=finish;u.onerror=finish;window.speechSynthesis.speak(u)}
+      function afterEnglish(t){if(!running||t!==token)return;const cn=cleanMeaning(current&&current.meaning);if(!$('zhPlay').checked||!cn){$('status').textContent='下一个单词…';return later(t,550)}$('status').textContent='🇨🇳 中文解释…';speak(cn,'zh-CN',0.95,t,()=>later(t,550))}
+      function play(t){if(!running||t!==token||!words.length)return;show(words[index]);speak(words[index].word,'en-US',0.82,t,()=>afterEnglish(t))}
+      function next(){if(!running||!words.length)return;index=(index+1)%words.length;token++;const t=token;window.speechSynthesis.cancel();play(t)}
+      function start(){if(!words.length){return}running=true;index=-1;token++;$('zhPlay').checked=$('zhStart').checked;$('startScreen').style.display='none';$('playScreen').style.display='block';next()}
+      function stop(){running=false;token++;clearTimeout(timer);window.speechSynthesis.cancel();$('status').textContent='已停止';$('heroStatus').textContent='挂机听已停止';$('stopBtn').disabled=true}
+      $('startBtn').onclick=start;$('stopBtn').onclick=stop;$('zhPlay').onchange=()=>{if(running&&$('zhPlay').checked)$('status').textContent='中文已开启 · 当前词结束后朗读'};
+    </script>
+    """
+    html = html.replace("__POOL_JSON__", pool_json)
+    components.html(html, height=500)
+
+def render_mobile_study_component(queue, mastered_words, current_lvl):
+    """
+    手机友好的普通自学模式：
+    - 第一次点击“开始朗读”解锁手机音频权限。
+    - “认识 / 模糊 / 斩掉”全部在同一个 iframe 内处理，不触发 Streamlit rerun。
+    - 每次切换到下一个单词后，立即继续播放，不依赖浏览器的自动播放新页面。
+    - 停止/完成后才把 mastered 写回 URL，让 Python 同步 Supabase。
     """
     queue_json = json.dumps(queue, ensure_ascii=False)
-    mastered_list_json = json.dumps([w["word"] for w in mastered_words], ensure_ascii=False)
+    mastered_json = json.dumps([w["word"] for w in mastered_words], ensure_ascii=False)
 
     html = f"""
     <html>
@@ -322,282 +499,155 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
             body {{ font-family: sans-serif; margin: 0; padding: 0; background: transparent; user-select: none; }}
-            .quiz-card {{ background:#fff; border:2px solid #e5e5e5; padding:25px 18px; border-radius:22px; margin-bottom:12px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,.05); }}
-            .example-card {{ background:#f7f7f7; padding:22px; border-radius:20px; border:2px solid #e5e5e5; text-align:left; margin-bottom:18px; }}
+            .card {{ background:#fff; border:2px solid #e5e5e5; padding:22px 18px; border-radius:22px; margin-bottom:12px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,.05); }}
+            .example {{ background:#f7f7f7; padding:20px; border-radius:20px; border:2px solid #e5e5e5; text-align:left; margin-bottom:14px; line-height:1.6; }}
             .highlight {{ color:#1cb0f6; font-weight:900; background:rgba(28,176,246,.15); border-radius:6px; padding:0 4px; }}
-            button {{ width:100%; border:none; padding:20px; font-size:19px; font-weight:900; border-radius:20px; cursor:pointer; margin-top:10px; }}
+            .status {{ min-height:22px; text-align:center; color:#777; font-size:14px; font-weight:bold; margin:8px 0; }}
+            button {{ width:100%; border:none; padding:18px; font-size:18px; font-weight:900; border-radius:18px; cursor:pointer; margin-top:9px; }}
             button:active {{ transform:translateY(4px); }}
-            .start-btn {{ background:#1cb0f6; color:#fff; box-shadow:0 6px 0 rgba(28,176,246,.3); margin-top:35px; height:105px; font-size:23px; }}
-            .stop-btn {{ background:#ff4b4b; color:#fff; box-shadow:0 6px 0 rgba(255,75,75,.3); }}
-            .master-btn {{ background:#58cc02; color:#fff; box-shadow:0 5px 0 rgba(88,204,2,.25); }}
-            .blur-btn {{ background:#ff9600; color:#fff; box-shadow:0 5px 0 rgba(255,150,0,.25); }}
-            .kill-btn {{ background:#777; color:#fff; box-shadow:0 5px 0 rgba(0,0,0,.12); }}
-            .audio-btn {{ background:#9c27b0; color:#fff; box-shadow:0 5px 0 rgba(156,39,176,.25); }}
-            .progress {{ font-size:15px; color:#888; font-weight:bold; margin-bottom:10px; text-align:right; }}
-            .status {{ min-height:24px; text-align:center; color:#777; font-size:14px; font-weight:bold; margin:8px 0; }}
+            .start {{ background:#1cb0f6; color:#fff; box-shadow:0 5px 0 rgba(28,176,246,.3); font-size:21px; padding:22px; }}
+            .audio {{ background:#9c27b0; color:#fff; box-shadow:0 5px 0 rgba(156,39,176,.25); }}
+            .blur {{ background:#ff9600; color:#fff; box-shadow:0 5px 0 rgba(255,150,0,.25); }}
+            .master {{ background:#58cc02; color:#fff; box-shadow:0 5px 0 rgba(88,204,2,.25); }}
+            .kill {{ background:#777; color:#fff; box-shadow:0 5px 0 rgba(0,0,0,.12); }}
+            .stop {{ background:#ff4b4b; color:#fff; box-shadow:0 5px 0 rgba(255,75,75,.25); }}
+            .row {{ display:flex; gap:10px; }}
+            .row button {{ flex:1; }}
         </style>
     </head>
     <body>
         <div id="start-screen">
-            <button class="start-btn" id="startBtn">▶️ 触摸这里<br>启动 1 秒沉浸连读</button>
-            <div style="margin-top:22px;text-align:center;">
-                <label style="font-size:17px;color:#333;font-weight:bold;">
-                    <input type="checkbox" id="readZhToggleStart" style="width:22px;height:22px;" checked>
-                    🔊 连读时朗读中文释义
-                </label>
-            </div>
-            <p style="text-align:center;color:#888;font-size:14px;margin-top:22px;line-height:1.5;">
-                第一次必须点击启动。启动后，单词、中文和下一个单词会在同一个播放链里连续进行。
+            <button class="start" id="startBtn">▶️ 开始学习并朗读</button>
+            <p style="text-align:center;color:#888;font-size:14px;line-height:1.5;margin-top:16px;">
+                第一次点击后，单词会自动朗读。之后点击“认识”，下一个单词会立即自动朗读。
             </p>
         </div>
 
-        <div id="play-screen" style="display:none;">
-            <div class="progress" id="progress-text"></div>
-            <div class="quiz-card">
-                <div id="word" style="font-size:48px;font-weight:900;color:#303133;margin-bottom:8px;"></div>
-                <div id="phonetic" style="font-size:18px;color:#afafaf;margin-bottom:12px;"></div>
-                <div id="meaning" style="font-size:24px;font-weight:bold;color:#1cb0f6;"></div>
+        <div id="study-screen" style="display:none;">
+            <div style="text-align:right;color:#888;font-size:14px;font-weight:bold;margin-bottom:8px;" id="progress"></div>
+            <div class="card">
+                <div id="word" style="font-size:46px;font-weight:900;color:#303133;margin-bottom:6px;"></div>
+                <div id="phonetic" style="font-size:17px;color:#afafaf;margin-bottom:10px;"></div>
+                <div id="meaning" style="font-size:22px;font-weight:bold;color:#1cb0f6;"></div>
             </div>
-
-            <div class="example-card">
-                <div style="font-size:17px;margin-bottom:12px;line-height:1.6;color:#333;">
-                    📖 <b>例句：</b><span id="example_en"></span>
-                </div>
-                <div style="font-size:16px;color:#777;line-height:1.5;">
-                    💡 <b>翻译：</b><span id="example_cn"></span>
-                </div>
+            <div class="example">
+                <div style="font-size:17px;margin-bottom:8px;color:#333;">📖 <b>例句：</b><span id="example_en"></span></div>
+                <div style="font-size:15px;color:#777;">💡 <b>翻译：</b><span id="example_cn"></span></div>
             </div>
-
-            <div style="text-align:center;margin-bottom:10px;">
-                <label style="font-size:16px;color:#555;font-weight:bold;">
-                    <input type="checkbox" id="readZhTogglePlay" style="width:20px;height:20px;" checked>
-                    🔊 连读时朗读中文释义
-                </label>
-            </div>
-
             <div class="status" id="status"></div>
-
-            <button class="audio-btn" id="replayBtn">🔊 再听一次</button>
-
-            <div style="display:flex;gap:10px;">
-                <button class="blur-btn" id="blurBtn" style="flex:1;">❌ 模糊 · 重练</button>
-                <button class="master-btn" id="masterBtn" style="flex:1;">✔ 认识 · 下一个</button>
+            <button class="audio" id="replayBtn">🔊 再听一次</button>
+            <div class="row">
+                <button class="blur" id="blurBtn">❌ 模糊 · 重练</button>
+                <button class="master" id="masterBtn">✔ 认识 · 下一个</button>
             </div>
-            <button class="kill-btn" id="killBtn">🗑️ 太简单，斩掉它</button>
-            <button class="stop-btn" id="stopBtn">⏹️ 停止并保存进度</button>
+            <button class="kill" id="killBtn">🗑️ 太简单，斩掉它</button>
+            <button class="stop" id="stopBtn">⏹️ 停止并保存进度</button>
         </div>
 
         <audio id="wordAudio" preload="auto" playsinline></audio>
 
         <script>
-            const queue = {queue_json};
-            const mastered = {mastered_list_json};
+            const remaining = {queue_json};
+            const mastered = {mastered_json};
             const currentLvl = {current_lvl};
-
-            let currentIndex = 0;
-            let isPlaying = false;
-            let mode = "normal";
             let currentItem = null;
+            let isPlaying = false;
             let audioToken = 0;
 
             const audio = document.getElementById("wordAudio");
-            const startBtn = document.getElementById("startBtn");
             const startScreen = document.getElementById("start-screen");
-            const playScreen = document.getElementById("play-screen");
+            const studyScreen = document.getElementById("study-screen");
             const status = document.getElementById("status");
-
-            function syncZhToggle(checked) {{
-                document.getElementById("readZhToggleStart").checked = checked;
-                document.getElementById("readZhTogglePlay").checked = checked;
-            }}
-
-            document.getElementById("readZhToggleStart").onchange = e => syncZhToggle(e.target.checked);
-            document.getElementById("readZhTogglePlay").onchange = e => syncZhToggle(e.target.checked);
 
             function audioUrl(word) {{
                 return "https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(word) + "&type=2";
             }}
 
-            function cleanMeaning(text) {{
-                return String(text || "").replace(/^[a-zA-Z.\\/]+\\s+/, "");
-            }}
-
             function showItem(item) {{
                 currentItem = item;
-                document.getElementById("progress-text").innerText =
-                    `已学习: ${{mastered.length}} 词 · 当前 ${{currentIndex + 1}} / ${{queue.length}}`;
-                document.getElementById("word").innerText = item.word;
+                document.getElementById("progress").innerText =
+                    `本关已掌握：${{mastered.length}} 词 · 剩余：${{remaining.length}} 词`;
+                document.getElementById("word").innerText = item.word || "";
                 document.getElementById("phonetic").innerText = item.phonetic || "";
                 document.getElementById("meaning").innerText = item.meaning || "";
 
-                const safe = String(item.word).replace(/[.*+?^${{}}()|[\\]\\\\]/g, "\\\\$&");
-                document.getElementById("example_en").innerHTML =
-                    String(item.example_en || "").replace(
-                        new RegExp("\\\\b" + safe + "\\\\b", "gi"),
-                        '<span class="highlight">$&</span>'
-                    );
+                const safe = String(item.word || "").replace(/[.*+?^${{}}()|[\\]\\\\]/g, "\\\\$&");
+                document.getElementById("example_en").innerHTML = String(item.example_en || "").replace(
+                    new RegExp("\\\\b" + safe + "\\\\b", "gi"),
+                    '<span class="highlight">$&</span>'
+                );
                 document.getElementById("example_cn").innerText = item.example_cn || "";
             }}
 
-            function speakChineseThenNext(token) {{
-                if (!isPlaying || token !== audioToken) return;
-
-                if (document.getElementById("readZhTogglePlay").checked) {{
-                    const u = new SpeechSynthesisUtterance(cleanMeaning(currentItem.meaning));
-                    u.lang = "zh-CN";
-                    u.rate = 1.0;
-                    u.onend = () => {{
-                        if (token !== audioToken) return;
-                        setTimeout(playNext, 1000);
-                    }};
-                    u.onerror = () => {{
-                        if (token !== audioToken) return;
-                        setTimeout(playNext, 1000);
-                    }};
-                    window.speechSynthesis.cancel();
-                    window.speechSynthesis.speak(u);
-                }} else {{
-                    setTimeout(playNext, 1000);
-                }}
-            }}
-
-            function playWord(item, fromUserGesture=false) {{
-                if (!isPlaying || !item) return;
-
+            function playCurrent() {{
+                if (!isPlaying || !currentItem) return;
                 audioToken++;
                 const token = audioToken;
                 window.speechSynthesis.cancel();
-                status.innerText = "🔊 正在播放：" + item.word;
-
-                // 只使用同一个 audio 元素，避免手机浏览器把后续 new Audio()
-                // 当成新的自动播放请求。
                 audio.pause();
-                audio.src = audioUrl(item.word);
+                audio.src = audioUrl(currentItem.word);
                 audio.load();
-
-                const startNativeAudio = () => {{
-                    const p = audio.play();
-                    if (p && p.catch) {{
-                        p.catch(() => fallbackSpeech(item, token));
-                    }}
-                }};
+                status.innerText = "🔊 正在播放：" + currentItem.word;
 
                 audio.onended = () => {{
                     if (token !== audioToken || !isPlaying) return;
                     status.innerText = "";
-                    speakChineseThenNext(token);
                 }};
 
-                audio.onerror = () => fallbackSpeech(item, token);
-
-                // 第一个播放来自 startBtn 的用户点击；
-                // 后面的播放复用同一个 audio 元素并接在 onended 链上。
-                startNativeAudio();
+                audio.onerror = () => fallbackSpeech(token);
+                const p = audio.play();
+                if (p && p.catch) p.catch(() => fallbackSpeech(token));
             }}
 
-            function fallbackSpeech(item, token) {{
-                if (token !== audioToken || !isPlaying) return;
-                const u = new SpeechSynthesisUtterance(item.word);
+            function fallbackSpeech(token) {{
+                if (!isPlaying || token !== audioToken || !currentItem) return;
+                const u = new SpeechSynthesisUtterance(currentItem.word);
                 u.lang = "en-US";
                 u.rate = 0.8;
-                u.onend = () => speakChineseThenNext(token);
-                u.onerror = () => setTimeout(playNext, 1000);
+                u.onend = () => {{ if (token === audioToken) status.innerText = ""; }};
+                u.onerror = () => {{ if (token === audioToken) status.innerText = ""; }};
                 window.speechSynthesis.cancel();
                 window.speechSynthesis.speak(u);
             }}
 
-            function playNext() {{
-                if (!isPlaying) return;
-
-                if (currentIndex >= queue.length) {{
-                    finishAndSave();
-                    return;
-                }}
-
-                const item = queue[currentIndex];
-                showItem(item);
-                playWord(item);
-            }}
-
-            function startPlay() {{
-                if (!queue.length) {{
-                    finishAndSave();
-                    return;
-                }}
+            function startStudy() {{
+                if (!remaining.length) {{ finishAndSave(); return; }}
                 startScreen.style.display = "none";
-                playScreen.style.display = "block";
+                studyScreen.style.display = "block";
                 isPlaying = true;
-
-                // 这个调用发生在真实点击事件中，是整个手机音频链的“解锁”。
-                const first = queue[currentIndex];
-                showItem(first);
-                playWord(first, true);
+                currentItem = remaining.shift();
+                showItem(currentItem);
+                playCurrent();
             }}
 
-            function goNext(action) {{
-                if (!currentItem || !isPlaying) return;
+            function next(action) {{
+                if (!isPlaying || !currentItem) return;
 
                 if (action === "master" || action === "kill") {{
-                    if (!mastered.some(w => w === currentItem.word)) {{
-                        mastered.push(currentItem.word);
-                    }}
+                    if (!mastered.includes(currentItem.word)) mastered.push(currentItem.word);
+                }} else if (action === "blur") {{
+                    remaining.push(currentItem);
                 }}
 
-                // 模糊：放到队尾；认识/斩掉：从队列移除。
-                if (action === "blur") {{
-                    queue.push(currentItem);
-                }}
-
-                currentIndex++;
-                if (currentIndex >= queue.length) {{
+                if (!remaining.length) {{
                     finishAndSave();
                     return;
                 }}
 
-                // 重点：不调用 window.parent.location、不触发 Streamlit rerun。
-                // 这样“认识”之后的下一词仍在同一个页面和同一个 audio 播放链里。
-                showItem(queue[currentIndex]);
-                playWord(queue[currentIndex], true);
+                currentItem = remaining.shift();
+                showItem(currentItem);
+                playCurrent();
             }}
 
-            function replayCurrent() {{
+            function replay() {{
                 if (!isPlaying || !currentItem) return;
-                window.speechSynthesis.cancel();
-                audioToken++;
-                const token = audioToken;
-
-                audio.pause();
-                audio.src = audioUrl(currentItem.word);
-                audio.load();
-                status.innerText = "🔊 正在重播：" + currentItem.word;
-
-                audio.onended = () => {{
-                    if (token !== audioToken || !isPlaying) return;
-                    status.innerText = "";
-                }};
-                audio.onerror = () => {{
-                    const u = new SpeechSynthesisUtterance(currentItem.word);
-                    u.lang = "en-US";
-                    u.rate = 0.8;
-                    u.onend = () => status.innerText = "";
-                    window.speechSynthesis.speak(u);
-                }};
-                const p = audio.play();
-                if (p && p.catch) p.catch(() => {{
-                    const u = new SpeechSynthesisUtterance(currentItem.word);
-                    u.lang = "en-US";
-                    u.rate = 0.8;
-                    u.onend = () => status.innerText = "";
-                    window.speechSynthesis.speak(u);
-                }});
+                playCurrent();
             }}
 
             function finishAndSave() {{
                 isPlaying = false;
                 window.speechSynthesis.cancel();
                 audio.pause();
-
-                // 把本次学习后的 mastered 单词写回父页面。
                 const url = new URL(window.parent.location.href);
                 url.searchParams.set("lvl_" + currentLvl, mastered.join(","));
                 url.searchParams.set("lvl", String(currentLvl));
@@ -605,177 +655,17 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
                 window.parent.location.replace(url.toString());
             }}
 
-            startBtn.addEventListener("click", startPlay);
-            document.getElementById("replayBtn").addEventListener("click", replayCurrent);
-            document.getElementById("blurBtn").addEventListener("click", () => goNext("blur"));
-            document.getElementById("masterBtn").addEventListener("click", () => goNext("master"));
-            document.getElementById("killBtn").addEventListener("click", () => goNext("kill"));
+            document.getElementById("startBtn").addEventListener("click", startStudy);
+            document.getElementById("replayBtn").addEventListener("click", replay);
+            document.getElementById("blurBtn").addEventListener("click", () => next("blur"));
+            document.getElementById("masterBtn").addEventListener("click", () => next("master"));
+            document.getElementById("killBtn").addEventListener("click", () => next("kill"));
             document.getElementById("stopBtn").addEventListener("click", finishAndSave);
-
-            // 页面隐藏时停止，避免切到后台后产生奇怪的播放状态。
-            document.addEventListener("visibilitychange", () => {{
-                if (document.hidden && isPlaying) {{
-                    audio.pause();
-                    window.speechSynthesis.cancel();
-                }}
-            }});
         </script>
     </body>
     </html>
     """
-    components.html(html, height=850)
-
-def render_autoplay_review_component(mastered_words):
-    pool_json = json.dumps(mastered_words)
-    html = f"""
-    <html>
-    <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {{ font-family: sans-serif; margin: 0; padding: 0; background: transparent; user-select: none; }}
-        .quiz-card {{ background: #fff; border: 2px solid #e5e5e5; padding: 25px 18px; border-radius: 22px; margin-bottom: 12px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }}
-        .example-card {{ background: #f7f7f7; padding: 22px; border-radius: 20px; border: 2px solid #e5e5e5; text-align: left; margin-bottom: 20px; }}
-        .highlight {{ color: #1cb0f6; font-weight: 900; background-color: rgba(28, 176, 246, 0.15); border-radius: 6px; padding: 0 4px; }}
-        button {{ width: 100%; border: none; padding: 22px; font-size: 20px; font-weight: 900; border-radius: 20px; cursor: pointer; transition: transform 0.1s; display: flex; justify-content: center; align-items: center; gap: 8px; }}
-        button:active {{ transform: translateY(5px); box-shadow: 0 0px 0px transparent !important; }}
-        .start-btn {{ background: #1cb0f6; color: #fff; box-shadow: 0 6px 0px rgba(28,176,246,0.3); margin-top: 40px; height: 110px; font-size: 24px; line-height: 1.4; }}
-        .stop-btn {{ background: #ff4b4b; color: #fff; box-shadow: 0 6px 0px rgba(255,75,75,0.3); }}
-        .progress {{ font-size: 15px; color: #afafaf; font-weight: bold; margin-bottom: 10px; text-align: center; }}
-    </style>
-    </head>
-    <body>
-
-    <div id="start-screen">
-        <button class="start-btn" onclick="startPlay()">▶️ 触摸这里<br>启动 1秒循环听音</button>
-        <div style="margin-top: 25px; text-align: center;">
-            <label style="font-size: 18px; color: #333; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;">
-                <input type="checkbox" id="readZhToggleStart" style="width: 24px; height: 24px;" onchange="syncToggle('start')" checked>
-                🔊 连读时朗读中文释义
-            </label>
-        </div>
-        <p style="text-align:center; color:#888; font-size:15px; margin-top:25px; line-height:1.5;">⚠️ 必须由您的手指亲自点击一次<br>才能彻底解开手机浏览器的静音限制！</p>
-    </div>
-
-    <div id="play-screen" style="display: none;">
-        <div class="progress">无限循环听音磨耳模式</div>
-        <div class="quiz-card">
-            <div id="word" style="font-size: 48px; font-weight: 900; color: #303133; margin-bottom: 8px;"></div>
-            <div id="phonetic" style="font-size: 18px; color: #afafaf; margin-bottom: 12px;"></div>
-            <div id="meaning" style="font-size: 24px; font-weight: bold; color: #1cb0f6;"></div>
-        </div>
-        
-        <div class="example-card">
-            <div style="font-size: 17px; margin-bottom: 12px; line-height: 1.6; color: #333;">
-                📖 <b>例句：</b><span id="example_en"></span>
-            </div>
-            <div style="font-size: 16px; color: #777; line-height: 1.5;">
-                💡 <b>翻译：</b><span id="example_cn"></span>
-            </div>
-        </div>
-
-        <div style="margin-bottom: 20px; text-align: center;">
-            <label style="font-size: 16px; color: #555; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;">
-                <input type="checkbox" id="readZhTogglePlay" style="width: 20px; height: 20px;" onchange="syncToggle('play')" checked>
-                🔊 连读时朗读中文释义
-            </label>
-        </div>
-
-        <button class="stop-btn" onclick="stopPlay()">⏹️ 退出挂机</button>
-    </div>
-
-    <script>
-        let pool = {pool_json};
-        let isPlaying = false;
-
-        function syncToggle(source) {{
-            let checked = source === 'start' ? document.getElementById('readZhToggleStart').checked : document.getElementById('readZhTogglePlay').checked;
-            document.getElementById('readZhToggleStart').checked = checked;
-            document.getElementById('readZhTogglePlay').checked = checked;
-        }}
-
-        function startPlay() {{
-            document.getElementById('start-screen').style.display = 'none';
-            document.getElementById('play-screen').style.display = 'block';
-            isPlaying = true;
-            playNext();
-        }}
-
-        function playNext() {{
-            if (!isPlaying) return;
-            if (pool.length === 0) return;
-
-            let item = pool[Math.floor(Math.random() * pool.length)];
-
-            document.getElementById('word').innerText = item.word;
-            document.getElementById('phonetic').innerText = item.phonetic;
-            document.getElementById('meaning').innerText = item.meaning;
-            
-            let safeWord = item.word.replace(/[.*+?^${{}}()|[\]\\\\]/g, '\\\\$&');
-            let exEn = item.example_en.replace(new RegExp(`\\\\b${{safeWord}}\\\\b`, 'gi'), '<span class="highlight">$&</span>');
-            document.getElementById('example_en').innerHTML = exEn;
-            document.getElementById('example_cn').innerText = item.example_cn;
-
-            window.speechSynthesis.cancel();
-            
-            // 核心更新：使用真人 MP3 接口播放单词发音
-            let audioUrl = 'https://dict.youdao.com/dictvoice?audio=' + encodeURIComponent(item.word) + '&type=2';
-            let wordAudio = new Audio(audioUrl);
-
-            let nextStep = function() {{
-                if(isPlaying) {{
-                    setTimeout(playNext, 1000); 
-                }}
-            }};
-
-            let playZhOrNext = function() {{
-                let readZh = document.getElementById('readZhTogglePlay').checked;
-                if (readZh && isPlaying) {{
-                    let cleanMeaning = item.meaning.replace(/^[a-zA-Z.\\/]+\\s+/g, '');
-                    let uZh = new SpeechSynthesisUtterance(cleanMeaning);
-                    uZh.lang = 'zh-CN';
-                    uZh.rate = 1.0;
-                    uZh.onend = nextStep;
-                    uZh.onerror = nextStep;
-                    window.speechSynthesis.speak(uZh);
-                }} else {{
-                    nextStep();
-                }}
-            }};
-
-            wordAudio.onended = playZhOrNext;
-            
-            wordAudio.onerror = function() {{
-                let uEn = new SpeechSynthesisUtterance(item.word);
-                uEn.lang = 'en-US';
-                uEn.rate = 0.8;
-                uEn.onend = playZhOrNext;
-                uEn.onerror = playZhOrNext;
-                if(isPlaying) window.speechSynthesis.speak(uEn);
-            }};
-
-            if(isPlaying) {{
-                wordAudio.play().catch(e => {{
-                    let uEn = new SpeechSynthesisUtterance(item.word);
-                    uEn.lang = 'en-US';
-                    uEn.rate = 0.8;
-                    uEn.onend = playZhOrNext;
-                    uEn.onerror = playZhOrNext;
-                    window.speechSynthesis.speak(uEn);
-                }});
-            }}
-        }}
-
-        function stopPlay() {{
-            isPlaying = false;
-            let url = new URL(window.parent.location.href);
-            url.searchParams.set("exit_autoplay", "1");
-            window.parent.location.replace(url.toString());
-        }}
-    </script>
-    </body>
-    </html>
-    """
-    components.html(html, height=720)
+    components.html(html, height=690)
 
 def restore_progress_from_db(profile_data):
     if profile_data:
@@ -969,9 +859,12 @@ else:
                 st.success("🎉 当前关卡已经没有新词啦！")
                 st.session_state.auto_play = False
         else:
-            if st.button("🤖 开启 1 秒沉浸连读", use_container_width=True, type="primary"):
+            # 🎧 挂机听：进入前端连续播放模式，不改变“认识”学习进度。
+            if st.button("🎧 挂机听（自动连读）", use_container_width=True, type="primary"):
                 st.session_state.auto_play = True
                 st.rerun()
+
+            st.caption("点击后再按一次“启动”，即可自动连续播放；播完本关会从头循环。")
 
             progress_pct = min(len(mastered_list) / 100.0, 1.0)
             st.progress(progress_pct)
@@ -982,81 +875,8 @@ else:
             )
 
             if current_queue:
-                current = current_queue[0]
-
-                render_word_audio_button(current["word"], "🔊 点此朗读单词", autoplay=True)
-
-                st.markdown(
-                    f"""
-                    <div class="quiz-card" style="margin-bottom: 12px;">
-                        <div style="font-size: 42px; font-weight: bold; color: #303133; margin-bottom: 4px;">{current['word']}</div>
-                        <div style="font-size: 16px; color: #afafaf; margin-bottom: 10px;">{current['phonetic']}</div>
-                        <div style="font-size: 20px; font-weight: bold; color: #1cb0f6;">{current['meaning']}</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
-
-                render_highlight_example(current["example_en"], current["example_cn"])
-                render_ai_speech_recognition(current["word"])
-
-                st.write("")
-
-                if st.session_state.study_history:
-                    if st.button("⏪ 哎呀点错了！返回上一个", use_container_width=True):
-                        action, word_data, added_to_mastered = st.session_state.study_history.pop()
-                        if action == "blur":
-                            if current_queue and current_queue[-1] == word_data:
-                                current_queue.pop()
-                            current_queue.insert(0, word_data)
-                        elif action == "master":
-                            if added_to_mastered and word_data in mastered_list:
-                                mastered_list.remove(word_data)
-                            current_queue.insert(0, word_data)
-                            sync_progress_to_cloud(
-                                st.session_state.user.id,
-                                st.session_state.level,
-                                st.session_state.mastered
-                            )
-                        st.rerun()
-
-                col1, col2 = st.columns(2)
-                with col1:
-                    if st.button("❌ 模糊 (重练)", use_container_width=True):
-                        done_word = current_queue.pop(0)
-                        current_queue.append(done_word)
-                        st.session_state.study_history.append(("blur", done_word, False))
-                        st.rerun()
-                with col2:
-                    if st.button("✔ 认识 (下一个)", use_container_width=True, type="primary", key="btn_study_next"):
-                        done_word = current_queue.pop(0)
-                        added = False
-                        if done_word not in mastered_list:
-                            mastered_list.append(done_word)
-                            added = True
-                        st.session_state.study_history.append(("master", done_word, added))
-                        sync_progress_to_cloud(
-                            st.session_state.user.id,
-                            st.session_state.level,
-                            st.session_state.mastered
-                        )
-                        st.rerun()
-
-                st.markdown("<hr style='margin: 15px 0 10px 0; border: none; border-top: 2px dashed #f2f2f2;'>", unsafe_allow_html=True)
-                if st.button("🗑️ 太简单，斩掉它！", use_container_width=True):
-                    done_word = current_queue.pop(0)
-                    added = False
-                    if done_word not in mastered_list:
-                        mastered_list.append(done_word)
-                        added = True
-                    st.session_state.study_history.append(("master", done_word, added))
-                    sync_progress_to_cloud(
-                        st.session_state.user.id,
-                        st.session_state.level,
-                        st.session_state.mastered
-                    )
-                    st.rerun()
-
+                # 手机普通自学模式：整个“认识→下一个→自动朗读”保持在同一个 iframe。
+                render_mobile_study_component(current_queue, mastered_list, current_lvl)
             else:
                 if st.session_state.study_history:
                     if st.button("⏪ 哎呀点快了！返回上一个单词", use_container_width=True):
@@ -1244,7 +1064,7 @@ else:
             if st.session_state.auto_play:
                 render_autoplay_review_component(mastered_list)
             else:
-                if st.button("🤖 开启 1 秒循环听音", use_container_width=True, type="primary"):
+                if st.button("🎧 开启挂机听（自动连读）", use_container_width=True, type="primary"):
                     st.session_state.auto_play = True
                     st.rerun()
                 
