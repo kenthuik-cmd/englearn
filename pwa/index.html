@@ -1,1 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>AI英语进阶闯关</title>
+
+    <link rel="manifest" href="./manifest.json">
+
+    <link rel="apple-touch-icon" href="./icon-192.png">
+    <link rel="icon" type="image/png" href="./icon-192.png">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AI英语进阶闯关">
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .box {
+            padding: 30px;
+        }
+
+        img {
+            width: 120px;
+            height: 120px;
+            border-radius: 26px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 20px 0 8px;
+        }
+
+        p {
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        a {
+            display: inline-block;
+            padding: 13px 25px;
+            border-radius: 14px;
+            background: #2563eb;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <div class="box">
+            <img src="./icon-192.png" alt="AI英语进阶闯关">
+            <h1>AI英语进阶闯关</h1>
+            <p>英语学习 · 挂机听 · 进阶闯关</p>
+
+            <a href="https://englearn-ars9vu4ac3vcwhsozqpayc.streamlit.app/">
+                开始学习
+            </a>
+        </div>
+    </div>
+
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("./service-worker.js")
+                .catch(function(error) {
+                    console.log("Service Worker:", error);
+                });
+        }
+    </script>
+</body>
+</html>
