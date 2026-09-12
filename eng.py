@@ -5,7 +5,6 @@ import base64
 import json
 from io import BytesIO
 from datetime import date
-from gtts import gTTS
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -16,7 +15,7 @@ import streamlit.components.v1 as components
 # Streamlit 本身继续使用自定义 favicon 作为浏览器标签页图标。
 st.set_page_config(
     page_title="AI 英语进阶闯关",
-    page_icon="static/icon-192.png",
+    page_icon="📚",
     layout="centered",
 )
 
@@ -24,9 +23,13 @@ from supabase import create_client
 from vocab_data import GLOBAL_VOCAB_DB
 
 # 读取 Supabase 配置 (无密直连)
-url = st.secrets["SUPABASE_URL"]
-key = st.secrets["SUPABASE_ANON_KEY"]
-supabase = create_client(url, key)
+@st.cache_resource(show_spinner=False)
+def get_supabase_client():
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_ANON_KEY"]
+    return create_client(url, key)
+
+supabase = get_supabase_client()
 
 # ==========================================
 # 📱 手机端极限放大适配 CSS
@@ -419,7 +422,7 @@ def render_autoplay_review_component(mastered_words):
     </script>
     """
     html = html.replace("__POOL_JSON__", pool_json)
-    components.html(html, height=500)
+    components.html(html, height=470)
 
 def render_mobile_study_component(queue, mastered_words, current_lvl):
     """
@@ -494,12 +497,24 @@ def render_mobile_study_component(queue, mastered_words, current_lvl):
             let audioToken = 0;
 
             const audio = document.getElementById("wordAudio");
+            const preloadAudio = document.createElement("audio");
+            preloadAudio.preload = "auto";
+            preloadAudio.playsInline = true;
+            let preloadedWord = "";
             const startScreen = document.getElementById("start-screen");
             const studyScreen = document.getElementById("study-screen");
             const status = document.getElementById("status");
 
             function audioUrl(word) {{
                 return "https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(word) + "&type=2";
+            }}
+
+            function preloadNext() {{
+                const nextItem = remaining[0];
+                if (!nextItem || !nextItem.word || nextItem.word === preloadedWord) return;
+                preloadedWord = nextItem.word;
+                preloadAudio.src = audioUrl(nextItem.word);
+                preloadAudio.load();
             }}
 
             function showItem(item) {{
@@ -524,8 +539,14 @@ def render_mobile_study_component(queue, mastered_words, current_lvl):
                 const token = audioToken;
                 window.speechSynthesis.cancel();
                 audio.pause();
-                audio.src = audioUrl(currentItem.word);
-                audio.load();
+                const currentUrl = audioUrl(currentItem.word);
+                if (preloadedWord === currentItem.word && preloadAudio.src) {{
+                    audio.src = preloadAudio.src;
+                    preloadedWord = "";
+                }} else {{
+                    audio.src = currentUrl;
+                    audio.load();
+                }}
                 status.innerText = "🔊 正在播放：" + currentItem.word;
 
                 audio.onended = () => {{
@@ -557,6 +578,7 @@ def render_mobile_study_component(queue, mastered_words, current_lvl):
                 currentItem = remaining.shift();
                 showItem(currentItem);
                 playCurrent();
+                preloadNext();
             }}
 
             function next(action) {{
@@ -576,6 +598,7 @@ def render_mobile_study_component(queue, mastered_words, current_lvl):
                 currentItem = remaining.shift();
                 showItem(currentItem);
                 playCurrent();
+                preloadNext();
             }}
 
             function replay() {{
@@ -836,7 +859,6 @@ else:
                         st.rerun()
 
                 if current_lvl < 20:
-                    st.balloons()
                     st.success(f"🎉 太棒了！Level {current_lvl} 完美通关！")
                     if st.button(
                         f"🚀 冲刺进入 Level {current_lvl + 1}",
