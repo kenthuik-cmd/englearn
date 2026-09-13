@@ -370,7 +370,7 @@ def render_autoplay_study_component(queue, mastered_words, current_lvl):
 
 
 def render_autoplay_review_component(mastered_words, auto_mark=False, current_lvl=None, user_id=None, initial_mastered=None):
-    """📱 极简 iPhone 挂机听界面；基础学习模式可自动记为“认识”。"""
+    """📱 极简 iPhone 挂机听界面；增加暂停即刻保存功能。"""
     pool_json = json.dumps(mastered_words, ensure_ascii=False)
     auto_mark_js = "true" if auto_mark else "false"
     current_lvl_js = json.dumps(current_lvl)
@@ -431,24 +431,34 @@ def render_autoplay_review_component(mastered_words, auto_mark=False, current_lv
       const supabaseKey=__SUPABASE_KEY__;
       const seen=new Set();
       const words=pool.filter(x=>{const w=String(x.word||'').trim().toLowerCase();if(!w||seen.has(w))return false;seen.add(w);return true;});
-      let index=-1,running=false,token=0,timer=null,current=null;
+      
+      // 引入 currentAudio，用来精准暂停和恢复 MP3
+      let index=-1,running=false,token=0,timer=null,current=null,currentAudio=null;
       let mastered=__MASTERED_JSON__;
       const $=id=>document.getElementById(id);
       $('startCount').textContent=words.length+' 词';
-      function clean(){if(timer){clearTimeout(timer);timer=null;}window.speechSynthesis.cancel();token++;}
+      
+      function clean(){
+          if(timer){clearTimeout(timer);timer=null;}
+          window.speechSynthesis.cancel();
+          if(currentAudio){currentAudio.pause();currentAudio=null;}
+          token++;
+      }
+      
       function speak(text,lang,rate,t){return new Promise(resolve=>{
         if(!running||t!==token)return resolve();
         const value=String(text||"").trim();
         if(!value)return resolve();
         if(lang==="en-US") {
-          const audio=new Audio("https://dict.youdao.com/dictvoice?audio="+encodeURIComponent(value)+"&type=2");
-          audio.preload="auto";
+          currentAudio=new Audio("https://dict.youdao.com/dictvoice?audio="+encodeURIComponent(value)+"&type=2");
+          currentAudio.preload="auto";
           let finished=false;
-          const done=()=>{if(finished)return;finished=true;resolve();};
-          audio.onended=done;
-          audio.onerror=()=>{
+          const done=()=>{if(finished)return;finished=true;currentAudio=null;resolve();};
+          currentAudio.onended=done;
+          currentAudio.onerror=()=>{
             if(finished)return;
             finished=true;
+            currentAudio=null;
             const u=new SpeechSynthesisUtterance(value);
             u.lang="en-US";
             u.rate=Math.min(rate||0.75,0.78);
@@ -457,8 +467,8 @@ def render_autoplay_review_component(mastered_words, auto_mark=False, current_lv
             window.speechSynthesis.cancel();
             if(running&&t===token)window.speechSynthesis.speak(u);else resolve();
           };
-          const p=audio.play();
-          if(p&&p.catch)p.catch(()=>audio.onerror());
+          const p=currentAudio.play();
+          if(p&&p.catch)p.catch(()=>currentAudio.onerror());
         } else {
           const u=new SpeechSynthesisUtterance(value);
           u.lang=lang;u.rate=rate;u.pitch=1;
@@ -466,11 +476,29 @@ def render_autoplay_review_component(mastered_words, auto_mark=False, current_lv
           window.speechSynthesis.speak(u);
         }
       });}
+
       async function saveProgress(){
         if(!autoMark||!mastered.length)return;
+        // 把进度即刻写进 URL (本地强保险)
+        try {
+            let url = new URL(window.parent.location.href);
+            url.searchParams.set("lvl_" + currentLvl, mastered.join(","));
+            url.searchParams.set("lvl", currentLvl);
+            window.parent.history.replaceState(null, "", url.toString());
+        } catch(e) {}
+        
+        // 云端同步
         const endpoint=supabaseUrl.replace(/\/$/,"")+"/rest/v1/user_profiles?user_id=eq."+encodeURIComponent(userId);
-        try{const r=await fetch(endpoint,{method:"PATCH",headers:{"apikey":supabaseKey,"Authorization":"Bearer "+supabaseKey,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({grade:currentLvl,mastered_words:mastered.join(",")})});if(!r.ok)throw new Error(r.status);$('status').innerText="✓ 已算作认识并保存";setTimeout(()=>{if($('status').innerText==="✓ 已算作认识并保存")$('status').innerText=""},900);}catch(e){$('status').innerText="⚠️ 保存稍慢，会继续重试";}
+        try{
+            const r=await fetch(endpoint,{method:"PATCH",headers:{"apikey":supabaseKey,"Authorization":"Bearer "+supabaseKey,"Content-Type":"application/json","Prefer":"return=minimal"},body:JSON.stringify({grade:currentLvl,mastered_words:mastered.join(",")})});
+            if(!r.ok)throw new Error(r.status);
+            $('status').innerText="✓ 已算作认识并保存";
+            setTimeout(()=>{if($('status').innerText==="✓ 已算作认识并保存")$('status').innerText=""},900);
+        }catch(e){
+            $('status').innerText="⚠️ 保存稍慢，会继续重试";
+        }
       }
+
       function show(item){$('word').textContent=item.word||"";$('phonetic').textContent=item.phonetic||"";$('meaning').textContent=item.meaning||"";$('example').textContent=item.example_en||"";$('heroWord').textContent=item.word||"";$('counter').textContent=(index+1)+" / "+words.length;$('progressFill').style.width=Math.round(((index+1)/Math.max(words.length,1))*100)+"%";}
       function speechWord(text){return String(text||"").trim().replace(/^(?:(?:n|v|adj|adv|prep|conj|pron|num|art|aux|vt|vi|det|phr|phrase)\.?\s+)+/i,"").trim();}
       function speechChinese(text){
@@ -480,29 +508,76 @@ def render_autoplay_review_component(mastered_words, auto_mark=False, current_lv
           .replace(/\s{2,}/g," ")
           .trim();
       }
-      async function play(){const t=token;if(!running||!current)return;$('heroStatus').textContent="正在朗读…";await speak(speechWord(current.word),"en-US",0.82,t);if(!running||t!==token)return;if($('zhPlay').checked&&current.meaning)await speak(speechChinese(current.meaning),"zh-CN",0.9,t);if(!running||t!==token)return;if($('examplePlay').checked&&current.example_en)await speak(current.example_en,"en-US",0.78,t);if(!running||t!==token)return;timer=setTimeout(()=>next(),550);}
+      
+      async function play(){
+          const t=token;
+          if(!running||!current)return;
+          $('heroStatus').textContent="正在朗读…";
+          await speak(speechWord(current.word),"en-US",0.82,t);
+          if(!running||t!==token)return;
+          if($('zhPlay').checked&&current.meaning)await speak(speechChinese(current.meaning),"zh-CN",0.9,t);
+          if(!running||t!==token)return;
+          if($('examplePlay').checked&&current.example_en)await speak(current.example_en,"en-US",0.78,t);
+          if(!running||t!==token)return;
+          timer=setTimeout(()=>next(),550);
+      }
+      
       function next(){
         if(!running)return;
         if(current&&autoMark){const w=String(current.word||"").trim();if(w&&!mastered.includes(w))mastered.push(w);saveProgress();}
         index=(index+1)%words.length;current=words[index];show(current);clean();running=true;play();
       }
       function start(){if(!words.length)return;running=true;$('startScreen').style.display='none';$('playScreen').style.display='block';$('zhPlay').checked=$('zhStart').checked;$('examplePlay').checked=$('exampleStart').checked;index=-1;next();}
+      
+      // === 核心：暂停功能加强版 ===
       function pauseToggle(){
-        if(window.speechSynthesis.paused){
-          window.speechSynthesis.resume();
+        if(!running){
+          // 恢复逻辑
           running=true;
+          if(window.speechSynthesis.paused) window.speechSynthesis.resume();
+          if(currentAudio) currentAudio.play();
           $('pauseBtn').textContent="⏸ 暂停";
           $('heroStatus').textContent="正在朗读…";
           $('status').innerText="";
+          // 防卡死补丁：如果暂停期间语音恰好没了，强制重启播报
+          if(!currentAudio && !window.speechSynthesis.speaking && !timer) { play(); }
           return;
         }
-        window.speechSynthesis.pause();
+        // 暂停逻辑
         running=false;
+        window.speechSynthesis.pause();
+        if(currentAudio) currentAudio.pause();
+        if(timer) { clearTimeout(timer); timer=null; }
+        
         $('pauseBtn').textContent="▶ 继续";
         $('heroStatus').textContent="已暂停";
-        $('status').innerText="已暂停，可继续播放";
+        
+        // 暂停后直接保存学习进度
+        if(autoMark){
+          $('status').innerText="正在保存进度...";
+          saveProgress().then(() => {
+              $('status').innerText="⏸ 已暂停，进度已安全保存！";
+          });
+        } else {
+          $('status').innerText="已暂停，可继续播放";
+        }
       }
-      function stop(){running=false;clean();$('pauseBtn').textContent="⏸ 暂停";$('heroStatus').textContent="已暂停";$('status').innerText=autoMark?"✓ 已保存当前进度":"";}
+      
+      function stop(){
+          running=false;
+          clean();
+          $('pauseBtn').textContent="⏸ 暂停";
+          $('heroStatus').textContent="已停止";
+          if(autoMark){
+              $('status').innerText="正在保存进度...";
+              saveProgress().then(() => {
+                  $('status').innerText="✓ 已保存当前进度";
+              });
+          }else{
+              $('status').innerText="";
+          }
+      }
+      
       $('startBtn').addEventListener('click',start);$('pauseBtn').addEventListener('click',pauseToggle);$('stopBtn').addEventListener('click',stop);$('zhPlay').addEventListener('change',()=>{});
       $('miniText').textContent=autoMark?"点一次开始 · 听到的单词自动算作“认识”并保存":"点一次开始，之后无需操作 · 自动循环";
       $('examplePlay').addEventListener('change',()=>{});
