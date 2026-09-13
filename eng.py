@@ -379,6 +379,18 @@ def render_autoplay_review_component(mastered_words, auto_mark=False, current_lv
           document.getElementById('readZhTogglePlay').checked = checked;
       }
 
+      // === 终极音频权限破冰（Unlocker）===
+      // 只要用户点过一次按钮，强制激活底层的所有语音API，打破iOS限制！
+      function unlockAudio() {
+          try {
+              let u = new SpeechSynthesisUtterance('');
+              u.volume = 0; // 静音
+              window.speechSynthesis.speak(u);
+              let a = new Audio();
+              a.play().catch(e => {});
+          } catch(e) {}
+      }
+
       function clean() {
           if(timer) { clearTimeout(timer); timer=null; }
           window.speechSynthesis.cancel();
@@ -392,29 +404,41 @@ def render_autoplay_review_component(mastered_words, auto_mark=False, current_lv
               const value = String(text||"").trim();
               if(!value) return resolve();
               
+              let finished = false;
+              let watchdog;
+              const done = () => { 
+                  if(finished) return; 
+                  finished = true; 
+                  if(watchdog) clearTimeout(watchdog);
+                  currentAudio = null; 
+                  resolve(); 
+              };
+
+              // === 不死看门狗 (Watchdog) ===
+              // 无论发音引擎是否卡死，最长等 4.5 秒强制切下一题，绝不断联！
+              const maxWait = Math.max(4500, value.length * 250);
+              watchdog = setTimeout(done, maxWait);
+              
               if(lang === "en-US") {
                   currentAudio = new Audio("https://dict.youdao.com/dictvoice?audio=" + encodeURIComponent(value) + "&type=2");
                   currentAudio.preload = "auto";
-                  let finished = false;
-                  const done = () => { if(finished) return; finished=true; currentAudio=null; resolve(); };
                   currentAudio.onended = done;
                   currentAudio.onerror = () => {
                       if(finished) return;
-                      finished = true;
                       currentAudio = null;
                       const u = new SpeechSynthesisUtterance(value);
                       u.lang = "en-US";
                       u.rate = Math.min(rate||0.8, 0.8);
-                      u.onend = resolve; u.onerror = resolve;
+                      u.onend = done; u.onerror = done;
                       window.speechSynthesis.cancel();
-                      if(running && t===token) window.speechSynthesis.speak(u); else resolve();
+                      if(running && t===token) window.speechSynthesis.speak(u); else done();
                   };
                   const p = currentAudio.play();
                   if(p && p.catch) p.catch(() => currentAudio.onerror());
               } else {
                   const u = new SpeechSynthesisUtterance(value);
                   u.lang = lang; u.rate = rate;
-                  u.onend = resolve; u.onerror = resolve;
+                  u.onend = done; u.onerror = done;
                   window.speechSynthesis.speak(u);
               }
           });
@@ -461,10 +485,10 @@ def render_autoplay_review_component(mastered_words, auto_mark=False, current_lv
 
       function speechWord(text) { return String(text||"").trim().replace(/^(?:(?:n|v|adj|adv|prep|conj|pron|num|art|aux|vt|vi|det|phr|phrase)\.?\s+)+/i,"").trim(); }
       function speechChinese(text) {
-          return String(text||"").trim()
-            .replace(/(^|[；;、,，\n])\s*(?:n|v|adj|adv|prep|conj|pron|num|art|aux|vt|vi|det|phr|phrase)\.?\s*/gi,"$1")
-            .replace(/(^|[；;、,，\n])\s*(?:名词|动词|形容词|副词|介词|连词|代词|数词|冠词|助动词|及物动词|不及物动词)\s*[:：]?\s*/g,"$1")
-            .replace(/\s{2,}/g," ").trim();
+          let t = String(text||"").trim();
+          t = t.replace(/(^|[；;、,，\n])\s*(?:n|v|adj|adv|prep|conj|pron|num|art|aux|vt|vi|det|phr|phrase)\.?\s*/gi,"$1");
+          t = t.replace(/(^|[；;、,，\n])\s*(?:名词|动词|形容词|副词|介词|连词|代词|数词|冠词|助动词|及物动词|不及物动词)\s*[:：]?\s*/g,"$1");
+          return t.replace(/\s{2,}/g," ").trim();
       }
 
       async function play() {
@@ -510,6 +534,7 @@ def render_autoplay_review_component(mastered_words, auto_mark=False, current_lv
 
       function startPlay() {
           if(!queue.length) return;
+          unlockAudio(); // 启动立刻破冰权限
           running = true;
           document.getElementById('start-screen').style.display = 'none';
           document.getElementById('play-screen').style.display = 'block';
@@ -517,15 +542,12 @@ def render_autoplay_review_component(mastered_words, auto_mark=False, current_lv
           next();
       }
 
-      // ===========================
-      // 🚀 核心：终极暂停功能 
-      // ===========================
       function pauseToggle() {
           let btn = document.getElementById('pauseBtn');
           let status = document.getElementById('status');
           
           if(!running) {
-              // ▶️ 用户点击：恢复播放
+              unlockAudio(); // 恢复播放前再次破冰
               running = true;
               if(window.speechSynthesis.paused) window.speechSynthesis.resume();
               if(currentAudio) currentAudio.play();
@@ -535,10 +557,8 @@ def render_autoplay_review_component(mastered_words, auto_mark=False, current_lv
               btn.style.boxShadow = "0 5px 0px rgba(255,150,0,0.3)";
               status.innerText = "🔊 正在朗读…";
               
-              // 防止意外卡死，强行打火重启
               if(!currentAudio && !window.speechSynthesis.speaking && !timer) { play(); }
           } else {
-              // ⏸ 用户点击：暂停播放
               running = false;
               window.speechSynthesis.pause();
               if(currentAudio) currentAudio.pause();
